@@ -283,10 +283,30 @@ class T5DenseReluDense(nn.Module):
         self.dropout = nn.Dropout(config.dropout_rate)
 
     def forward(self, hidden_states):
-        hidden_states = self.wi(hidden_states)
-        hidden_states = nn.functional.relu(hidden_states)
-        hidden_states = self.dropout(hidden_states)
-        hidden_states = self.wo(hidden_states)
+        # T5LayerNorm and the attention softmax both already upcast to fp32 for their own
+        # computation (inherited from upstream HF T5) -- this feed-forward block did not,
+        # and is a documented T5 fp16 failure mode: `wi` projects to `d_ff` (16384 here),
+        # `wo` then sums back over that same width, and either accumulation can exceed
+        # fp16's ~65504 max. Confirmed directly with per-sublayer NaN/Inf hooks on the real
+        # Graphix-3B checkpoint: encoder block 19's `T5LayerFF` was the first sublayer in
+        # the whole model to produce Inf (still finite-looking NaN==False, inf==True at
+        # that point); the very next sublayer to run (that block's RGAT layer) then turned
+        # that Inf into a NaN that propagated through every remaining block, the decoder,
+        # and the final SQL generation (which came back empty). Same fix shape as the
+        # `lm_head` one already applied: upcast this op's inputs to fp32 without changing
+        # `self.wi`/`self.wo`'s stored (fp16) weight dtype.
+        input_dtype = hidden_states.dtype
+        if input_dtype in (torch.float16, torch.bfloat16):
+            hidden_states = nn.functional.linear(hidden_states.float(), self.wi.weight.float())
+            hidden_states = nn.functional.relu(hidden_states)
+            hidden_states = self.dropout(hidden_states)
+            hidden_states = nn.functional.linear(hidden_states, self.wo.weight.float())
+            hidden_states = hidden_states.to(input_dtype)
+        else:
+            hidden_states = self.wi(hidden_states)
+            hidden_states = nn.functional.relu(hidden_states)
+            hidden_states = self.dropout(hidden_states)
+            hidden_states = self.wo(hidden_states)
         return hidden_states
 
 
@@ -300,11 +320,25 @@ class T5DenseGatedGeluDense(nn.Module):
         self.gelu_act = ACT2FN["gelu_new"]
 
     def forward(self, hidden_states):
-        hidden_gelu = self.gelu_act(self.wi_0(hidden_states))
-        hidden_linear = self.wi_1(hidden_states)
-        hidden_states = hidden_gelu * hidden_linear
-        hidden_states = self.dropout(hidden_states)
-        hidden_states = self.wo(hidden_states)
+        # Same fp16 overflow risk as T5DenseReluDense.forward (see the comment there for
+        # the confirmed repro) -- this variant isn't the one Graphix-3B's config actually
+        # uses (feed_forward_proj="relu"), but the fix is identical and cheap, so it's
+        # applied here too for consistency in case that ever changes.
+        input_dtype = hidden_states.dtype
+        if input_dtype in (torch.float16, torch.bfloat16):
+            hidden_states = hidden_states.float()
+            hidden_gelu = self.gelu_act(nn.functional.linear(hidden_states, self.wi_0.weight.float()))
+            hidden_linear = nn.functional.linear(hidden_states, self.wi_1.weight.float())
+            hidden_states = hidden_gelu * hidden_linear
+            hidden_states = self.dropout(hidden_states)
+            hidden_states = nn.functional.linear(hidden_states, self.wo.weight.float())
+            hidden_states = hidden_states.to(input_dtype)
+        else:
+            hidden_gelu = self.gelu_act(self.wi_0(hidden_states))
+            hidden_linear = self.wi_1(hidden_states)
+            hidden_states = hidden_gelu * hidden_linear
+            hidden_states = self.dropout(hidden_states)
+            hidden_states = self.wo(hidden_states)
         return hidden_states
 
 
@@ -550,8 +584,35 @@ class T5Attention(nn.Module):
         )
 
         # compute scores
+        # bf16/fp16 upcast to fp32 here, not just downstream at the softmax (which upstream
+        # HF T5 already did): this matmul is 4D (batch, n_heads, seq, dim) and PyTorch 1.9
+        # dispatches it through cuBLAS's *strided-batched* GEMM, which for bf16 hardcodes
+        # `CUBLAS_GEMM_DEFAULT_TENSOR_OP` with no fallback -- a tensor-core-only algorithm.
+        # Pascal (this GPU, compute capability 6.1) has no tensor cores at all, so cuBLAS
+        # rejects the call outright: "CUBLAS_STATUS_NOT_SUPPORTED ... CUDA_R_16BF ...
+        # CUBLAS_GEMM_DEFAULT_TENSOR_OP" -- confirmed directly, this crashed on the very
+        # first encoder block's self-attention once WORKING_DTYPE was switched to bf16 (see
+        # rgat_picard.py). Plain `nn.Linear` (2D, non-batched) does not hit this: it goes
+        # through a different ATen/cuBLAS path that tolerates non-tensor-core hardware, which
+        # is why the FFN's bf16 matmuls (also confirmed directly) run fine. fp32 batched GEMM
+        # has no such restriction, so upcasting sidesteps the limitation entirely rather than
+        # requiring the batched structure to be rewritten.
+        # NOTE: upcasts use separate `*_mm` names rather than reassigning `query_states`/
+        # `key_states`/`value_states` in place -- `key_states`/`value_states` are reused
+        # below for `present_key_value_state`, the KV cache threaded into the next
+        # autoregressive decoding step via `past_key_value`; caching the fp32 copies instead
+        # would make that cache's dtype disagree with the fresh (working-dtype) key/value
+        # projections computed on the next call, breaking `torch.cat([past_key_value,
+        # hidden_states], dim=2)` a few lines up.
+        input_dtype = query_states.dtype
+        if input_dtype in (torch.float16, torch.bfloat16):
+            query_states_mm = query_states.float()
+            key_states_mm = key_states.float()
+        else:
+            query_states_mm = query_states
+            key_states_mm = key_states
         scores = torch.matmul(
-            query_states, key_states.transpose(3, 2)
+            query_states_mm, key_states_mm.transpose(3, 2)
         )  # equivalent of torch.einsum("bnqd,bnkd->bnqk", query_states, key_states), compatible with onnx op>9
 
         if position_bias is None:
@@ -584,7 +645,18 @@ class T5Attention(nn.Module):
         if layer_head_mask is not None:
             attn_weights = attn_weights * layer_head_mask
 
-        attn_output = unshape(torch.matmul(attn_weights, value_states))  # (batch_size, seq_length, dim)
+        # Second batched matmul, same tensor-core-only cuBLAS restriction as the QK^T matmul
+        # above -- `attn_weights` is already fp32 here (softmax's upcast, now left uncast
+        # since `scores` itself is fp32 when input_dtype was 16-bit, see above). Upcast only
+        # a local `value_states_mm` copy, same reasoning as `key_states_mm` above: the
+        # original (working-dtype) `value_states` is what gets cached below.
+        if input_dtype in (torch.float16, torch.bfloat16):
+            value_states_mm = value_states.float()
+        else:
+            value_states_mm = value_states
+        attn_output = unshape(torch.matmul(attn_weights, value_states_mm))  # (batch_size, seq_length, dim)
+        if input_dtype in (torch.float16, torch.bfloat16):
+            attn_output = attn_output.to(input_dtype)
         attn_output = self.o(attn_output)
 
         present_key_value_state = (key_states, value_states) if (self.is_decoder and use_cache) else None
@@ -1726,7 +1798,21 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             # See https://github.com/tensorflow/mesh/blob/fa19d69eafc9a482aff0b59ddd96b025c0cb207d/mesh_tensorflow/transformer/transformer.py#L586
             sequence_output = sequence_output * (self.model_dim**-0.5)
 
-        lm_logits = self.lm_head(sequence_output)
+        # T5LayerNorm's variance and the attention softmax above are already computed in
+        # fp32 (both cast explicitly, inherited from upstream HF T5) -- but the final
+        # projection to the ~32k-token vocabulary was not, and running this specific matmul
+        # in fp16 is a well-known T5 failure mode: logit magnitudes here can exceed fp16's
+        # ~65504 max, and CrossEntropyLoss's log_softmax over Inf/near-Inf values produces
+        # NaN -- confirmed directly (eval_loss came back NaN, and the corresponding
+        # generate() call produced an empty prediction, consistent with corrupted logits
+        # at the very first decoding step). Upcasting just this call's inputs to fp32 (not
+        # `self.lm_head.weight`'s stored dtype, which stays fp16 -- important since it may
+        # be tied to the input embeddings) costs a transient ~65MB, not a real VRAM concern
+        # given the offloading headroom.
+        if sequence_output.dtype in (torch.float16, torch.bfloat16):
+            lm_logits = torch.nn.functional.linear(sequence_output.float(), self.lm_head.weight.float())
+        else:
+            lm_logits = self.lm_head(sequence_output)
 
         loss = None
         if labels is not None:
