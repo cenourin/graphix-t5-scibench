@@ -1,0 +1,21 @@
+# Large local-only assets — never fetched from here, always
+# mounted from the host via the Makefile's docker run targets.
+data_all_in/data/
+data_all_in/preprocess/*.char
+data_all_in/t5-large/
+stanza_resources/
+train_db_id/
+transformers_cache/
+train/
+train_data/runs/
+wandb/
+
+# Local tooling / caches
+.venv-tools/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Editor / backup cruft
+*.backup
+*~
