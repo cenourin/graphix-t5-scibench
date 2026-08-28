@@ -71,11 +71,23 @@ def question_subword_matrix(processed_question_toks, relations, tokenizer):
     # relations: matrix of relations
     # return: new subword-based relation matrix
     question_dict = defaultdict()
-    question = " ".join(processed_question_toks) + " ; "
-    tokenized_question = tokenizer(question)
-    word_ids = tokenized_question.word_ids()
-    # reduce the special token like ("101", "102")
-    word_ids = word_ids[:-1]
+
+    # Preserve the token boundaries produced by the Graphix preprocessing.
+    # The final ";" is the extra question/schema separator expected downstream.
+    question_words = processed_question_toks + [";"]
+
+    tokenized_question = tokenizer(
+        question_words,
+        is_split_into_words=True,
+        add_special_tokens=True
+    )
+
+    # Special tokens such as EOS have word_id=None.
+    word_ids = [
+        word_id
+        for word_id in tokenized_question.word_ids()
+        if word_id is not None
+    ]
     subword_matrix = [['symbol'] * len(word_ids) for _ in range(len(word_ids))]
 
     # contruct a dict mapping from idx of original tokens --> list of subwords: {5: [5, 6], 6: [7], }
