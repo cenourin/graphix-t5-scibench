@@ -21,7 +21,7 @@ train:
 			-it \
 			--rm \
 			--gpus all\
-			--user 13011:13011 \
+			--user $(shell id -u):$(shell id -g) \
 			--mount type=bind,source=$(BASE_DIR)/train_db_id,target=/train_db_id \
 			--mount type=bind,source=$(BASE_DIR)/transformers_cache,target=/transformers_cache \
 			--mount type=bind,source=$(BASE_DIR)/configs,target=/app/configs \
@@ -45,10 +45,14 @@ pre_process:
 			-it \
 			--rm \
 			--gpus all\
-			--user 13011:13011 \
+			--user $(shell id -u):$(shell id -g) \
+			--env HOME=/tmp \
+			--env DGLBACKEND=pytorch \
+			--env STANZA_RESOURCES_DIR=/stanza_resources \
 			--mount type=bind,source=$(BASE_DIR)/train,target=/train \
 			--mount type=bind,source=$(BASE_DIR)/train_data,target=/train_data \
 			--mount type=bind,source=$(BASE_DIR)/transformers_cache,target=/transformers_cache \
+			--mount type=bind,source=$(BASE_DIR)/stanza_resources,target=/stanza_resources \
 			--mount type=bind,source=$(BASE_DIR)/configs,target=/app/configs \
 			--mount type=bind,source=$(BASE_DIR)/configs/train.json,target=/app/configs/train.json \
 			--mount type=bind,source=$(BASE_DIR)/seq2seq,target=/app/seq2seq \
@@ -69,7 +73,7 @@ eval:
 			-it \
 			--rm \
 			--gpus all\
-			--user 13011:13011 \
+			--user $(shell id -u):$(shell id -g) \
 			--mount type=bind,source=$(BASE_DIR)/eval,target=/eval \
 			--mount type=bind,source=$(BASE_DIR)/transformers_cache,target=/transformers_cache \
 			--mount type=bind,source=$(BASE_DIR)/train_db_id,target=/train_db_id \
