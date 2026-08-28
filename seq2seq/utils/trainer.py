@@ -224,6 +224,13 @@ class Seq2SeqTrainer(transformers.trainer_seq2seq.Seq2SeqTrainer):
             "synced_gpus": False,
             "no_repeat_ngram_size": 0,  # FIXME: hard coding the no_repeat_ngram_size
         }
+        if self._max_time is not None:
+            # `_max_time` (from `val_max_time` in the data-training config) was stored on
+            # `self` by __init__/evaluate() but never actually forwarded into `gen_kwargs`
+            # -- `generate()` never received a `max_time` stopping criterion, so it had no
+            # per-call time budget at all and ran unbounded. Confirmed directly: a single
+            # example ran past `val_max_time=300` without being cut off.
+            gen_kwargs["max_time"] = self._max_time
 
         if "description_input_ids" in inputs:
             gen_kwargs["description_input_ids"] = inputs["description_input_ids"]

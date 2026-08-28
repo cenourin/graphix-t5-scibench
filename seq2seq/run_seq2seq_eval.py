@@ -42,6 +42,7 @@ seq2seq_eval_dataset = json.load(open('data_all_in/data/output/seq2seq_dev_datas
 
 
 def main() -> None:
+    global seq2seq_eval_dataset
     # See all possible arguments by passing the --help flag to this script.
     parser = HfArgumentParser(
         (PicardArguments, ModelArguments, DataArguments, DataTrainingArguments, Seq2SeqTrainingArguments)
@@ -156,6 +157,18 @@ def main() -> None:
         training_args=training_args,
         tokenizer=tokenizer,
     )
+
+    # `data_training_args.max_val_samples` was previously only read far below (~line 252)
+    # to compute the *reported* `eval_samples` metric -- it never actually truncated the
+    # dataset the eval loop iterates over. `seq2seq_eval_dataset` is loaded once at module
+    # import time as a plain list (from seq2seq_dev_dataset.json), before any config is
+    # parsed, so this is the first point where max_val_samples is actually available; slicing
+    # here is safe because each example dict carries its own `graph_idx` into `graph_pedia`,
+    # so truncating the list doesn't disturb that correspondence. Confirmed directly: without
+    # this, an eval run with max_val_samples=1 still logged "Num examples = 1034" and kept
+    # iterating the full dev set (~3min/example observed) instead of stopping after one.
+    if data_training_args.max_val_samples is not None:
+        seq2seq_eval_dataset = seq2seq_eval_dataset[: data_training_args.max_val_samples]
 
     train_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
                                      seq2seq_train_dataset, graph_pedia) if training_args.do_train else None
