@@ -1,5 +1,11 @@
 # Graphix-T5: Mixing Pre-Trained Transformers with Graph-Aware Layers for Text-to-SQL Parsing
 
+> **Fork notice**: this is a personal working copy vendored from
+> [AlibabaResearch/DAMO-ConvAI](https://github.com/AlibabaResearch/DAMO-ConvAI)
+> (`graphix/` subdirectory), used to validate and adapt the Graphix-T5
+> pipeline for a TCC (undergraduate thesis) on NL2SQL, moving from Spider
+> toward ScienceBenchmark. Original license/attribution preserved in `LICENSE`/`NOTICE`.
+
 [![Data Link](https://img.shields.io/badge/BIRD-benchmark-green.svg)](https://bird-bench.github.io/)
 [![Python 3.7+](https://img.shields.io/badge/Python-3.7+-teal.svg)](https://www.python.org/downloads/release/python-390/)
 [![Pytorch 1.8+](https://img.shields.io/badge/Pytorch-1.8+-red.svg)](https://pytorch.org/blog/pytorch-1.8-released/)
