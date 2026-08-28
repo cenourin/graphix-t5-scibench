@@ -18,12 +18,12 @@ python3 seq2seq/run_peteshaw_dev.py ${configs}
 # question relation injection
 echo "Starting to split question relations into subwords ..."
 python3 -u data_all_in/map_subword_question.py --syntax_path ${syntax_eval_out} --dataset_path ${seq2seq_eval_dataset} \
---dataset_output_path ${seq2seq_eval_out1} --plm t5-large
+--dataset_output_path ${seq2seq_eval_out1} --plm data_all_in/t5-large
 
 # database relation injection
 echo "Starting to split schema relations into subwords ..."
 python3 -u data_all_in/map_subword_schema.py --dataset_path ${seq2seq_eval_out1} --dataset_output_path ${seq2seq_eval_out1} \
---plm t5-large --table_path ${tables_out}
+--plm data_all_in/t5-large --table_path ${tables_out}
 
 # schema_linking relation injection
 echo "Starting to split schema-linking relations into subwords ..."
