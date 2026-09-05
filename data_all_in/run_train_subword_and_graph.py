@@ -1,5 +1,6 @@
 import json
 import pickle
+import shelve
 import argparse
 import time
 from transformers import AutoTokenizer
@@ -17,8 +18,23 @@ subword matrices in memory simultaneously across three full passes. Spider's tra
 This script performs the exact same per-example transformations, in the exact same order,
 via the exact same functions -- but as a single streaming pass per example, dropping each
 example's large intermediate fields immediately (mirroring what Graph_Processing.py already
-does at the end of its own loop). Peak RSS measured on this access pattern for the full split
-is ~12GB, comfortably within budget.
+does at the end of its own loop). That bounded per-example peak was measured at ~12GB on
+Spider's train split -- fine there, but ScienceBenchmark's larger individual schemas (oncomx,
+sdss) push the *finished* per-example graph objects themselves to be much bigger, so
+accumulating all 4732 of them in a single in-memory dict before one final pickle.dump() (the
+original design here) pushed host RSS to within a few MB of a 22GB container limit and then
+to a near system-wide OOM on a second attempt, on a 27GB host, before any of the actual dump
+happened -- confirmed via free -h during a real run of this script.
+
+graph_pedia is now written incrementally to a shelve (on-disk dict-like store, keyed by
+str(idx)) instead of accumulated in a Python dict: each `graph_pedia[key] = value` assignment
+is pickled and flushed to disk immediately by the stdlib shelve/dbm layer (writeback=False,
+the default), so this process's own memory footprint no longer grows with the number of
+examples processed -- only with the size of whichever single example is currently in flight.
+Consumers open this the same way (dict-like `[]` access), just via `shelve.open(path, "r")`
+instead of `pickle.load()`; seq2seq/utils/dataset_graph.py::TokenizedDataset already falls
+back to a str(graph_idx) key lookup if the int key isn't found, so it works against either a
+plain pickled dict (existing dev/Spider graph_pedia files, unchanged) or this shelve store.
 '''
 
 def main():
@@ -40,7 +56,9 @@ def main():
     syntax_dataset = json.load(open(args.syntax_path, "r"))
 
     processor = SubwordGraphProcessor()
-    graph_pedia = {}
+    # flag="n": always start a fresh store (matches the old dict's "start empty" semantics
+    # and avoids silently mixing in stale entries from a previous, possibly-interrupted run).
+    graph_pedia = shelve.open(args.graph_output_path, flag="n")
     seq2seq_dataset_formal = []
 
     for i_str, data in seq2seq_dataset.items():
@@ -84,7 +102,7 @@ def main():
 
         # --- Graph_Processing.py ---
         new_data = processor.process_subgraph_utils(data)
-        graph_pedia[idx] = data['graph']
+        graph_pedia[str(idx)] = data['graph']  # shelve requires str keys
 
         del new_data['question_subword_matrix']
         del new_data['question_subword_dict']
@@ -102,7 +120,7 @@ def main():
             print("processing {}th data".format(idx))
 
     json.dump(seq2seq_dataset_formal, open(args.output_path, "w"))
-    pickle.dump(graph_pedia, open(args.graph_output_path, "wb"))
+    graph_pedia.close()
 
     print('Dataset preprocessing costs %.4fs .' % (time.time() - t0))
 

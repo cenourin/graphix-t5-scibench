@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 import os
 import json
+import re
+import shelve
 from pathlib import Path
 import pickle
 from contextlib import nullcontext
@@ -33,13 +35,94 @@ from seq2seq.utils.dataset import DataTrainingArguments, DataArguments
 from seq2seq.utils.dataset_loader import load_dataset
 from seq2seq.utils.spider import SpiderTrainer
 from seq2seq.utils.cosql import CoSQLTrainer
-from seq2seq.utils.dataset_graph import TokenizedDataset
+from seq2seq.utils.dataset_graph import TokenizedDataset, get_graph_entry
 
 print(os.getcwd())
 
-graph_pedia = pickle.load(open('data_all_in/data/output/graph_pedia_total.bin', 'rb'))
-seq2seq_train_dataset = json.load(open('data_all_in/data/output/seq2seq_train_dataset.json', 'r'))
-seq2seq_eval_dataset = json.load(open('data_all_in/data/output/seq2seq_dev_dataset.json', 'r'))
+
+def _load_graph_pedia(path):
+    # ScienceBenchmark's train graph_pedia is written by
+    # data_all_in/run_train_subword_and_graph.py as an incremental shelve store
+    # (dbm.dumb backend -> path + ".dat"/".dir"/".bak" on disk), not a single pickled
+    # dict -- see that script's module docstring. Detect which format `path` is and
+    # open accordingly; Spider's graph_pedia_total.bin (plain pickle) is unaffected.
+    if os.path.exists(path + '.dat'):
+        return shelve.open(path, flag='r')
+    return pickle.load(open(path, 'rb'))
+
+
+# Separate train/eval graph_pedia paths (both default to Spider's single merged file,
+# preserving old behavior exactly). This split matters for ScienceBenchmark: unlike
+# Spider (whose graph_pedia_total.bin merges train+dev with dev's graph_idx offset by
+# 8577 to avoid collisions -- see inject_syntax.py), ScienceBenchmark's dev graph_idx
+# is 0-based (--dev_graph_idx_offset 0), the same range as train's, so train and dev
+# examples cannot share one graph_pedia dict/store without index collisions -- they
+# have to stay in the two separate files run_train_subword_and_graph.py / the normal
+# dev pipeline each produced.
+graph_pedia_train = _load_graph_pedia(
+    os.environ.get('GRAPHIX_TRAIN_GRAPH_PEDIA_PATH', 'data_all_in/data/output/graph_pedia_total.bin'))
+graph_pedia_eval = _load_graph_pedia(
+    os.environ.get('GRAPHIX_EVAL_GRAPH_PEDIA_PATH', 'data_all_in/data/output/graph_pedia_total.bin'))
+seq2seq_train_dataset = json.load(open(
+    os.environ.get('GRAPHIX_TRAIN_DATASET_PATH', 'data_all_in/data/output/seq2seq_train_dataset.json'), 'r'))
+seq2seq_eval_dataset = json.load(open(
+    os.environ.get('GRAPHIX_EVAL_DATASET_PATH', 'data_all_in/data/output/seq2seq_dev_dataset.json'), 'r'))
+
+# On 8GB VRAM, examples whose RGAT graph exceeds MAX_GRAPH_NODES nodes OOM during
+# training (the DGL propagate_attention pass, not the T5 encoder/decoder itself --
+# confirmed via a pilot run that failed identically with and without
+# PYTORCH_CUDA_ALLOC_CONF=expandable_segments, ruling out fragmentation). Dropping
+# these examples (the top ~3% by graph size on Spider train) is a hardware
+# accommodation, not a change to how any *retained* example is processed --
+# TokenizedDataset still tokenizes/serializes every kept example exactly as before.
+MAX_GRAPH_NODES = int(os.environ.get("GRAPHIX_MAX_GRAPH_NODES", "512"))
+
+
+def _filter_by_graph_size(dataset, graph_pedia, max_nodes):
+    kept = [
+        item for item in dataset
+        if get_graph_entry(graph_pedia, item['graph_idx'])['graph'].number_of_nodes() <= max_nodes
+    ]
+    dropped = len(dataset) - len(kept)
+    if dropped:
+        logger.warning(
+            "Dropped %d/%d examples with RGAT graph > %d nodes (VRAM accommodation)",
+            dropped, len(dataset), max_nodes,
+        )
+    return kept
+
+
+seq2seq_train_dataset = _filter_by_graph_size(seq2seq_train_dataset, graph_pedia_train, MAX_GRAPH_NODES)
+seq2seq_eval_dataset = _filter_by_graph_size(seq2seq_eval_dataset, graph_pedia_eval, MAX_GRAPH_NODES)
+
+
+# TokenizedDataset.__getitem__ (dataset_graph.py) only *prints* when its tokenized input
+# length doesn't match the RGAT graph's node count -- the real assert is commented out
+# there, by design. That mismatch crashes deep in the RGAT/DGL forward pass (feature
+# count != node count) instead of failing cleanly here. Needs the tokenizer, so this
+# filter (unlike _filter_by_graph_size above) has to run inside main(), after the
+# tokenizer is loaded -- see the call site there.
+def _filter_by_token_node_match(dataset, graph_pedia, tokenizer, max_source_length):
+    def _match(raw_item):
+        question_in = " ".join(raw_item['raw_question_toks'])
+        struct_in_norm = re.sub('  +', ' ', get_graph_entry(graph_pedia, raw_item['graph_idx'])['new_struct_in'])
+        seq_in = "{} ; {}".format(question_in, struct_in_norm)
+        tokenized = tokenizer(seq_in, max_length=max_source_length, truncation=True)
+        n_tokens = len([a for a in tokenized.input_ids if a > 1])
+        n_nodes = get_graph_entry(graph_pedia, raw_item['graph_idx'])['graph'].number_of_nodes()
+        return n_tokens == n_nodes
+
+    matches = [_match(item) for item in dataset]
+    kept = [item for item, ok in zip(dataset, matches) if ok]
+    dropped = len(dataset) - len(kept)
+    if dropped:
+        from collections import Counter
+        dropped_by_db = Counter(item.get('db_id') for item, ok in zip(dataset, matches) if not ok)
+        logger.warning(
+            "Dropped %d/%d examples with a token/graph-node count mismatch (by db_id: %s)",
+            dropped, len(dataset), dict(dropped_by_db),
+        )
+    return kept
 
 
 def main() -> None:
@@ -132,6 +215,7 @@ def main() -> None:
         num_beams=data_training_args.num_beams,
         num_beam_groups=data_training_args.num_beam_groups,
         diversity_penalty=data_training_args.diversity_penalty,
+        no_repeat_ngram_size=data_training_args.no_repeat_ngram_size,
         gradient_checkpointing=training_args.gradient_checkpointing,
         use_cache=not training_args.gradient_checkpointing,
         # use_cache=False
@@ -150,6 +234,12 @@ def main() -> None:
         # In T5 `<` is OOV, see https://github.com/google-research/language/blob/master/language/nqg/tasks/spider/restore_oov.py
         tokenizer.add_tokens([AddedToken(" <="), AddedToken(" <")])
 
+    global seq2seq_train_dataset, seq2seq_eval_dataset
+    seq2seq_train_dataset = _filter_by_token_node_match(
+        seq2seq_train_dataset, graph_pedia_train, tokenizer, data_training_args.max_source_length)
+    seq2seq_eval_dataset = _filter_by_token_node_match(
+        seq2seq_eval_dataset, graph_pedia_eval, tokenizer, data_training_args.max_source_length)
+
     # Load dataset
     metric, dataset_splits = load_dataset(
         data_args=data_args,
@@ -160,9 +250,9 @@ def main() -> None:
     )
 
     train_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
-                                     seq2seq_train_dataset, graph_pedia) if seq2seq_train_dataset else None
+                                     seq2seq_train_dataset, graph_pedia_train) if seq2seq_train_dataset else None
     eval_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
-                                    seq2seq_eval_dataset, graph_pedia) if seq2seq_eval_dataset else None
+                                    seq2seq_eval_dataset, graph_pedia_eval) if seq2seq_eval_dataset else None
     
 
     # Initialize Picard if necessary
@@ -177,8 +267,17 @@ def main() -> None:
 
         # Initialize model
         '''We load our own model: '''
-        from models.graphix.rgat import Model
-        model = Model(tokenizer, model_cls_wrapper, model_args, config, graph_pedia)
+        # GRAPHIX_MODEL_VARIANT=plain selects models.graphix.plain.Model (a standard,
+        # non-RGAT-injected T5ForConditionalGeneration wrapper) instead of the default
+        # RGAT-aware one -- used for the "plain T5, no graph structure" ablation
+        # baseline. graph_idx still flows through TokenizedDataset either way (it's
+        # needed there to reconstruct the serialized-schema input text), but plain.Model
+        # never builds a graph_batch or touches DGL.
+        if os.environ.get("GRAPHIX_MODEL_VARIANT", "rgat") == "plain":
+            from models.graphix.plain import Model
+        else:
+            from models.graphix.rgat import Model
+        model = Model(tokenizer, model_cls_wrapper, model_args, config, graph_pedia_train, graph_pedia_eval)
     
         if isinstance(model, T5ForConditionalGeneration):
             model.resize_token_embeddings(len(tokenizer))
@@ -208,7 +307,7 @@ def main() -> None:
         }
         # pdb.set_trace()
         #using spidertrainer as it is.
-        if data_args.dataset in ["spider", "spider_realistic", "spider_syn", "spider_dk"]:
+        if data_args.dataset in ["spider", "spider_realistic", "spider_syn", "spider_dk", "sciencebenchmark"]:
             trainer = SpiderTrainer(**trainer_kwargs)
         elif data_args.dataset in ["cosql", "cosql+spider"]:
             trainer = CoSQLTrainer(**trainer_kwargs)

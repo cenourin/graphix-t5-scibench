@@ -87,6 +87,16 @@ class DataTrainingArguments:
             "which is used during ``evaluate`` and ``predict``."
         },
     )
+    no_repeat_ngram_size: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "If set, n-grams of this size cannot occur more than once during generation (model.generate). "
+            "Hard-blocks the repetition-loop degenerate output (e.g. 'a.b.b.b.b...') that greedy/low-beam decoding "
+            "can produce, especially early in fine-tuning before the model's own generation is well-calibrated -- "
+            "confirmed via real ScienceBenchmark fine-tuning eval predictions collapsing into repeated n-grams "
+            "even as eval_loss (teacher-forced) kept improving."
+        },
+    )
     num_return_sequences: Optional[int] = field(
         default=None,
         metadata={
@@ -142,7 +152,8 @@ class DataArguments:
             "cosql": "./seq2seq/datasets/cosql",
             "spider_realistic": "./seq2seq/datasets/spider_realistic",
             "spider_syn": "./seq2seq/datasets/spider_syn",
-            "spider_dk": "./seq2seq/datasets/spider_dk"
+            "spider_dk": "./seq2seq/datasets/spider_dk",
+            "sciencebenchmark": "./seq2seq/datasets/sciencebenchmark"
 
         },
         metadata={"help": "Paths of the dataset modules."},
@@ -158,7 +169,8 @@ class DataArguments:
             "spider_realistic" : "./seq2seq/metrics/spider",
             "cosql": "./seq2seq/metrics/cosql",
             "spider_syn":"./seq2seq/metrics/spider",
-            "spider_dk":"./seq2seq/metrics/spider"
+            "spider_dk":"./seq2seq/metrics/spider",
+            "sciencebenchmark": "./seq2seq/metrics/spider"
         },
         metadata={"help": "Paths of the metric modules."},
     )

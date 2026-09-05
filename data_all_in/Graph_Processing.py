@@ -77,10 +77,10 @@ class SubwordGraphProcessor():
 
 
     def process_subgraph_utils(self, seq2seq_dataset):
-        q = np.array(seq2seq_dataset['question_subword_matrix'], dtype='<U100')
-        s = np.array(seq2seq_dataset['schema_subword_relations'], dtype='<U100')
-        q_s = np.array(seq2seq_dataset['schema_linking_subword'][0], dtype='<U100')
-        s_q = np.array(seq2seq_dataset['schema_linking_subword'][1], dtype='<U100')
+        q = np.array(seq2seq_dataset['question_subword_matrix'], dtype='<U32')
+        s = np.array(seq2seq_dataset['schema_subword_relations'], dtype='<U32')
+        q_s = np.array(seq2seq_dataset['schema_linking_subword'][0], dtype='<U32')
+        s_q = np.array(seq2seq_dataset['schema_linking_subword'][1], dtype='<U32')
         relation = np.concatenate([
             np.concatenate([q, q_s], axis=1),
             np.concatenate([s_q, s], axis=1)

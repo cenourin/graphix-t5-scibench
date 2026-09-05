@@ -1,0 +1,596 @@
+% Resultados do eval do checkpoint Graphix-T5 (t5-base + RGAT, treinado no Spider)
+% aplicado ao ScienceBenchmark (cordis, oncomx, sdss), zero-shot.
+%
+% Pode ser incluído num capítulo/seção do TCC via \input{sciencebenchmark-eval-results}
+% ou compilado standalone.
+
+\section{Avaliação no ScienceBenchmark (zero-shot)}
+\label{sec:sciencebenchmark-eval}
+
+O checkpoint treinado no Spider (t5-base + RGAT, 5 épocas, 8577 exemplos de
+treino, resultado no dev set do Spider: 41,9\% \emph{exact match} / 44,8\%
+\emph{execution accuracy}) foi avaliado, sem nenhum re-treinamento, sobre os
+299 exemplos do split de desenvolvimento do ScienceBenchmark
+\cite{sciencebenchmark2023}, distribuídos em três bancos de domínios distintos:
+\texttt{cordis} (projetos de pesquisa europeus), \texttt{oncomx} (biomedicina)
+e \texttt{sdss} (astronomia).
+
+\subsection{Resultado agregado}
+
+\begin{table}[h]
+\centering
+\caption{Resultado do eval zero-shot do checkpoint Spider-treinado no ScienceBenchmark, por banco.}
+\label{tab:sciencebenchmark-zeroshot}
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Banco} & \textbf{n} & \textbf{exact match} & \textbf{exec} & \textbf{Exemplos avaliados} \\
+\midrule
+cordis            & 100 & 12,0\% & 15,0\% & 100/100 \\
+oncomx            & 99  & 14,1\% & 11,1\% & 99/99 (exec: 97/99) \\
+sdss              & 94  & 0,0\%  & 0,0\%  & 90/94\textsuperscript{a} \\
+\midrule
+\textbf{Total (agregado)} & \textbf{293} & \textbf{9,0\%} & \textbf{8,9\%} & exact: 289/293, exec: 287/293 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.3em}
+{\footnotesize\textsuperscript{a}4 exemplos do sdss descartados da métrica: parser
+SQL do Spider (\texttt{third\_party/spider/process\_sql.py}) não suporta
+parênteses agrupando condições no \texttt{WHERE}, um padrão ausente no SQL
+gold do Spider mas presente no do ScienceBenchmark.}
+\end{table}
+
+Para efeito de comparação, o mesmo checkpoint avaliado no dev set do Spider
+(1034 exemplos, mesmo domínio de treino) obteve 41,9\% exact match e 44,8\%
+exec -- uma queda de $\sim$33 pontos percentuais ao mudar de domínio sem
+re-treinamento, consistente com a expectativa de que arquiteturas
+graph-aware treinadas em um conjunto de bancos pequenos e homogêneos (Spider,
+$\sim$5,3 tabelas/banco em média) generalizam de forma limitada para bancos
+maiores e de domínio mais específico (ScienceBenchmark, 19--25 tabelas no
+\texttt{cordis}, colunas de medição numérica pouco usuais no \texttt{sdss}).
+
+\subsection{Quebra por dificuldade}
+
+Usando a classificação de dificuldade do avaliador oficial do Spider
+(\emph{easy}/\emph{medium}/\emph{hard}/\emph{extra}, baseada em número de
+componentes SQL, condições e agregações), o exact match cai a zero em
+\emph{hard} e \emph{extra} nos três bancos, sem exceção:
+
+\begin{table}[h]
+\centering
+\caption{Exact match por nível de dificuldade e banco.}
+\label{tab:sciencebenchmark-hardness}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Banco} & \textbf{easy} & \textbf{medium} & \textbf{hard} & \textbf{extra} \\
+\midrule
+cordis (n=100) & 32,0\% (n=25) & 11,4\% (n=35) & 0\% (n=19) & 0\% (n=21) \\
+oncomx (n=99)  & 42,9\% (n=21) & 13,9\% (n=36) & 0\% (n=22) & 0\% (n=20) \\
+sdss (n=90)    & 0\% (n=6)     & 0\% (n=28)    & 0\% (n=20) & 0\% (n=36) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O padrão observado sugere duas causas de queda distintas e sobrepostas: (i)
+uma limitação de \emph{capacidade}, comum aos três bancos -- o modelo t5-base
+resolve consultas simples mas não lida com consultas complexas (múltiplos
+JOINs, subconsultas, agregações compostas) fora do domínio de treino; e (ii)
+uma limitação de \emph{transferência de domínio}, específica do
+\texttt{sdss} -- o resultado é zero mesmo nas consultas \emph{easy}, o que não
+ocorre em \texttt{cordis}/\texttt{oncomx}, indicando que o vocabulário e a
+estrutura de esquema do \texttt{sdss} (medições fotométricas, nomenclatura
+astronômica) são suficientemente distantes do domínio de treino a ponto de
+comprometer até os casos mais simples.
+
+Uma observação metodológica reforça essa segunda leitura: o tamanho do
+esquema (contagem de nós do grafo RGAT) e o banco de dados são quase
+colineares nesta amostra -- \texttt{cordis}/\texttt{oncomx} sempre excedem
+512 nós, \texttt{sdss} está sempre abaixo. Como \texttt{sdss} é o banco com o
+\emph{menor} esquema em número de nós e ainda assim o único com resultado
+nulo em todos os níveis de dificuldade, o fator determinante da queda não
+parece ser o tamanho do esquema, e sim a distância de domínio/vocabulário em
+relação ao Spider.
+
+\subsection{Análise qualitativa dos erros}
+
+Das 263 previsões incorretas (excluindo os 4 exemplos de \texttt{sdss} sem
+gold parseável), 179 (68\%) foram inicialmente classificadas como ``SQL
+sintaticamente inválido'' pelo parser oficial do Spider
+(\texttt{third\_party/spider/process\_sql.py}) -- ou seja, o modelo nem
+produziu uma consulta que o parser conseguisse interpretar como AST SQL.
+
+\begin{table}[h]
+\centering
+\caption{Distribuição das categorias de erro (previsões incorretas, exact match = 0).}
+\label{tab:error-categories}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Categoria} & \textbf{Total} & \textbf{cordis} & \textbf{oncomx} & \textbf{sdss} \\
+\midrule
+SQL sintaticamente inválido & 179 & 56 & 58 & 65 \\
+Tabela errada                & 50  & 13 & 12 & 25 \\
+Coluna errada                 & 19  & 9  & 10 & 0  \\
+Outro erro semântico          & 10  & 5  & 5  & 0  \\
+Agregação errada              & 5   & 5  & 0  & 0  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Como o parser oficial do Spider já se mostrou limitado a uma gramática SQL
+restrita neste trabalho (cf. o caso de parênteses agrupando condições no
+\texttt{WHERE}, seção anterior), investigou-se se parte dessas 179 previsões
+``inválidas'' seriam, na verdade, SQLite sintaticamente válido que o parser
+simplesmente não reconhece. Cada uma das 179 previsões foi executada
+diretamente contra o banco SQLite real correspondente (\texttt{sqlite3},
+sem passar pelo parser AST do Spider). O resultado foi conclusivo:
+\textbf{nenhuma das 179 (0\%) executou com sucesso} -- todas produziram um
+erro real do SQLite, predominantemente \texttt{no such table} ou
+\texttt{no such column} (por exemplo, \texttt{institutions.uncs\_id} em vez
+de \texttt{unics\_id}, ou um join com a tabela inexistente \texttt{subjects}
+em vez de \texttt{subject\_areas}). Isso descarta a hipótese de artefato de
+parser para esta categoria: a maioria dos erros do modelo no
+ScienceBenchmark é, de fato, alucinação de nomes de tabela/coluna
+inexistentes no esquema ou SQL genuinamente malformado, não uma limitação da
+ferramenta de avaliação.
+
+\subsection{Decodificação restrita por gramática (PICARD)}
+\label{sec:picard-attempt}
+
+Dado que a maioria dos erros é SQL sintaticamente inválido, testou-se se a
+decodificação restrita por gramática do PICARD \cite{picard2021}
+-- que impede o modelo de gerar tokens que levariam a uma consulta
+inválida -- reduziria essa taxa. O eval foi refeito com
+\texttt{use\_picard=true}, \texttt{launch\_picard=true}, mantendo os demais
+parâmetros idênticos.
+
+\textbf{Resultado}: as 293 previsões geradas com PICARD ativo são
+\emph{idênticas, token a token}, às geradas sem PICARD -- exact match e exec
+saíram exatamente iguais aos valores da Tabela~\ref{tab:sciencebenchmark-zeroshot}.
+Investigando a causa, constatou-se que o PICARD nunca chega a interceptar a
+geração nesta configuração: em \texttt{seq2seq/models/graphix/rgat\_picard.py},
+um ajuste anterior (necessário para corrigir a resolução da classe do modelo,
+que sem ele carregava um T5 genérico em vez da variante com RGAT) passou a
+importar a classe do modelo diretamente, contornando o mecanismo
+(\texttt{model\_cls\_wrapper}) pelo qual o \texttt{generate()} restrito do
+PICARD normalmente seria aplicado. O servidor PICARD chega a subir e ficar
+ativo durante o eval, mas nunca é de fato consultado pela geração --
+confirmado tanto pela ausência total de qualquer menção a
+``picard''/``thrift'' nos logs do eval quanto pela identidade exata das
+previsões. Trata-se de uma lacuna de integração pré-existente, não avaliada
+anteriormente porque o eval com PICARD nunca havia sido exercitado de ponta
+a ponta neste projeto; o conserto exigiria combinar os dois mecanismos de
+substituição de classe (RGAT-aware e PICARD-aware) em vez de tratá-los como
+alternativas mutuamente exclusivas, o que fica registrado aqui como limitação
+conhecida e trabalho futuro.
+
+\subsection{Busca em feixe (\emph{beam search}, num\_beams=4)}
+\label{sec:beam4}
+
+Como variação de decodificação adicional (mantendo o checkpoint zero-shot
+inalterado), o eval foi refeito com \texttt{num\_beams=4} no lugar da
+decodificação gulosa (\texttt{num\_beams=1}) usada nos resultados acima.
+
+\textbf{Resultado}: 9,34\% exact match / 9,56\% exec (289 exemplos
+pontuados para exact match, 287 para exec), \texttt{eval\_loss=0,6885} --
+uma melhora pequena mas real sobre a decodificação gulosa (9,0\%/8,87\%),
+consistente com o ganho usual, porém modesto, de busca em feixe sobre
+geração gulosa em tarefas de geração estruturada.
+
+\section{Fine-tuning no ScienceBenchmark}
+\label{sec:finetuning}
+
+A partir do mesmo checkpoint zero-shot, foram conduzidos dois experimentos de
+ajuste fino sobre os dados de treino do ScienceBenchmark (4732 exemplos,
+seed+synth combinados): um fine-tuning completo (todas as épocas sobre o
+maior subconjunto de dados que a GPU disponível comporta) e um fine-tuning
+\emph{few-shot} (poucas centenas de exemplos, mais épocas). Ambos foram
+avaliados no mesmo split de dev usado no zero-shot, seguindo a mesma
+metodologia de scoring (exact match + execução, mesmos filtros de
+segurança contra travamentos de execução no \texttt{sdss}).
+
+\textbf{Restrição de hardware determinante}: os experimentos rodaram numa
+única GPU de consumidor (NVIDIA GeForce GTX 1070, 8\,GB de VRAM, sem tensor
+cores), o mesmo hardware usado para os evals acima. Diferente do Spider
+(esquemas pequenos, $\sim$5,3 tabelas/banco em média), os grafos RGAT do
+ScienceBenchmark chegam a mais de 1300 nós por exemplo, o que por si só é
+suficiente para saturar 8\,GB de VRAM durante o treino (fase que aloca
+ativações para retropropagação, ao contrário do eval, que só faz
+inferência).
+
+\subsection{Fine-tuning completo}
+\label{sec:finetuning-full}
+
+\textbf{Configuração}: 3 épocas, \texttt{batch\_size=1} com
+\texttt{gradient\_accumulation\_steps=32} (lote efetivo 32), taxa de
+aprendizado $5\times10^{-5}$ com \texttt{adafactor}, 330 passos de
+otimização totais. Por restrição de VRAM, exemplos cujo grafo RGAT excede
+1000 nós foram descartados do treino -- isso excluiu \textbf{1165 dos 1165
+exemplos de \texttt{oncomx}} presentes no split de treino após o primeiro
+filtro (praticamente o banco inteiro; ver limitação (iii) abaixo), mantendo
+\texttt{cordis} e \texttt{sdss} quase integralmente (3540 dos 4732 exemplos
+totais permaneceram).
+
+\begin{table}[h]
+\centering
+\caption{Fine-tuning completo: resultado final no dev set completo (289--293 exemplos, sem o filtro de tamanho de grafo aplicado ao treino).}
+\label{tab:finetuning-full}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Configuração} & \textbf{exact match} & \textbf{exec} & \textbf{eval\_loss} \\
+\midrule
+Zero-shot (referência) & 9,0\%  & 8,87\% & -- \\
+Fine-tuning completo    & \textbf{0,0\%} & \textbf{0,34\%} & 4,2321 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O resultado é \textbf{pior que o zero-shot}, apesar do \emph{loss} de
+treino ter caído de forma saudável e monotônica até 0,469 ao final das 3
+épocas. A causa raiz identificada: o modelo nunca viu nenhum exemplo de
+\texttt{oncomx} durante o treino (excluído por VRAM), mas o dev set de
+avaliação final inclui \texttt{oncomx} normalmente -- o desempenho ruim
+nesse domínio nunca visto arrasta a média agregada para baixo, revertendo
+o ganho que o fine-tuning trouxe em \texttt{cordis}/\texttt{sdss}. Esse é
+um achado metodológico central deste trabalho: \textbf{fine-tuning
+completo sob restrição severa de VRAM que exclui um dos domínios-alvo pode
+piorar a generalização agregada}, mesmo quando todos os indicadores de
+treino (perda) sugerem que o ajuste está funcionando.
+
+\subsection{Fine-tuning \emph{few-shot}}
+\label{sec:finetuning-fewshot}
+
+Para tentar obter alguma representação de \texttt{oncomx} sem incorrer no
+mesmo custo proibitivo de VRAM ao longo de um treino completo, foi montado
+um segundo experimento com uma amostra pequena e deliberadamente balanceada
+entre os três bancos: 140 exemplos de \texttt{cordis} + 140 de
+\texttt{sdss} (amostragem aleatória) + 20 de \texttt{oncomx} (os 20 exemplos
+de menor grafo disponíveis, 1022--1025 nós -- ver limitação (iii)), 300
+exemplos no total, por 10 épocas (90 passos de otimização).
+
+\begin{table}[h]
+\centering
+\caption{Fine-tuning few-shot: resultado final no dev set completo.}
+\label{tab:finetuning-fewshot}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Configuração} & \textbf{exact match} & \textbf{exec} & \textbf{eval\_loss} \\
+\midrule
+Zero-shot (referência)  & 9,0\%  & 8,87\% & -- \\
+Fine-tuning completo     & 0,0\%  & 0,34\% & 4,2321 \\
+Fine-tuning few-shot     & \textbf{0,0\%} & \textbf{0,0\%} & 4,8754 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O resultado também ficou abaixo do zero-shot, e abaixo até do fine-tuning
+completo no exec. Diferente do fine-tuning completo, aqui não há exclusão
+sistemática de um banco (os três estão representados, ainda que
+\texttt{oncomx} de forma mínima) -- a causa mais provável é volume de
+dados insuficiente (300 exemplos) combinado com uma limitação metodológica
+própria deste experimento, descrita em (iv) abaixo: o checkpoint final
+salvo corresponde a apenas 52\% do treino planejado, não ao ponto de
+convergência real.
+
+\subsection{Correção do \emph{gradient checkpointing} e fine-tuning completo revisado}
+\label{sec:gc-fix}
+
+A limitação (iii) acima -- exclusão total de \texttt{oncomx} do treino por
+falta de VRAM -- motivou uma segunda iteração deste trabalho, buscando
+incluir os três domínios sem reduzir \texttt{max\_source\_length}. O
+mecanismo natural para isso é o \emph{gradient checkpointing} do PyTorch
+(\texttt{torch.utils.checkpoint}): em vez de manter em memória todas as
+ativações intermediárias da rede para a retropropagação, ele as recalcula
+sob demanda durante o \emph{backward pass}, trocando tempo de computação por
+memória. A flag já existia em \texttt{configs/train.json}, mas estava sem
+efeito para o modelo com RGAT -- dois problemas distintos, ambos
+corrigidos:
+
+\begin{itemize}
+\item A classe \texttt{Model} em \texttt{seq2seq/models/graphix/rgat.py} é
+um invólucro (\emph{wrapper}) que guarda o T5 com RGAT de fato como um
+atributo interno (\texttt{self.pretrain\_model}), em vez de herdar sua
+hierarquia de camadas. O método padrão
+\texttt{gradient\_checkpointing\_enable()} do HuggingFace percorre
+recursivamente as submódulos de uma classe para ativar o checkpointing em
+cada um -- como o RGAT vive dentro de um atributo e não na hierarquia
+percorrida, a ativação nunca chegava lá. Corrigido delegando
+explicitamente a chamada ao \texttt{pretrain\_model} interno.
+\item Mesmo com a delegação corrigida, o \texttt{T5Stack.forward()} (em
+\texttt{seq2seq/models/modeling\_t5.py}) constrói, quando o checkpointing
+está ativo, uma função de encapsulamento (\emph{closure}) para cada bloco
+que é passada a \texttt{torch.utils.checkpoint.checkpoint()} -- e essa
+closure não repassava \texttt{graph\_batch}/\texttt{relation\_emb} ao
+bloco, fazendo o RGAT ser silenciosamente ignorado (ou falhar) sempre que
+o checkpointing estava ativo. Corrigido capturando esses dois objetos por
+\emph{closure} do Python (não são tensores diferenciáveis que o mecanismo
+de checkpoint precise gerenciar, então isso é seguro tanto na chamada
+inicial quanto no recálculo do \emph{backward}).
+\end{itemize}
+
+A correção foi validada com um teste de fumaça isolado sobre os seis
+maiores grafos de \texttt{oncomx} (1217--1308 nós, os que mais
+frequentemente causavam OOM antes), confirmando treino sem erros e perda
+decrescente normalmente.
+
+Com o \emph{gradient checkpointing} funcionando, o fine-tuning completo foi
+refeito com os mesmos hiperparâmetros da Seção~\ref{sec:finetuning-full}
+(3 épocas, \texttt{batch\_size=1}, \texttt{gradient\_accumulation\_steps=32},
+$5\times10^{-5}$ com \texttt{adafactor}), desta vez sem nenhuma exclusão de
+exemplo por tamanho de grafo -- os 4732 exemplos de treino (incluindo
+\texttt{oncomx} por completo) participaram do treino.
+
+\begin{table}[h]
+\centering
+\caption{Fine-tuning completo, antes e depois da correção do gradient checkpointing.}
+\label{tab:finetuning-full-gc}
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Configuração} & \textbf{exact match} & \textbf{exec} & \textbf{eval\_loss} & \textbf{train\_loss / tempo} \\
+\midrule
+Fine-tuning completo (sem \texttt{oncomx}) & 0,0\% & 0,34\% & 4,2321 & 0,469 / -- \\
+Fine-tuning completo (com \texttt{oncomx}, gc) & 0,0\% & \textbf{0,34\%} & \textbf{1,6765} & 2,215 / 9h42min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O resultado é um achado genuinamente nuançado: incluir \texttt{oncomx}
+reduziu o \texttt{eval\_loss} em quase $2{,}5\times$ (4,2321 $\to$ 1,6765) --
+uma melhora clara e esperada, já que o modelo agora vê exemplos do domínio
+que antes lhe era totalmente estranho. Mas essa melhora \textbf{não se
+traduziu em nenhum ganho nas métricas discretas}: \texttt{exact\_match}
+permanece em 0\% e \texttt{exec} praticamente inalterado (0,34\%). Isso
+sugere que a hipótese da Seção~\ref{sec:finetuning-full} (exclusão de
+\texttt{oncomx} como causa única do resultado ruim) era \emph{necessária
+mas não suficiente}: mesmo com todos os três domínios representados no
+treino, os erros do modelo continuam sendo do tipo que quebra
+\texttt{exact\_match}/\texttt{exec} de forma binária -- nome de
+tabela/coluna incorreto, estrutura de \texttt{JOIN} equivocada -- e uma
+perda agregada mais baixa (que mede o quão "próxima" a distribuição de
+tokens gerada está do alvo, token a token) não impede esse tipo de erro
+categórico. As causas mais prováveis são um orçamento de treino ainda
+pequeno (3 épocas sobre 4732 exemplos heterogêneos, contra 5 épocas sobre
+8577 exemplos homogêneos no Spider original) e/ou uma limitação de
+capacidade do próprio t5-base diante da diversidade de esquemas do
+ScienceBenchmark, discutida em conjunto com o achado da próxima seção.
+
+\subsection{Baseline t5-small sem RGAT}
+\label{sec:t5small-baseline}
+
+Para isolar o efeito específico do RGAT dos demais fatores (tamanho do
+modelo, orçamento de treino, dados), foi conduzido um experimento de
+ablação: um T5 padrão, \textbf{sem nenhuma camada RGAT ou estrutura de
+grafo}, na variante \texttt{t5-small} (60M parâmetros, contra os $\sim$220M
+do \texttt{t5-base} usado em todos os experimentos anteriores). O restante
+do pipeline foi mantido idêntico -- mesmo pré-processamento (a mesma
+serialização de esquema textual produzida pelas etapas de grafo, ainda que
+o grafo em si não seja consumido), mesmo split de treino/dev (4732/299
+exemplos), mesmos hiperparâmetros (3 épocas, \texttt{batch\_size=1},
+\texttt{gradient\_accumulation\_steps=32}, $5\times10^{-5}$ com
+\texttt{adafactor}). Uma nova classe \texttt{Model}
+(\texttt{seq2seq/models/graphix/plain.py}) carrega um
+\texttt{T5ForConditionalGeneration} padrão do HuggingFace e ignora
+completamente o \texttt{graph\_batch}, selecionável por uma variável de
+ambiente (\texttt{GRAPHIX\_MODEL\_VARIANT=plain}) sem duplicar o restante
+do script de treino.
+
+\begin{table}[h]
+\centering
+\caption{t5-small sem RGAT vs.\ t5-base com RGAT (fine-tuning completo).}
+\label{tab:t5small-vs-rgat}
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Configuração} & \textbf{exact match} & \textbf{exec} & \textbf{eval\_loss} & \textbf{tempo de treino} \\
+\midrule
+t5-base + RGAT (com \texttt{oncomx}, gc) & 0,0\% & 0,34\% & 1,6765 & 9h42min \\
+t5-small \textbf{sem} RGAT (3 épocas)     & \textbf{1,38\%} & \textbf{1,37\%} & \textbf{1,1825} & \textbf{2h53min} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O resultado é surpreendente: o modelo \emph{menor} e \emph{sem} qualquer
+estrutura de grafo superou o modelo com RGAT em todas as métricas -- exact
+match 4$\times$ maior (1,38\% vs.\ 0,34\% de exec no RGAT, comparação
+direta de exec: 1,37\% vs.\ 0,34\%, também $\sim$4$\times$), \texttt{eval\_loss}
+menor, e treino $3{,}4\times$ mais rápido (sem o custo de recomputação do
+\emph{gradient checkpointing} nem a sobrecarga de propagar mensagens em
+grafos de até 1300 nós por exemplo). É importante notar que essa
+comparação \textbf{não é perfeitamente controlada}: t5-small e t5-base+RGAT
+diferem tanto na presença do RGAT quanto no tamanho do modelo base, então
+o experimento isola "RGAT vs.\ sem RGAT" apenas de forma aproximada, não
+com uma variável por vez. Ainda assim, o resultado é informativo na direção
+oposta à esperada -- se o RGAT estivesse agregando valor líquido, seria
+razoável esperar que o modelo \emph{maior e com estrutura adicional}
+superasse o menor e mais simples, não o contrário. Hipóteses para essa
+inversão:
+
+\begin{itemize}
+\item O RGAT deste projeto foi desenhado e ajustado para os esquemas
+pequenos e homogêneos do Spider ($\sim$5,3 tabelas/banco); grafos de
+1000+ nós do ScienceBenchmark estão 2--3 ordens de grandeza acima da escala
+para a qual a arquitetura foi validada, e a propagação de mensagens em
+grafos tão densos pode diluir sinal útil em vez de reforçá-lo.
+\item Um modelo maior e mais complexo (t5-base+RGAT) tipicamente precisa de
+mais dados e/ou mais épocas para superar um modelo menor em fine-tuning --
+com apenas 4732 exemplos e 3 épocas, o orçamento de treino pode ser
+insuficiente para que a capacidade extra do RGAT se traduza em vantagem
+prática, enquanto o t5-small, por ser mais simples, converge mais
+rapidamente para um padrão razoável com o mesmo orçamento.
+\item A complexidade adicional (mais parâmetros, mais uma fonte de
+gradiente via o \emph{encoder} do grafo) pode estar introduzindo ruído de
+otimização que atrapalha a convergência dentro do orçamento de treino
+disponível, sem chegar a comprometer a estabilidade geral (o \emph{loss}
+de treino do RGAT+t5-base ainda caiu de forma saudável, só não tão baixo
+quanto seria necessário para competir com o t5-small nas métricas
+discretas).
+\end{itemize}
+
+Este resultado não permite concluir que RGAT seja inerentemente inadequado
+para text-to-SQL sobre esquemas grandes -- apenas que, \textbf{nas
+condições específicas deste trabalho} (hardware de 8\,GB de VRAM, poucas
+horas de treino disponíveis, 4732 exemplos), a complexidade adicional do
+RGAT não se pagou em métricas discretas frente a um baseline T5 puro e
+menor, treinado com o mesmo orçamento de tempo.
+
+\subsection{Limitações metodológicas}
+\label{sec:limitations}
+
+Os dois experimentos de fine-tuning expuseram uma série de limitações,
+tanto de hardware quanto de configuração, documentadas aqui por
+transparência e como recomendação para trabalho futuro:
+
+\begin{enumerate}
+\item[(i)] \textbf{Ausência de split de teste genuíno.} O ScienceBenchmark,
+como distribuído, só define \texttt{train} (seed+synth) e \texttt{dev}. O
+mesmo split de \texttt{dev} usado para validação durante o treino
+(seleção do "melhor" checkpoint) foi reutilizado como avaliação final --
+não há um terceiro split, cego durante todo o processo, para reportar como
+número de teste independente. O Spider, usado no treino-base, tem a mesma
+limitação estrutural (sem test set público), então isso é consistente com
+a metodologia herdada, mas permanece uma ressalva válida: o número final
+reportado pode estar levemente inflado em relação a um teste verdadeiramente
+cego.
+
+\item[(ii)] \textbf{\texttt{torch.cuda.empty\_cache()} incondicional.} Uma
+chamada incondicional a \texttt{torch.cuda.empty\_cache()} em
+\texttt{seq2seq/models/graphix/rgat\_tuning.py::RGAT\_Layer.forward}, uma
+vez por camada RGAT (12$\times$ por exemplo no t5-base), forçava uma
+sincronização CUDA completa a cada chamada. Esse código é compartilhado
+entre treino e avaliação (\texttt{modeling\_t5.py} importa a mesma classe
+para ambos), então os resultados de zero-shot/PICARD/beam4 relatados acima
+provavelmente rodaram mais devagar do que precisavam -- os números
+continuam válidos, só o tempo de execução foi maior que o necessário. O
+fix (só chamar \texttt{empty\_cache()} sob OOM real, não preventivamente)
+foi validado por comparação direta: antes, nenhum passo de otimização
+completava em mais de uma hora; depois, o mesmo passo completava em
+minutos.
+
+\item[(iii)] \textbf{\texttt{oncomx} tem esquema uniformemente grande
+demais para 8\,GB de VRAM.} Todos os 1165 exemplos de treino de
+\texttt{oncomx} produzem grafos RGAT entre 1022 e 1308 nós -- não existe
+um subconjunto pequeno e seguro para amostrar. Mesmo os 20 exemplos
+"menores" usados no few-shot (1022--1025 nós) ainda estão acima do teto de
+900--1000 nós que se mostrou confiável durante o treino completo, e
+provocaram OOMs individuais recorrentes durante o few-shot (capturados e
+pulados por um mecanismo de segurança, não por acaso -- ver item v). Esta é
+uma restrição de hardware, não uma limitação de amostragem: nenhuma
+estratégia de seleção de exemplos resolve o problema sem reduzir
+\texttt{max\_source\_length} (o que exigiria reprocessar toda a base de
+grafos RGAT, fora do escopo deste trabalho). \textbf{Atualização}: esta
+restrição foi contornada numa iteração posterior deste trabalho habilitando
+corretamente o \emph{gradient checkpointing} do PyTorch, o que permitiu
+incluir \texttt{oncomx} por completo no treino sem reduzir
+\texttt{max\_source\_length} -- ver Seção~\ref{sec:gc-fix}.
+
+\item[(iv)] \textbf{Ausência de \emph{warmup} de taxa de aprendizado no
+fine-tuning completo, e espaçamento de checkpoint excessivo no few-shot.}
+O fine-tuning completo usou \texttt{warmup\_ratio=0}, fazendo a taxa de
+aprendizado saltar diretamente para $5\times10^{-5}$ no primeiro passo --
+isso corresponde a um colapso temporário de geração (repetição de
+n-gramas, ex.\ \texttt{"...loadversion = 301 and loadversion = 301 and..."}
+até o limite de tokens), causando \texttt{eval\_exact\_match=0} em todos os
+checkpoints intermediários mesmo com o \emph{loss} caindo normalmente. Um
+\texttt{no\_repeat\_ngram\_size=3} foi adicionado durante o treino
+(reduzindo o tempo de geração em $5\times$ e eliminando os loops de
+n-grama), e o few-shot já nasceu com \texttt{warmup\_ratio=0,1} e
+\texttt{no\_repeat\_ngram\_size=3} desde o início -- mas um padrão de
+repetição mais sutil (alternância entre tokens SentencePiece de tamanhos
+diferentes que decodificam para o mesmo caractere repetido, ex.\
+\texttt{"6666666..."}) persistiu, sugerindo que o modelo continuou
+sub-treinado para geração de literais numéricos mesmo ao final do processo.
+Separadamente, no few-shot, o intervalo entre checkpoints
+(\texttt{eval\_steps=47}) foi ajustado no meio do treino para reduzir o
+tempo gasto em avaliação (cada rodada de eval levava até 111 minutos), mas
+isso fez com que só um checkpoint intermediário (passo 47 de 90, 52\% do
+treino) fosse salvo antes do fim -- o \texttt{load\_best\_model\_at\_end}
+carregou esse checkpoint como "melhor" por ser o único candidato com
+métrica registrada, e os pesos do passo 90 (o treino de fato mais avançado)
+nunca chegaram a ser persistidos em disco.
+
+\item[(v)] \textbf{Seleção de "melhor checkpoint" quebrada quando a métrica
+empata.} O fine-tuning completo usou
+\texttt{metric\_for\_best\_model="exact\_match"}. Como o colapso de geração
+descrito em (iv) manteve \texttt{exact\_match=0,0} em \emph{todos} os
+checkpoints intermediários, e a lógica de comparação do HuggingFace
+Trainer só substitui o "melhor" registrado quando a nova métrica é
+\emph{estritamente} maior, o primeiro checkpoint avaliado (passo 50 de
+330, a versão \emph{menos} treinada de todas) nunca foi superado e acabou
+sendo o modelo efetivamente salvo ao final do treino -- os pesos do passo
+300 (97\% do treino) precisaram ser recuperados manualmente do diretório de
+checkpoint correspondente para a avaliação real reportada na
+Tabela~\ref{tab:finetuning-full}. O few-shot corrigiu isso usando
+\texttt{metric\_for\_best\_model="eval\_loss"} com
+\texttt{greater\_is\_better=false} (uma métrica contínua, que decresceu de
+forma monotônica ao longo do treino), mas essa correção por si só não
+evitou a limitação (iv) relacionada ao espaçamento de checkpoints.
+
+\item[(vi)] \textbf{OOMs genuínos e travamento de driver de GPU.} Dois
+crashes de OOM (\emph{out of memory}) genuínos interromperam o fine-tuning
+completo no meio do treino, e um deles coincidiu com um travamento
+completo do driver NVIDIA (\texttt{nvidia-smi} parou de reconhecer a
+placa), exigindo reinicialização completa da máquina -- um reset de driver
+isolado não foi suficiente para restaurar o desempenho normal da GPU.
+Mitigações aplicadas: \emph{checkpointing} a cada 50 passos (em vez de 500,
+o intervalo original herdado do treino no Spider, que nunca dispararia
+dentro de um treino de 330 passos) e uma captura de OOM por micro-batch em
+\texttt{seq2seq/utils/trainer.py::Seq2SeqTrainer.training\_step} que pula
+apenas o exemplo problemático (zerando o gradiente parcialmente acumulado
+e liberando cache) em vez de derrubar o processo inteiro -- validado
+diretamente durante o few-shot, que sobreviveu a dezenas de OOMs
+individuais de exemplos grandes de \texttt{oncomx} sem interrupção.
+\end{enumerate}
+
+\section{Comparação final}
+\label{sec:final-comparison}
+
+\begin{table}[h]
+\centering
+\caption{Comparação de todas as configurações avaliadas no dev set do ScienceBenchmark.}
+\label{tab:final-comparison}
+\begin{tabular}{lrrl}
+\toprule
+\textbf{Configuração} & \textbf{exact match} & \textbf{exec} & \textbf{Observação} \\
+\midrule
+Zero-shot (greedy, num\_beams=1)  & 9,0\%  & 8,87\% & referência \\
+Zero-shot + beam search (n=4)      & \textbf{9,34\%} & \textbf{9,56\%} & melhor resultado geral \\
+Zero-shot + PICARD                 & 9,0\%  & 8,87\% & PICARD inerte (falha de integração, \S\ref{sec:picard-attempt}) \\
+Fine-tuning completo, sem \texttt{oncomx} (3 épocas)    & 0,0\%  & 0,34\% & pior que zero-shot (\S\ref{sec:finetuning-full}) \\
+Fine-tuning few-shot (300 ex., 10 épocas) & 0,0\% & 0,0\% & pior que zero-shot (\S\ref{sec:finetuning-fewshot}) \\
+Fine-tuning completo, com \texttt{oncomx} + gc (3 épocas) & 0,0\% & 0,34\% & eval\_loss $2,5\times$ menor, métricas discretas inalteradas (\S\ref{sec:gc-fix}) \\
+Baseline t5-small sem RGAT (3 épocas)     & 1,38\% & 1,37\% & supera todos os fine-tunings com RGAT (\S\ref{sec:t5small-baseline}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O achado central deste conjunto de experimentos permanece, em essência,
+\textbf{negativo em relação ao fine-tuning com RGAT}: em nenhuma das quatro
+tentativas de ajuste fino (completo sem \texttt{oncomx}, \emph{few-shot},
+completo com \texttt{oncomx} via \emph{gradient checkpointing}) o modelo
+t5-base+RGAT superou o desempenho do checkpoint zero-shot com busca em
+feixe nas métricas discretas -- mesmo depois de resolver a limitação de
+VRAM que impedia incluir todos os domínios de treino. A correção do
+\emph{gradient checkpointing} (\S\ref{sec:gc-fix}) trouxe uma melhora real
+e mensurável na perda de avaliação (2,5$\times$ menor), mas essa melhora
+não se propagou às métricas discretas -- um resultado que, por si só, já é
+instrutivo: perda agregada e acerto exato/execução podem divergir
+significativamente quando os erros do modelo são predominantemente
+categóricos (nome de tabela/coluna errado) em vez de graduais.
+
+O achado mais forte deste trabalho, no entanto, veio do baseline de
+ablação (\S\ref{sec:t5small-baseline}): um \texttt{t5-small} \textbf{sem
+nenhuma estrutura de grafo}, treinado com o mesmo orçamento de dados e
+épocas, superou \emph{todas} as configurações com RGAT fine-tunadas neste
+trabalho em exact match e exec, e o fez em menos de um terço do tempo de
+treino. Combinado com o resultado do zero-shot (onde o RGAT+t5-base é a
+única opção avaliada, pois não há um t5-small equivalente pré-treinado no
+Spider para comparação direta), a evidência deste trabalho aponta para uma
+conclusão qualificada: \textbf{nas condições de hardware e dados
+disponíveis, a complexidade adicional do RGAT não demonstrou vantagem
+sobre um T5 padrão no fine-tuning para o ScienceBenchmark} -- um resultado
+negativo genuíno para a hipótese de que a estrutura de grafo ajudaria a
+generalizar para esquemas maiores e de domínio distinto do treino
+original. As limitações documentadas na Seção~\ref{sec:limitations}
+(volume de dados, orçamento de épocas, ausência de um terceiro split de
+teste cego) continuam válidas e sugerem que essa conclusão é específica
+deste orçamento experimental, não necessariamente uma propriedade
+fundamental da arquitetura RGAT -- mas dentro do escopo efetivamente
+testado, o T5 puro foi tanto mais eficaz quanto mais barato de treinar.

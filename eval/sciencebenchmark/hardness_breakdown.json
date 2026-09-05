@@ -1,0 +1,80 @@
+{
+  "cordis_temporary": {
+    "n": 100,
+    "skipped": 0,
+    "by_level": {
+      "easy": {
+        "count": 25,
+        "exact_match": 0.32
+      },
+      "medium": {
+        "count": 35,
+        "exact_match": 0.11428571428571428
+      },
+      "hard": {
+        "count": 19,
+        "exact_match": 0.0
+      },
+      "extra": {
+        "count": 21,
+        "exact_match": 0.0
+      },
+      "all": {
+        "count": 100,
+        "exact_match": 0.12
+      }
+    }
+  },
+  "oncomx_v1_0_25_small": {
+    "n": 99,
+    "skipped": 0,
+    "by_level": {
+      "easy": {
+        "count": 21,
+        "exact_match": 0.42857142857142855
+      },
+      "medium": {
+        "count": 36,
+        "exact_match": 0.1388888888888889
+      },
+      "hard": {
+        "count": 22,
+        "exact_match": 0.0
+      },
+      "extra": {
+        "count": 20,
+        "exact_match": 0.0
+      },
+      "all": {
+        "count": 99,
+        "exact_match": 0.1414141414141414
+      }
+    }
+  },
+  "skyserver_dr16_2020_11_30": {
+    "n": 94,
+    "skipped": 4,
+    "by_level": {
+      "easy": {
+        "count": 6,
+        "exact_match": 0.0
+      },
+      "medium": {
+        "count": 28,
+        "exact_match": 0.0
+      },
+      "hard": {
+        "count": 20,
+        "exact_match": 0.0
+      },
+      "extra": {
+        "count": 36,
+        "exact_match": 0.0
+      },
+      "all": {
+        "count": 90,
+        "exact_match": 0.0
+      }
+    }
+  }
+}

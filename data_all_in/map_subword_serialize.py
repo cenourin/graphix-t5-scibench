@@ -113,7 +113,7 @@ def question_subword_matrix(processed_question_toks, relations, tokenizer):
                 for sub_idx_c in question_dict[c]:
                     subword_matrix[sub_idx_r][sub_idx_c] = relations[r][c]
 
-    subword_matrix = np.array(subword_matrix, dtype='<U100')
+    subword_matrix = np.array(subword_matrix, dtype='<U32')
     subword_matrix = subword_matrix.tolist()
 
     return subword_matrix, question_dict
@@ -135,7 +135,15 @@ def schema_subword_matrix(db_sep, init_idx, tables, tokenizer, table_items=None,
     schema_relations = tables[db_id]['relations']
     schema_idx_lst = table_idx_lst + column_idx_lst
 
-    schema_subword_token = tokenizer(struct_in, max_length=1024) # 546 is the longest input seq for schema
+    # No max_length/truncation here: schema_idx_lst (from find_schema_idx, above) is a
+    # set of WORD-level positions computed against the full, untruncated struct_in, and
+    # ids_mapping() below looks those positions up in word_ids() -- any truncation here
+    # desyncs the two and throws a KeyError. The original 1024 cap ("546 is the longest
+    # input seq for schema") was calibrated on Spider; ScienceBenchmark's oncomx schema
+    # alone reaches ~1017-1048 subword tokens, already past that cap. Actual model input
+    # length is still bounded downstream by max_source_length at train/eval time -- this
+    # only controls whether *preprocessing* sees the complete schema.
+    schema_subword_token = tokenizer(struct_in, truncation=False)
     schema_ids = schema_subword_token.word_ids()[:-1]
     # pdb.set_trace()
     subword_mapping_dict = subword_dict(schema_ids)
@@ -152,7 +160,7 @@ def schema_subword_matrix(db_sep, init_idx, tables, tokenizer, table_items=None,
                 for sub_idx_c in schema_to_ids[c]:
                     subword_matrix[sub_idx_r][sub_idx_c] = schema_relations[r][c]
 
-    subword_matrix = np.array(subword_matrix, dtype='<U100')
+    subword_matrix = np.array(subword_matrix, dtype='<U32')
     subword_matrix = subword_matrix.tolist()
 
     return subword_matrix, subword_mapping_dict, struct_in, schema_to_ids
@@ -187,6 +195,14 @@ def find_schema_idx(db_seq, table_items, column_items, init_idx=0):
                         column_idx_lst.append(i + init_idx)
                 elif seq_lst[i + 1] == "(":
                     # head columns with value
+                    if item in schema_elements:
+                        column_idx_lst.append(i + init_idx)
+                elif seq_lst[i + 1] == "|":
+                    # single-column table: this column is simultaneously the head
+                    # and the tail (no comma at all, e.g. "table_x : only_col |").
+                    # Spider's DBs never have a 1-column table so this branch was
+                    # never needed there; ScienceBenchmark's cordis_temporary does
+                    # (ec_framework_programs has exactly one column).
                     if item in schema_elements:
                         column_idx_lst.append(i + init_idx)
 
@@ -252,8 +268,8 @@ def schema_linking_subword(question_subword_dict: dict, schema_2_ids: dict, sche
                 for sub_idx_q in question_subword_dict[c_q]:
                     schema_q_subword_matrix[sub_idx_s][sub_idx_q] = tmp_relation
 
-    q_schema_subword_matrix = np.array(q_schema_subword_matrix, dtype='<U100')
-    schema_q_subword_matrix = np.array(schema_q_subword_matrix, dtype='<U100')
+    q_schema_subword_matrix = np.array(q_schema_subword_matrix, dtype='<U32')
+    schema_q_subword_matrix = np.array(schema_q_subword_matrix, dtype='<U32')
 
     subword_schema_linking = (q_schema_subword_matrix.tolist(), schema_q_subword_matrix.tolist())
 

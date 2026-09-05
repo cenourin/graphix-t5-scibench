@@ -6,6 +6,13 @@ from nltk.corpus import stopwords
 from itertools import product, combinations
 # Inherit from LGESQL processing
 MAX_RELATIVE_DIST=1
+# Content-based value matching fetches every distinct value of a column into Python
+# memory. Fine for Spider's small SQLite DBs, but ScienceBenchmark's real-world DBs have
+# tables up to 76.8M rows (sdss.neighbors) -- fetching all-distinct there OOMs even with
+# per-column caching (confirmed empirically: OOM'd on a 16GB container partway through
+# oncomx, whose largest table is "only" ~953k rows). Skip content-based value matching
+# for columns in tables above this size; table/column-name matching is unaffected.
+MAX_CONTENT_MATCH_ROWS = int(os.environ.get('GRAPHIX_MAX_CONTENT_MATCH_ROWS', '500000'))
 def is_number(s):
     try:
         float(s)
@@ -43,6 +50,14 @@ class Preprocessor():
         self.db_content = db_content
         self.nlp = stanza.Pipeline('en', processors='tokenize,pos,lemma')#, use_gpu=False)
         self.stopwords = stopwords.words("english")
+        # DB content (distinct values per column) doesn't change across examples of the
+        # same db_id, but schema_linking used to re-run "SELECT DISTINCT" per example --
+        # fine for Spider's small SQLite DBs, but on ScienceBenchmark's larger real-world
+        # DBs (e.g. sdss.neighbors, 76.8M rows) this made per-example cost scale with
+        # table size, effectively unusable. Caching per (db_id, table, column) makes the
+        # query run once per column per DB instead of once per example.
+        self._cell_value_cache = {}
+        self._table_row_count_cache = {}
 
     def pipeline(self, entry: dict, db: dict, verbose: bool = False):
         """ db should be preprocessed """
@@ -302,13 +317,27 @@ class Preprocessor():
                 if i == 0 or 'id' in column_toks[i]: # ignore * and special token 'id'
                     continue
                 tab_name = db['table_names_original'][tab_id]
-                try:
-                    cursor = conn.execute("SELECT DISTINCT \"%s\" FROM \"%s\";" % (col_name, tab_name))
-                    cell_values = cursor.fetchall()
-                    cell_values = [str(each[0]) for each in cell_values]
-                    cell_values = [[str(float(each))] if is_number(each) else each.lower().split() for each in cell_values]
-                except Exception as e:
-                    print(e)
+                cache_key = (db['db_id'], tab_name, col_name)
+                if cache_key in self._cell_value_cache:
+                    cell_values = self._cell_value_cache[cache_key]
+                else:
+                    row_count_key = (db['db_id'], tab_name)
+                    if row_count_key not in self._table_row_count_cache:
+                        self._table_row_count_cache[row_count_key] = conn.execute(
+                            "SELECT COUNT(*) FROM \"%s\";" % tab_name
+                        ).fetchone()[0]
+                    if self._table_row_count_cache[row_count_key] > MAX_CONTENT_MATCH_ROWS:
+                        cell_values = []
+                        self._cell_value_cache[cache_key] = cell_values
+                    else:
+                        try:
+                            cursor = conn.execute("SELECT DISTINCT \"%s\" FROM \"%s\";" % (col_name, tab_name))
+                            cell_values = cursor.fetchall()
+                            cell_values = [str(each[0]) for each in cell_values]
+                            cell_values = [[str(float(each))] if is_number(each) else each.lower().split() for each in cell_values]
+                            self._cell_value_cache[cache_key] = cell_values
+                        except Exception as e:
+                            print(e)
                 for j, word in enumerate(raw_question_toks):
                     word = str(float(word)) if is_number(word) else word
                     for c in cell_values:

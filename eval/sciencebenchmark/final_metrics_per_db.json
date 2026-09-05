@@ -1,0 +1,53 @@
+{
+  "cordis_temporary": {
+    "n": 100,
+    "exact_match": {
+      "exact_match": 0.12,
+      "exact_match_scored_examples": 100,
+      "exact_match_skipped_by_db": {}
+    },
+    "exec": {
+      "exec": 0.15,
+      "exec_scored_examples": 100,
+      "exec_skipped_by_db": {},
+      "exec_skipped_hang_risk_db_ids": [],
+      "exec_skipped_hang_risk_count": 0
+    }
+  },
+  "oncomx_v1_0_25_small": {
+    "n": 99,
+    "exact_match": {
+      "exact_match": 0.1414141414141414,
+      "exact_match_scored_examples": 99,
+      "exact_match_skipped_by_db": {}
+    },
+    "exec": {
+      "exec": 0.1111111111111111,
+      "exec_scored_examples": 97,
+      "exec_skipped_by_db": {
+        "oncomx_v1_0_25_small": 2
+      },
+      "exec_skipped_hang_risk_db_ids": [],
+      "exec_skipped_hang_risk_count": 0
+    }
+  },
+  "skyserver_dr16_2020_11_30": {
+    "n": 94,
+    "exact_match": {
+      "exact_match": 0.0,
+      "exact_match_scored_examples": 90,
+      "exact_match_skipped_by_db": {
+        "skyserver_dr16_2020_11_30": 4
+      }
+    },
+    "exec": {
+      "exec": 0.0,
+      "exec_scored_examples": 90,
+      "exec_skipped_by_db": {
+        "skyserver_dr16_2020_11_30": 4
+      },
+      "exec_skipped_hang_risk_db_ids": [],
+      "exec_skipped_hang_risk_count": 0
+    }
+  }
+}

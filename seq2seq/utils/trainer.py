@@ -44,6 +44,45 @@ class Seq2SeqTrainer(transformers.trainer_seq2seq.Seq2SeqTrainer):
     ) -> EvalPrediction:
         raise NotImplementedError()
 
+    def training_step(self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]) -> torch.Tensor:
+        # Reproduces transformers.Trainer.training_step (the sagemaker/apex/deepspeed
+        # branches don't apply to this setup -- fp16=False, no deepspeed, single GPU),
+        # but wraps the forward+backward pass in a CUDA-OOM guard.
+        #
+        # Confirmed via two real ScienceBenchmark fine-tuning runs: a marginal OOM
+        # ("Tried to allocate 52.00 MiB... 51 MiB free") crashing the whole training
+        # process at the same step (~155-160) both times, close to the graph-size VRAM
+        # ceiling (GRAPHIX_MAX_GRAPH_NODES) with fragmentation accumulated over the
+        # preceding ~150 steps. Rather than losing the run over one micro-batch,
+        # skip just that micro-batch's contribution to this accumulation step (the
+        # other ~31 micro-batches in the same optimizer step still contribute
+        # normally) -- same capture/skip/log/never-crash-the-whole-run pattern used
+        # elsewhere in this codebase for per-example failures.
+        model.train()
+        inputs = self._prepare_inputs(inputs)
+        try:
+            with self.autocast_smart_context_manager():
+                loss = self.compute_loss(model, inputs)
+            if self.args.n_gpu > 1:
+                loss = loss.mean()
+            if self.args.gradient_accumulation_steps > 1 and not self.deepspeed:
+                loss = loss / self.args.gradient_accumulation_steps
+            loss.backward()
+            return loss.detach()
+        except RuntimeError as e:
+            if "out of memory" not in str(e).lower():
+                raise
+            import logging
+            logging.getLogger(__name__).warning(
+                "training_step: CUDA OOM on this micro-batch (graph_idx=%s) -- skipping "
+                "it for this accumulation step and clearing the gradient it may have "
+                "partially accumulated. Error: %s",
+                inputs.get("graph_idx"), e,
+            )
+            self.optimizer.zero_grad()
+            torch.cuda.empty_cache()
+            return torch.tensor(0.0, device=self.args.device)
+
     def evaluate(
         self,
         eval_dataset: Optional[Dataset] = None,

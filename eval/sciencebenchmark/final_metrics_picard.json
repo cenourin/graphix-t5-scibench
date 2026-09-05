@@ -1,0 +1,7 @@
+{
+  "exact_match": 0.08996539792387544,
+  "exact_match_scored_examples": 289,
+  "exec": 0.08873720136518772,
+  "exec_scored_examples": 287,
+  "exec_skipped_hang_risk_count": 0
+}

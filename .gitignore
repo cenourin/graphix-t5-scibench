@@ -3,6 +3,8 @@
 data_all_in/data/
 data_all_in/preprocess/*.char
 data_all_in/t5-large/
+data_all_in/t5-base/
+data_all_in/t5-small/
 stanza_resources/
 train_db_id/
 transformers_cache/

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 import os
 import json
+import re
 from pathlib import Path
 import pickle
 from contextlib import nullcontext
@@ -33,12 +34,17 @@ from seq2seq.utils.dataset import DataTrainingArguments, DataArguments
 from seq2seq.utils.dataset_loader import load_dataset
 from seq2seq.utils.spider import SpiderTrainer
 from seq2seq.utils.cosql import CoSQLTrainer
-from seq2seq.utils.dataset_graph import TokenizedDataset
+from seq2seq.utils.dataset_graph import TokenizedDataset, get_graph_entry
 import torch
 print(os.getcwd())
 
-graph_pedia = pickle.load(open('data_all_in/data/output/graph_pedia_total.bin', 'rb'))
-seq2seq_eval_dataset = json.load(open('data_all_in/data/output/seq2seq_dev_dataset.json', 'r'))
+# Env-overridable so this script (and its Spider-calibrated default paths) also works
+# unmodified for evaluating on a different processed dataset, e.g. ScienceBenchmark's
+# data_all_in/data/sciencebenchmark/output/{graph_pedia_dev.bin,seq2seq_dev_dataset.json}.
+graph_pedia = pickle.load(open(
+    os.environ.get('GRAPHIX_EVAL_GRAPH_PEDIA_PATH', 'data_all_in/data/output/graph_pedia_total.bin'), 'rb'))
+seq2seq_eval_dataset = json.load(open(
+    os.environ.get('GRAPHIX_EVAL_DATASET_PATH', 'data_all_in/data/output/seq2seq_dev_dataset.json'), 'r'))
 
 
 def main() -> None:
@@ -170,6 +176,41 @@ def main() -> None:
     if data_training_args.max_val_samples is not None:
         seq2seq_eval_dataset = seq2seq_eval_dataset[: data_training_args.max_val_samples]
 
+    # TokenizedDataset.__getitem__ (dataset_graph.py) only *prints* when the tokenized
+    # input length doesn't match the RGAT graph's node count -- the real assert is
+    # commented out there, by design (see CLAUDE.md). On Spider this mismatch basically
+    # never happens (preprocessing and eval both tokenize with the same t5-large
+    # tokenizer + added tokens). On ScienceBenchmark it does, rarely (~1/216 seen): a few
+    # examples tokenize to 1-2 fewer/more ids at eval time than during preprocessing,
+    # which crashes deep in the RGAT/DGL forward pass (feature count != node count)
+    # instead of at this dataset boundary. Filter those out here -- at the orchestration
+    # level, before the eval loop starts -- rather than let the crash happen mid-run.
+    if seq2seq_eval_dataset:
+        def _token_node_counts_match(raw_item):
+            question_in = " ".join(raw_item['raw_question_toks'])
+            struct_in_norm = re.sub('  +', ' ', get_graph_entry(graph_pedia, raw_item['graph_idx'])['new_struct_in'])
+            seq_in = "{} ; {}".format(question_in, struct_in_norm)
+            tokenized = tokenizer(seq_in, max_length=data_training_args.max_source_length, truncation=True)
+            n_tokens = len([a for a in tokenized.input_ids if a > 1])
+            n_nodes = get_graph_entry(graph_pedia, raw_item['graph_idx'])['graph'].number_of_nodes()
+            return n_tokens == n_nodes
+
+        _before_dataset = seq2seq_eval_dataset
+        _matches = [_token_node_counts_match(item) for item in _before_dataset]
+        seq2seq_eval_dataset = [item for item, ok in zip(_before_dataset, _matches) if ok]
+        _dropped = len(_before_dataset) - len(seq2seq_eval_dataset)
+        if _dropped:
+            from collections import Counter
+            _dropped_by_db = Counter(
+                item.get('db_id') for item, ok in zip(_before_dataset, _matches) if not ok
+            )
+            _kept_by_db = Counter(item.get('db_id') for item in seq2seq_eval_dataset)
+            logger.warning(
+                "Dropped %d/%d eval examples with a token/graph-node count mismatch -- "
+                "dropped by db_id: %s, kept by db_id: %s",
+                _dropped, len(_before_dataset), dict(_dropped_by_db), dict(_kept_by_db),
+            )
+
     train_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
                                      seq2seq_train_dataset, graph_pedia) if training_args.do_train else None
     eval_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
@@ -219,7 +260,7 @@ def main() -> None:
         }
         # pdb.set_trace()
         #using spidertrainer as it is.
-        if data_args.dataset in ["spider", "spider_realistic", "spider_syn", "spider_dk"]:
+        if data_args.dataset in ["spider", "spider_realistic", "spider_syn", "spider_dk", "sciencebenchmark"]:
             trainer = SpiderTrainer(**trainer_kwargs)
         elif data_args.dataset in ["cosql", "cosql+spider"]:
             trainer = CoSQLTrainer(**trainer_kwargs)

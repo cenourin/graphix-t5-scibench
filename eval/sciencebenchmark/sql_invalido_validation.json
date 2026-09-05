@@ -1,0 +1,1258 @@
+{
+  "actually_valid_sqlite": [],
+  "really_invalid": [
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find institutions from the region of Nordjylland",
+      "gold": "SELECT T1.institutions_name FROM institutions AS T1 JOIN eu_territorial_units AS T2 ON T1.geocode_regions_3 = T2.geocode_regions WHERE T2.description = 'Nordjylland'",
+      "pred": "select institutions.institutions_name from institutions join eu_territorial_units on institutions.uncs_id = eu_territorial_units.geocode_regions join subjects on topics.code = subjects.code where subjects.title = \"Nordjylland\";",
+      "sqlite_error": "no such table: subjects"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the name of institutions based in Nordjylland",
+      "gold": "SELECT T1.institutions_name FROM institutions AS T1 JOIN eu_territorial_units AS T2 ON T1.geocode_regions_3 = T2.geocode_regions WHERE T2.description = 'Nordjylland'",
+      "pred": "select institutions_name from institutions where country_code = \"Northernjylland\";",
+      "sqlite_error": "no such column: country_code"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the full name of people being investigators in projects that began in 2014",
+      "gold": "SELECT T2.full_name FROM projects AS T1 join people as T2 on T1.principal_investigator = T2.unics_id WHERE T1.start_year = 2014",
+      "pred": "select full_name from people where start_year = 2014;",
+      "sqlite_error": "no such column: start_year"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find projects whose subject area is \u201cMathematics and Statistics\u201d",
+      "gold": "SELECT t1.title FROM projects AS T1 join project_subject_areas as psa on T1.unics_id = psa.project join subject_areas as sa on psa.subject_area = sa.code WHERE sa.title = 'Mathematics and Statistics'",
+      "pred": "select project_subject_areas.title from project_subject_areas join subject_areas on project_subject_areas.code = subject_areas.code where subject_areas.subject_area = \"mathematics and statistics\";",
+      "sqlite_error": "no such column: project_subject_areas.title"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the acronym and subject area description of projects with subject area \u201cMathematics and Statistics\u201d",
+      "gold": "SELECT t1.acronym, sa.description FROM projects AS T1 join project_subject_areas as psa on T1.unics_id = psa.project join subject_areas as sa on psa.subject_area = sa.code WHERE sa.title = 'Mathematics and Statistics'",
+      "pred": "select acronym, subject_areas.description from project_subject_areas join subject_areas on project_subject_areas.code = subject_areas.code where subject_areas.title = \"Mathematics and statistics\";",
+      "sqlite_error": "no such column: acronym"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find all different topics of projects that ended in 2014",
+      "gold": "SELECT distinct t.title FROM projects AS T1 join project_topics as pt on T1.unics_id = pt.project join topics as t on pt.topic = t.code where t1.end_year = 2014",
+      "pred": "select distinct topic from projects where end_year = 2014;",
+      "sqlite_error": "no such column: topic"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find distinct titles of topics of projects that with end year 2014",
+      "gold": "SELECT distinct t.title FROM projects AS T1 join project_topics as pt on T1.unics_id = pt.project join topics as t on pt.topic = t.code where t1.end_year = 2014",
+      "pred": "select distinct title from project_topics where end_year = 2014;",
+      "sqlite_error": "no such column: title"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the acronym of projects with a member from Greece",
+      "gold": "Select p.acronym from projects as p join project_members as pm on p.unics_id = pm.project join institutions as i on pm.institution_id = i.unics_id join countries as c on i.country_id = c.unics_id where c.country_name = 'Greece'",
+      "pred": "select acronym from projects where country_name = \"Greece\";",
+      "sqlite_error": "no such column: country_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show names of institutions from France or Germany",
+      "gold": "Select i.institutions_name from institutions as i join countries as c on i.country_id = c.unics_id where c.country_name = 'France' or c.country_name = 'Germany'",
+      "pred": "select institutions.institution_name from institutions join countries on institutions.uncs_id = countries.uncs_id where countries.country_name = \"France\" or countries.country_name = \"Germany\";",
+      "sqlite_error": "no such column: institutions.institution_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show names of institutions which are not from France",
+      "gold": "Select i.institutions_name from institutions as i join countries as c on i.country_id = c.unics_id where c.country_name != 'France'",
+      "pred": "select institutions_name from institutions where country_name!= \"France\";",
+      "sqlite_error": "no such column: country_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the name of members in projects costing less than the average project cost.",
+      "gold": "SELECT T1.member_name FROM project_members AS T1 JOIN projects AS T2 ON T1.project = T2.unics_id WHERE T2.total_cost < (SELECT AVG(T23.total_cost) FROM projects AS T23)",
+      "pred": "select member_name from project_members where total_cost > (select avg(project_cost) from projects)",
+      "sqlite_error": "no such column: total_cost"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find the code and title of the funding scheme which funded the highest number of projects.",
+      "gold": "select s.code, s.title from funding_schemes as s where s.code = (select s2.code from funding_schemes as s2 join projects as p on s2.code = p.ec_fund_scheme group by s2.code order by count(*) desc LIMIT 1)",
+      "pred": "select funding_schemes.code, funding_schemes.title from projects join funding_schemes on projects.ec_fund_scheme = funding_schemes.ec_fund_scheme group by funding_schemes.code order by count(*) desc limit 1",
+      "sqlite_error": "no such column: funding_schemes.ec_fund_scheme"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find the projects which lasted the longest and have an end year and a start year",
+      "gold": "select title, end_year - start_year from projects order by end_year - start_year desc limit 1",
+      "pred": "select projects.end_year, projects.start_year from projects join project_programmes on projects.code = project_programmes.code group by projects.end_year order by count(*) desc limit 1;",
+      "sqlite_error": "no such column: projects.code"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show me the all different names of people",
+      "gold": "select distinct full_name from people",
+      "pred": "select distinct people.full_name from people join people on people.uncs_id = people.uncs_id",
+      "sqlite_error": "ambiguous column name: people.full_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the title of projects with costs higher than a million",
+      "gold": "select p.title from projects as p where p.total_cost > 1000000",
+      "pred": "select title from projects where total_cost > a million",
+      "sqlite_error": "near \"million\": syntax error"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the project title and member name where the member has a partner role ",
+      "gold": "select title, member_name from projects as p join project_members as pm on p.unics_id = pm.project join project_member_roles as pmr on pm.member_role = pmr.code where pmr.code = 'partner'",
+      "pred": "select project_title, member_name from project_members where project_member_roles = \"Partner\"",
+      "sqlite_error": "no such column: project_title"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "What different research domains do exist?",
+      "gold": "select distinct description from erc_research_domains",
+      "pred": "select distinct erc_research_domains.title from erc_research_domains join subject_areas on erc_research_domains.code = subject_areas.code join subjects on subject_areas.code = subjects.code where topics.title = \"Research\" and subjects.title = \"Research\"",
+      "sqlite_error": "no such table: subjects"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show me the country name of all institutes.",
+      "gold": "select c.country_name from countries as c join institutions as i on c.unics_id = i.country_id",
+      "pred": "select country_name from institutions",
+      "sqlite_error": "no such column: country_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show me the country of all institutes.",
+      "gold": "select c.country_name from countries as c join institutions as i on c.unics_id = i.country_id",
+      "pred": "select country_name from institutions",
+      "sqlite_error": "no such column: country_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find member name and role code of project members in project with acronym GTBB",
+      "gold": "select pm.member_name, pr.code from project_members as pm join projects as p on pm.project = p.unics_id join project_member_roles as pr on pm.member_role = pr.code where p.acronym = 'GTBB'",
+      "pred": "select member_name, role_code from project_members where acronym = \"gtbb\";",
+      "sqlite_error": "no such column: role_code"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find member name and role code of project members in project GTBB",
+      "gold": "select pm.member_name, pr.code from project_members as pm join projects as p on pm.project = p.unics_id join project_member_roles as pr on pm.member_role = pr.code where p.acronym = 'GTBB'",
+      "pred": "select member_name, role_code from project_members where project_members = \"gtbb\";",
+      "sqlite_error": "no such column: role_code"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show titles of programmes which have program with code FP7 as parent program",
+      "gold": "select title from programmes where parent = 'FP7'",
+      "pred": "select title from programmes where programme = 'FP7'",
+      "sqlite_error": "no such column: programme"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Get panel descriptions from research domain Life Sciences",
+      "gold": "select p.description from erc_panels as p join erc_research_domains as erd on p.part_of = erd.code where erd.description = 'Life Sciences'",
+      "pred": "select panel from erc_research_domains where description = \"Life Sciences\";",
+      "sqlite_error": "no such column: panel"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Get panel descriptions from research domain life sciences",
+      "gold": "select p.description from erc_panels as p join erc_research_domains as erd on p.part_of = erd.code where erd.description = 'Life Sciences'",
+      "pred": "select panel from erc_research_domains where description = \"Life Sciences\";",
+      "sqlite_error": "no such column: panel"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Find project members of type Research Organisations",
+      "gold": "select member_name from project_members as mb join activity_types as a on a.code = mb.activity_type where a.description = 'Research Organisations'",
+      "pred": "select project_members.member_name from activity_types join project_members on activity_types.code = project_members.code join project_members on project_members.code = project_members.code where activity_types.description = \"Research Organisations\";",
+      "sqlite_error": "ambiguous column name: project_members.member_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "What is the objective of DEEPCARBON?",
+      "gold": "select objective from projects where acronym = 'DEEPCARBON'",
+      "pred": "select objective from projects where deepcarbon = \"deepcarbon\"",
+      "sqlite_error": "no such column: deepcarbon"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show all names of institutions from France except institutions from the territorial region of Paris",
+      "gold": "select i.institutions_name from institutions as i join countries as c on c.unics_id = i.country_id where country_name = 'France' except select i.institutions_name from institutions as i join countries as c on c.unics_id = i.country_id join eu_territorial_units as etu on i.geocode_regions_3 = etu.geocode_regions where country_name = 'France' and etu.description = 'Paris'",
+      "pred": "select institutions_name from institutions where country_name = \"France\" except select institutions_name from institutions where geocode_regions = \"Paris\"",
+      "sqlite_error": "no such column: geocode_regions"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show institutions from France except the ones from Paris",
+      "gold": "select i.institutions_name from institutions as i join countries as c on c.unics_id = i.country_id where country_name = 'France' except select i.institutions_name from institutions as i join countries as c on c.unics_id = i.country_id join eu_territorial_units as etu on i.geocode_regions_3 = etu.geocode_regions where country_name = 'France' and etu.description = 'Paris'",
+      "pred": "select institutions.institution_name from institutions join countries on institutions.country_id = countries.country_id where countries.country_name = \"France\" except select institutions.institution_name from institutions join eu_territorial_units on institutions.country_id = countries.country_id where countries.country_name = \"Paris\"",
+      "sqlite_error": "no such column: institutions.institution_name"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which institutions have never been project coordinators",
+      "gold": "SELECT distinct member_name from project_members WHERE member_name NOT in (SELECT member_name from project_members where member_role = 'coordinator')",
+      "pred": "select institutions_name from institutions where institution_id not in ( select institution_id from project_member_roles );",
+      "sqlite_error": "no such column: institution_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show all of the instituions that have never coordinated a project",
+      "gold": "SELECT distinct member_name from project_members WHERE member_name NOT in (SELECT member_name from project_members where member_role = 'coordinator')",
+      "pred": "select institutions.institutions_name from projects join institutions on projects.institutions_id = institutions.institutions_id where projects.title = \"Projects\" and projects.acronym = \"Projects\";",
+      "sqlite_error": "no such column: projects.institutions_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which people have worked on more than one project",
+      "gold": "SELECT t1.full_name, count(p.title) FROM people as t1 join projects as p on t1.unics_id = p.principal_investigator group by t1.full_name HAVING count(p.title) > 1",
+      "pred": "select activity_types.title from project_members join people on project_members.uncs_id = people.uncs_id join project_members on project_members.code = project_members.code where people.full_name = \"PEOPLE\" and project_members.activity_types.title > 1;",
+      "sqlite_error": "no such column: activity_types.title"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "What is the title of the subject area that has been granted the most funding",
+      "gold": "SELECT t1.title, MAX(t3.ec_max_contribution) from subject_areas as t1 join project_subject_areas as t2 on t1.code = t2.subject_area join projects as t3 on t2.project = t3.unics_id  group by t1.title order by  MAX(t3.ec_max_contribution) DESC LIMIT 1",
+      "pred": "select title from subject_areas order by ec_max_contribution desc limit 1",
+      "sqlite_error": "no such column: ec_max_contribution"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which subject area has recieved the highest funding contribution?",
+      "gold": "SELECT t1.title, MAX(t3.ec_max_contribution) from subject_areas as t1 join project_subject_areas as t2 on t1.code = t2.subject_area join projects as t3 on t2.project = t3.unics_id  group by t1.title order by  MAX(t3.ec_max_contribution) DESC LIMIT 1",
+      "pred": "select subject_areas.subject_area from project_subject_areas join subject_areas on project_subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas = subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_subject",
+      "sqlite_error": "near \".\": syntax error"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which subject area has recieved the least funding contribution",
+      "gold": "SELECT t1.title, MIN(t3.ec_max_contribution) from subject_areas as t1 join project_subject_areas as t2 on t1.code = t2.subject_area join projects as t3 on t2.project = t3.unics_id  group by t1.title order by  MIN(t3.ec_max_contribution) DESC LIMIT 1",
+      "pred": "select subject_areas.subject_area from project_subject_areas join subject_areas on project_subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_areas.subject_subject_subject_sub",
+      "sqlite_error": "near \".\": syntax error"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "What is the title of the subject area that has been granted the least amount of funding",
+      "gold": "SELECT t1.title, MIN(t3.ec_max_contribution) from subject_areas as t1 join project_subject_areas as t2 on t1.code = t2.subject_area join projects as t3 on t2.project = t3.unics_id  group by t1.title order by  MIN(t3.ec_max_contribution) DESC LIMIT 1",
+      "pred": "select title from subject_areas order by ec_contribution limit 1",
+      "sqlite_error": "no such column: ec_contribution"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which institution has participated in the most projects",
+      "gold": "Select i.institutions_name, Count(distinct project) From project_members join institutions as i on project_members.institution_id = i.unics_id GROUP BY i.institutions_name order by count(distinct project) desc limit 1",
+      "pred": "select institutions.institution_id from projects join project_members on projects.institution_id = project_members.institution_id group by projects.institution_id order by count(*) desc limit 1;",
+      "sqlite_error": "no such column: institutions.institution_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the institution that has been involved in the highest number of projects",
+      "gold": "Select i.institutions_name, Count(distinct project) From project_members join institutions as i on project_members.institution_id = i.unics_id GROUP BY i.institutions_name order by count(distinct project) desc limit 1",
+      "pred": "select institutions.institution_id from projects join institutions on projects.institution_id = institutions.institution_id group by projects.institution_id order by count(*) desc limit 1;",
+      "sqlite_error": "no such column: institutions.institution_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which institution has participated in the fewest projects",
+      "gold": "Select t2.institutions_name, Count(distinct project) From project_members as t1 join institutions as t2 on t1.institution_id = t2.unics_id GROUP BY t2.institutions_name order by count(distinct project) asc limit 1",
+      "pred": "select institutions.institution_id from projects join project_members on projects.institution_id = project_members.institution_id group by projects.institution_id order by count(*) limit 1;",
+      "sqlite_error": "no such column: institutions.institution_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the institution that has been involved in the least amount of projects",
+      "gold": "Select t2.institutions_name, Count(distinct project) From project_members as t1 join institutions as t2 on t1.institution_id = t2.unics_id GROUP BY t2.institutions_name order by count(distinct project) asc limit 1",
+      "pred": "select institutions.institution_id from projects join institutions on projects.institution_id = institutions.institution_id group by projects.institution_id order by count(*) limit 1;",
+      "sqlite_error": "no such column: institutions.institution_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the industrial partners that have worked on projects and the amount of funding they have recieved in order from most to least",
+      "gold": "SELECT t1.member_name, p.ec_max_contribution FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code join projects as p on t1.project = p.unics_id WHERE t2.code = 'PRC' ORDER BY ec_max_contribution DESC",
+      "pred": "select people.persona, project_members.ec_fund_scheme from project_members join people on project_members.persona = people.persona where people.uncs_id = \"Partner\" order by project_members.ec_fund_scheme desc limit 1;",
+      "sqlite_error": "no such column: people.persona"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the amount of funding and corresponding list of industrial partners that have worked on projects in order from the most funding to the least funding",
+      "gold": "SELECT t1.member_name, p.ec_max_contribution FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code join projects as p on t1.project = p.unics_id WHERE t2.code = 'PRC' ORDER BY ec_max_contribution DESC",
+      "pred": "select sum(ec_fund_scheme), corresponding list of industrial partners from projects order by ec_fund_scheme desc limit 1",
+      "sqlite_error": "near \"of\": syntax error"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the titles of all of the projects that share the subject area code 'CCC",
+      "gold": "SELECT t3.title from subject_areas as t1 join project_subject_areas as t2 on t1.code = t2.subject_area join projects as t3 on t2.project = t3.unics_id WHERE t1.title = 'Climate change and Carbon cycle research'",
+      "pred": "select title from subject_areas where subject_areas = \"CCC\";",
+      "sqlite_error": "no such column: subject_areas"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "What are all of the ways that projects members can participate in projects?",
+      "gold": "SELECT pmr.description from project_member_roles as pmr",
+      "pred": "select activity_types.description from project_members join project_members on project_members.project = project_members.code where project_members.member_name = \"Participant\"",
+      "sqlite_error": "no such column: activity_types.description"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "List all of the european research council panels related to social sciences and humanities",
+      "gold": "SELECT t1.description from erc_panels as t1 join erc_research_domains as t2 on t2.code = t1.part_of WHERE t2.code = 'SH'",
+      "pred": "select panel from erc_panels where description = \"Social Sciences And Humanities\";",
+      "sqlite_error": "no such column: panel"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "How many european research council panels are related to social sciences and humanities",
+      "gold": "SELECT count(t1.description) from erc_panels as t1 join erc_research_domains as t2 on t2.code = t1.part_of WHERE t2.code = 'SH'",
+      "pred": "select count(*) from erc_panels where title = \"Social Sciences And Humanities\";",
+      "sqlite_error": "no such column: title"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which project members are businesses?",
+      "gold": "SELECT member_name FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code WHERE t2.code = 'PRC'",
+      "pred": "select member_role from project_members where activity_types = \"business\"",
+      "sqlite_error": "no such column: activity_types"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "How many project members are Higher or Secondary Education Establishments?",
+      "gold": "SELECT count (distinct member_name) FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code WHERE t2.code = 'HES'",
+      "pred": "select count(*) from activity_types where activity_types = 'Higher or Secondary Education Establishments'",
+      "sqlite_error": "no such column: activity_types"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "What is the number of projects that have been carried out in the subject area of Robotics?",
+      "gold": "SELECT count(t3.title) from subject_areas as t1 join project_subject_areas as t2 on t1.code = t2.subject_area join projects as t3 on t2.project = t3.unics_id WHERE t1.title = 'Robotics'",
+      "pred": "select count(*) from project_subject_areas where title = 'Robotics'",
+      "sqlite_error": "no such column: title"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which entity located outside of the EU has received the most funding?",
+      "gold": "SELECT t1.member_name, p.ec_max_contribution FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code join projects as p on t1.project = p.unics_id WHERE t1.geocode_regions_3 = 'NONEU' ORDER BY ec_max_contribution DESC LIMIT 1",
+      "pred": "select institutions.institutions_name from institutions join funding_schemes on institutions.institutions_id = funding_schemes.institutions_id group by institutions.institutions_id order by count(*) desc limit 1",
+      "sqlite_error": "no such column: institutions.institutions_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which entity located outside of the EU has received the least funding?",
+      "gold": "SELECT t1.member_name, p.ec_max_contribution FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code join projects as p on t1.project = p.unics_id WHERE t1.geocode_regions_3 = 'NONEU' ORDER BY ec_max_contribution ASC LIMIT 1",
+      "pred": "select institutions.institutions_name from institutions join funding_schemes on institutions.institutions_id = funding_schemes.institutions_id group by institutions.institutions_id order by count(*) limit 1",
+      "sqlite_error": "no such column: institutions.institutions_id"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "How many non-EU entities have participated in projects?",
+      "gold": "SELECT count(distinct t1.member_name) FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code join projects as p on t1.project = p.unics_id  WHERE t1.geocode_regions_3 = 'NONEU'",
+      "pred": "select count(*) from project_members where ec_contribution not in ( select ec_contribution from projects )",
+      "sqlite_error": "interrupted"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Which entities that are located outside of the European Union have participated in projects?",
+      "gold": "SELECT distinct t1.member_name FROM project_members as t1 join activity_types as t2 on t1.activity_type = t2.code join projects as p on t1.project = p.unics_id WHERE t1.geocode_regions_3 = 'NONEU'",
+      "pred": "select activity_types.description from project_members join people on project_members.ec_id = people.ec_id where people.country_code = \"Europe\"",
+      "sqlite_error": "no such column: activity_types.description"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show all of the programmes with titles that are related to climate",
+      "gold": "SELECT p.title from programmes as p WHERE p.title like '%climate%'",
+      "pred": "select programme from programmes where title like \"%climate%\"",
+      "sqlite_error": "no such column: programme"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "List the programms that have the term climate in the title",
+      "gold": "SELECT p.title from programmes as p WHERE p.title like '%climate%'",
+      "pred": "select programme from programmes where title like \"Climate\";",
+      "sqlite_error": "no such column: programme"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "Show the title and amount of funds that have been allocated per programme",
+      "gold": "SELECT t1.title, sum(t3.ec_max_contribution) from programmes as t1 join project_programmes as t2 on t1.code = t2.programme join projects as t3 on t3.unics_id = t2.project group by t1.title",
+      "pred": "select title, sum(ec_fund_scheme) from projects group by programme",
+      "sqlite_error": "no such column: programme"
+    },
+    {
+      "db_id": "cordis_temporary",
+      "question": "List all of the titles and the amount of funding that has been dispersed per programme",
+      "gold": "SELECT t1.title, sum(t3.ec_max_contribution) from programmes as t1 join project_programmes as t2 on t1.code = t2.programme join projects as t3 on t3.unics_id = t2.project group by t1.title",
+      "pred": "select title, sum(ec_fund_scheme) from programmes",
+      "sqlite_error": "no such column: ec_fund_scheme"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me all disease mutations with ref_aa E",
+      "gold": "SELECT * FROM disease_mutation WHERE ref_aa = 'E'",
+      "pred": "select disease_mutation.name from disease_mutation join disease_mutation on disease_mutation.id = disease_mutation.id where disease_mutation.ref_aa = \"E\";",
+      "sqlite_error": "no such column: disease_mutation.name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Get a list of all biomarker descriptions",
+      "gold": "SELECT biomarker_description FROM biomarker",
+      "pred": "select description from biomarker",
+      "sqlite_error": "no such column: description"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show the gene symbol and the description of cancer biomarkers with panel = 'false'",
+      "gold": "SELECT biomarker.gene_symbol, biomarker_description FROM biomarker WHERE test_is_a_panel = 'false'",
+      "pred": "select gene_symbol, description from biomarker where panel = \"False\"",
+      "sqlite_error": "no such column: description"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me all biomarkers on the EDRN platform which are not of type protein.",
+      "gold": "SELECT biomarker_title FROM biomarker_edrn WHERE biomarker_type != 'Protein'",
+      "pred": "select biomarker_id from biomarker_edrn where biomarker_type!= \"Protein\"",
+      "sqlite_error": "no such column: biomarker_id"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Identify a list of genes expressed in lung cancer",
+      "gold": "SELECT differential_expression.gene_symbol\nFROM differential_expression\n         JOIN disease ON differential_expression.doid = disease.id\nWHERE disease.name = 'lung cancer'",
+      "pred": "select distinct expression_level_gene_relative from disease_mutation_site_annotation where name = \"Lung cancer\";",
+      "sqlite_error": "no such column: expression_level_gene_relative"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show biomarker gene symbol and description for 'breast cancer'",
+      "gold": "SELECT biomarker.gene_symbol, biomarker.biomarker_description\nFROM biomarker\n         JOIN biomarker_fda on biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test ON biomarker_fda.test_submission = biomarker_fda_test.test_submission and\n                                    biomarker_fda.test_trade_name = biomarker_fda_test.test_trade_name\n         JOIN disease ON disease.id = biomarker_fda_test.doid\nWHERE disease.name = 'breast cancer'",
+      "pred": "select biomarker_gene_symbol, description from biomarker_alias where alias = \"Breast Cancer\"",
+      "sqlite_error": "no such column: biomarker_gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What are the different biomarker EDRN phases?",
+      "gold": "SELECT DISTINCT phase from biomarker_edrn",
+      "pred": "select distinct biomarker_edrn phase from biomarker_edrn",
+      "sqlite_error": "no such column: biomarker_edrn"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Get the p-value of differential expressions for the disease 'lung cancer'",
+      "gold": "SELECT differential_expression.pvalue\nFROM differential_expression\n         JOIN disease ON differential_expression.doid = disease.id\nWHERE disease.name = 'lung cancer'",
+      "pred": "select pvalue from differential_expression where disease = \"lung cancer\"",
+      "sqlite_error": "no such column: disease"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show disease mutation chromosome positions for skin cancer",
+      "gold": "SELECT disease_mutation.chromosome_pos\nFROM disease_mutation\n         JOIN disease ON disease_mutation.doid = disease.id\nWHERE disease.name = 'skin cancer'",
+      "pred": "select disease_mutation_chromosome_pos from disease_mutation where name = \"skin cancer\";",
+      "sqlite_error": "no such column: disease_mutation_chromosome_pos"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What are the name of cancer types where the A1BG gene expression is significantly increased (up regulated)",
+      "gold": "SELECT disease.name\nFROM differential_expression\n         JOIN disease ON differential_expression.doid = disease.id\nWHERE differential_expression.gene_symbol = 'A1BG'\n  and differential_expression.expression_change_direction = 'up'",
+      "pred": "select distinct disease.name from disease join cancer_tissue on disease_mutation_site_annotation.id = cancer_tissue.id where disease_mutation_tissue.name = \"Gene\" and disease_mutation_tissue.name = \"Gene\" and disease_mutation_tissue.name = \"Gene\";",
+      "sqlite_error": "no such column: disease_mutation_tissue.name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me all information about species",
+      "gold": "SELECT * FROM species",
+      "pred": "select species.species from species join biomarker_alias on species.speciesid = biomarker_alias.biomarker_internal_id join disease on disease_mutation_site_annotation.disease_mutation_id = disease_mutation_site_annotation.disease_mutation_id join biomarker_fda_drug on disease_mutation_site_annotation.disease_id on disease_dis",
+      "sqlite_error": "near \"on\": syntax error"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Return gen symbol and pvalue for the expression of gene with symbol 'EGFR' in lung cancer ",
+      "gold": "SELECT differential_expression.gene_symbol,\n       differential_expression.pvalue\nFROM differential_expression JOIN disease ON differential_expression.doid = disease.id\nWHERE differential_expression.gene_symbol = 'EGFR' AND disease.name = 'lung cancer'",
+      "pred": "select gen_symbol, pvalue from differential_expression where gene_symbol like '%egfr%'",
+      "sqlite_error": "no such column: gen_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "How many healthy expression are there for 'late adult stage'?",
+      "gold": "SELECT COUNT(*) FROM healthy_expression JOIN stage ON healthy_expression.uberon_developmental_id = stage.id WHERE stage.name = 'late adult stage'",
+      "pred": "select count(*) from healthy_expression where stage = \"late adult stage\"",
+      "sqlite_error": "no such column: stage"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show name of diseases where the gene expression with symbol A1BG has a statistical significance of 'Yes'",
+      "gold": "SELECT disease.name\nFROM differential_expression\n         JOIN disease ON differential_expression.doid = disease.id\nWHERE differential_expression.gene_symbol = 'A1BG'\n  and differential_expression.statistical_significance = 'Yes'",
+      "pred": "select disease.name from disease join differential_expression on disease.gene_symbol = differential_expression.gene_symbol where differential_expression.statistical_significance = \"YES\"",
+      "sqlite_error": "no such column: disease.gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me the description of all biomarkers",
+      "gold": "SELECT biomarker_description FROM biomarker",
+      "pred": "select description from biomarker",
+      "sqlite_error": "no such column: description"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show the gene symbol and the description of cancer biomarkers which are not in a panel",
+      "gold": "SELECT biomarker.gene_symbol, biomarker_description FROM biomarker WHERE test_is_a_panel = 'false'",
+      "pred": "select gene_symbol, description from biomarker where biomarker_id not in (select biomarker_id from biomarker_fda_drug)",
+      "sqlite_error": "no such column: description"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me all biomarkers on the EDRN platform with type protein in phase two.",
+      "gold": "SELECT biomarker_title FROM biomarker_edrn WHERE biomarker_type = 'Protein' AND phase = 'Two'",
+      "pred": "select biomarker_edrn.biomarker_type from biomarker_edrn join biomarker_edrn on biomarker_edrn.biomarker_id = biomarker_edrn.biomarker_id where biomarker_type = \"Protein\" and biomarker_phase = \"Two\"",
+      "sqlite_error": "ambiguous column name: biomarker_edrn.biomarker_type"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Get the biomarker gene symbol and biomarker description for disease with name 'breast cancer'",
+      "gold": "SELECT biomarker.gene_symbol, biomarker.biomarker_description\nFROM biomarker\n         JOIN biomarker_fda on biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test ON biomarker_fda.test_submission = biomarker_fda_test.test_submission and\n                                    biomarker_fda.test_trade_name = biomarker_fda_test.test_trade_name\n         JOIN disease ON disease.id = biomarker_fda_test.doid\nWHERE disease.name = 'breast cancer'",
+      "pred": "select biomarker_gene_symbol, biomarker_description from biomarker_alias where alias = \"Breast Cancer\"",
+      "sqlite_error": "no such column: biomarker_gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Get all distinct biomarker EDRN phases",
+      "gold": "SELECT DISTINCT phase from biomarker_edrn",
+      "pred": "select distinct biomarker_edrn phase from biomarker_edrn",
+      "sqlite_error": "no such column: biomarker_edrn"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show the pvalue of differential expression of lung cancer",
+      "gold": "SELECT differential_expression.pvalue\nFROM differential_expression\n         JOIN disease ON differential_expression.doid = disease.id\nWHERE disease.name = 'lung cancer'",
+      "pred": "select pvalue from differential_expression where name = \"lung cancer\"",
+      "sqlite_error": "no such column: name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show tests built by a manufacturer starting with 'Roche' ",
+      "gold": "SELECT *\nFROM biomarker_fda_test\nWHERE test_manufacturer like 'Roche%'",
+      "pred": "select test_trade_name from test_trade where test_manufacturer like \"%roche%\"",
+      "sqlite_error": "no such table: test_trade"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Which diseases (name) have a mutation with a coding sequence position of 102997?",
+      "gold": "SELECT disease.name\nFROM disease JOIN disease_mutation ON disease.id = disease_mutation.doid\nWHERE disease_mutation.cds_pos = 102997",
+      "pred": "select disease.name from disease join disease_mutation_site_annotation on disease_mutation_site_annotation.disease_mutation_id = disease_mutation_site_annotation.disease_mutation_id where disease_mutation_mutation_mutation_id = 102997",
+      "sqlite_error": "no such column: disease_mutation_mutation_mutation_id"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show the distinct chromosome id's in mutations of breast cancer",
+      "gold": "SELECT DISTINCT disease_mutation.chromosome_id\nFROM disease_mutation\n         JOIN disease ON disease_mutation.doid = disease.id\nWHERE disease.name = 'breast cancer'",
+      "pred": "select distinct chromosome_id from disease_mutation where name = \"Breast Cancer\"",
+      "sqlite_error": "no such column: name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show the different chromosome id's in mutations of disease 'breast cancer'",
+      "gold": "SELECT DISTINCT disease_mutation.chromosome_id\nFROM disease_mutation\n         JOIN disease ON disease_mutation.doid = disease.id\nWHERE disease.name = 'breast cancer'",
+      "pred": "select distinct chromosome_id from disease_mutation where name = \"Breast Cancer\"",
+      "sqlite_error": "no such column: name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me the names of all anatomical entities which have a healthy expression with relative gene expression level LOW and a relative anatomical expression level of HIGH",
+      "gold": "SELECT anatomical_entity.name\nFROM anatomical_entity\n         JOIN healthy_expression ON anatomical_entity.id = healthy_expression.uberon_anatomical_id\nWHERE expression_level_gene_relative = 'LOW'\n  AND expression_level_anatomical_relative = 'HIGH'",
+      "pred": "select name from anatomical_entity where expression_level_gene_relative = \"low\" intersect select name from anatomical_entity where expression_level_gene_relative = \"high\"",
+      "sqlite_error": "no such column: expression_level_gene_relative"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "List the names of anatomical entities having an expression with relative gene expression level LOW and a relative anatomical expression level of HIGH",
+      "gold": "SELECT anatomical_entity.name\nFROM anatomical_entity\n         JOIN healthy_expression ON anatomical_entity.id = healthy_expression.uberon_anatomical_id\nWHERE expression_level_gene_relative = 'LOW'\n  AND expression_level_anatomical_relative = 'HIGH'",
+      "pred": "select name from anatomical_entity where expression_level_gene_relative = \"low\" intersect select name from anatomical_entity where expression_level_gene_relative = \"high\"",
+      "sqlite_error": "no such column: expression_level_gene_relative"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "How many healthy expression are there for stage name starting with 'late adult'?",
+      "gold": "SELECT COUNT(*) FROM healthy_expression JOIN stage ON healthy_expression.uberon_developmental_id = stage.id WHERE stage.name LIKE 'late adult%'",
+      "pred": "select count(*) from healthy_expression where name like \"%late adult%\"",
+      "sqlite_error": "no such column: name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show all symbols of genes expressed in the disease 'lung cancer'",
+      "gold": "SELECT differential_expression.gene_symbol\nFROM differential_expression\n         JOIN disease ON differential_expression.doid = disease.id\nWHERE disease.name = 'lung cancer'",
+      "pred": "select gene_symbol from disease where name = \"Lung cancer\"",
+      "sqlite_error": "no such column: gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me the description for FDA approved biomarkers with test approval status 'class II'",
+      "gold": "SELECT biomarker.biomarker_description\nFROM biomarker\n         JOIN biomarker_fda ON biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test on biomarker_fda.test_submission = biomarker_fda_test.test_submission\nWHERE biomarker_fda_test.test_approval_status = 'class II'",
+      "pred": "select biomarker_description from biomarker_fda_test where test_approval_status = \"class ii\"",
+      "sqlite_error": "no such column: biomarker_description"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "List the descriptions of biomarkers for fda tests with approval status 'class II'",
+      "gold": "SELECT biomarker.biomarker_description\nFROM biomarker\n         JOIN biomarker_fda ON biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test on biomarker_fda.test_submission = biomarker_fda_test.test_submission\nWHERE biomarker_fda_test.test_approval_status = 'class II'",
+      "pred": "select biomarker_description from biomarker_fda_test where test_approval_status = \"class ii\"",
+      "sqlite_error": "no such column: biomarker_description"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What are the symbols for biomarkers with type genomic for anatomical entity breast?",
+      "gold": "SELECT gene_symbol\nFROM biomarker\n         JOIN biomarker_edrn ON biomarker.id = biomarker_edrn.id\n         JOIN anatomical_entity ON biomarker_edrn.uberon_anatomical_id = anatomical_entity.id\nWHERE anatomical_entity.name = 'breast'\n  and biomarker_edrn.biomarker_type = 'Genomic'\n",
+      "pred": "select biomarker_symbol from biomarker_alias where biomarker_type = \"Genomic\" and biomarker_entity = \"brass\"",
+      "sqlite_error": "no such column: biomarker_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What are the symbols for biomarkers on the EDRN platform with biomarker type Genomic for anatomical entity 'breast'?",
+      "gold": "SELECT gene_symbol\nFROM biomarker\n         JOIN biomarker_edrn ON biomarker.id = biomarker_edrn.id\n         JOIN anatomical_entity ON biomarker_edrn.uberon_anatomical_id = anatomical_entity.id\nWHERE anatomical_entity.name = 'breast'\n  and biomarker_edrn.biomarker_type = 'Genomic'\n",
+      "pred": "select biomarker_symbol from biomarker_edrn where biomarker_type = \"Genomic\"",
+      "sqlite_error": "no such column: biomarker_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "List the name of diseases that can occur in the anatomical entity 'liver'",
+      "gold": "SELECT disease.name\nFROM anatomical_entity\n         JOIN cancer_tissue ON anatomical_entity.id = cancer_tissue.uberon_anatomical_id\n         JOIN disease ON cancer_tissue.doid = disease.id\nWHERE anatomical_entity.name = 'liver'",
+      "pred": "select disease.name from disease join disease on disease_mutation_site_annotation.disease_mutation_id = disease_mutation_site_annotation.disease_mutation_id where disease_mutation_tissue.name = \"heart\"",
+      "sqlite_error": "ambiguous column name: disease.name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show distinct manufacturer of tests for gene BRAF ",
+      "gold": "SELECT DISTINCT biomarker_fda_test.test_manufacturer\nFROM biomarker\n         JOIN biomarker_fda on biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test\n              ON biomarker_fda.test_trade_name = biomarker_fda_test.test_trade_name AND biomarker_fda.test_submission = biomarker_fda_test.test_submission\nWHERE biomarker.gene_symbol = 'BRAF'",
+      "pred": "select distinct test_manufacturer from biomarker_fda_test where gene_symbol = \"BRAF\";",
+      "sqlite_error": "no such column: gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show all FDA test manufacturer for biomarkers of gene BRAF ",
+      "gold": "SELECT biomarker_fda_test.test_manufacturer\nFROM biomarker\n         JOIN biomarker_fda on biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test\n              ON biomarker_fda.test_trade_name = biomarker_fda_test.test_trade_name AND biomarker_fda.test_submission = biomarker_fda_test.test_submission\nWHERE biomarker.gene_symbol = 'BRAF'",
+      "pred": "select test_manufacturer from biomarker_fda_test where gene_symbol = \"BRAF\"",
+      "sqlite_error": "no such column: gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me the name of anatomical entities and species for all species",
+      "gold": "SELECT anatomical_entity.name, species.speciescommonname\nFROM anatomical_entity\n         JOIN healthy_expression ON anatomical_entity.id = healthy_expression.uberon_anatomical_id\n         JOIN xref_gene_ensembl ON healthy_expression.ensembl_gene_id = xref_gene_ensembl.ensembl_gene_id\n         JOIN species ON xref_gene_ensembl.speciesid = species.speciesid",
+      "pred": "select anatomical_entity, species from species",
+      "sqlite_error": "no such column: anatomical_entity"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What are the distinct healthy organs where the gene A1BG is expressed.",
+      "gold": "SELECT distinct anatomical_entity.name\nFROM healthy_expression\n         JOIN xref_gene_ensembl ON healthy_expression.ensembl_gene_id = xref_gene_ensembl.ensembl_gene_id\n         JOIN anatomical_entity ON healthy_expression.uberon_anatomical_id = anatomical_entity.id\nWHERE xref_gene_ensembl.gene_symbol = 'A1BG'\n  and healthy_expression.expression_level_anatomical_relative != 'ABSENT'",
+      "pred": "select distinct healthy_expression.name from healthy_expression join xref_gene_ensembl on healthy_expression.ensembl_gene_id = ensembl_gene_id where a1bg = 'G'",
+      "sqlite_error": "no such column: healthy_expression.name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Give me symbol and description of biomarkers related to breast at the EDRN phase one",
+      "gold": "SELECT biomarker.gene_symbol, biomarker.biomarker_description\nFROM biomarker\n         JOIN biomarker_edrn ON biomarker.id = biomarker_edrn.id\n         JOIN anatomical_entity ON biomarker_edrn.uberon_anatomical_id = anatomical_entity.id\nWHERE anatomical_entity.name = 'breast'\n  and biomarker_edrn.phase = 'One'\n",
+      "pred": "select biomarker_symbol, description from biomarker_edrn where anatomical_entity = \"Breast\";",
+      "sqlite_error": "no such column: biomarker_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me the name of the anatomical entity and the expression score of where either gene ENSMUSG00000000037 or gene ENSMUSG00000000078 is expressed in.",
+      "gold": "SELECT anatomical_entity.name, healthy_expression.expression_score\nFROM healthy_expression\n         JOIN anatomical_entity\n              ON healthy_expression.uberon_anatomical_id = anatomical_entity.id\nWHERE healthy_expression.ensembl_gene_id = 'ENSMUSG00000000037'\n   OR healthy_expression.ensembl_gene_id = 'ENSMUSG00000000078'",
+      "pred": "select anatomical_entity, expression_score from differential_expression where gene_symbol = \"Ensmusg00000000037\" or gene_symbol = \"Ensmusg00000000078\"",
+      "sqlite_error": "no such column: anatomical_entity"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What's the NCIt term for biomarker with symbol ALDH4A1?",
+      "gold": "SELECT biomarker_fda_ncit_term.ncit_biomarker\nFROM biomarker_fda_ncit_term\n         JOIN biomarker_fda ON biomarker_fda_ncit_term.biomarker_fda_id = biomarker_fda.id\n         JOIN biomarker ON biomarker_fda.id = biomarker.id\nWHERE biomarker.gene_symbol = 'ALDH4A1'",
+      "pred": "select ncit_term from biomarker where gene_symbol = \"ALDH4A1\"",
+      "sqlite_error": "no such column: ncit_term"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show all information about disease mutations of the anatomical entity liver",
+      "gold": "SELECT *\nFROM disease_mutation\n         JOIN disease_mutation_tissue ON disease_mutation.id = disease_mutation_tissue.disease_mutation_id\n         JOIN anatomical_entity ON disease_mutation_tissue.uberon_anatomical_id = anatomical_entity.id\nWHERE anatomical_entity.name = 'liver'",
+      "pred": "select * from disease_mutation_site_annotation where name = \"heart\"",
+      "sqlite_error": "no such column: name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "List all disease mutations which belong to anatomical entity liver.",
+      "gold": "SELECT *\nFROM anatomical_entity\n         JOIN disease_mutation_tissue ON anatomical_entity.id = disease_mutation_tissue.uberon_anatomical_id\n         JOIN disease_mutation ON disease_mutation_tissue.disease_mutation_id = disease_mutation.id\nwhere anatomical_entity.name = 'liver'",
+      "pred": "select disease_mutation_id from disease_mutation_site_annotation where name = \"heart\"",
+      "sqlite_error": "no such column: name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show me the gene symbol of biomarkers that have an approval status of 'PMP' from the FDA",
+      "gold": "SELECT gene_symbol \nFROM biomarker\nJOIN biomarker_fda ON biomarker.id = biomarker_fda.id\nJOIN biomarker_fda_test ON biomarker_fda.test_submission = biomarker_fda_test.test_submission\nWHERE biomarker_fda_test.test_approval_status = 'PMP'",
+      "pred": "select gene_symbol from biomarker where test_approval_status = \"PMP\"",
+      "sqlite_error": "no such column: test_approval_status"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "What are the desctiptions of biomarkers related to breast cancer?",
+      "gold": "SELECT biomarker.biomarker_description\nFROM biomarker\nJOIN biomarker_edrn ON biomarker.id = biomarker_edrn.id\nJOIN anatomical_entity ON biomarker_edrn.uberon_anatomical_id = anatomical_entity.id\nWHERE anatomical_entity.name = 'breast'",
+      "pred": "select distinct biomarker_description from biomarker_fda_ncit_biomarker where alias = \"Breast Cancer 2\"",
+      "sqlite_error": "no such table: biomarker_fda_ncit_biomarker"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show distinct manufacturer of diagnostic tests for gene BRAF ",
+      "gold": "SELECT distinct(biomarker_fda_test.test_manufacturer), biomarker_fda_test_use.actual_use\nFROM biomarker\n         JOIN biomarker_fda on biomarker.id = biomarker_fda.id\n         JOIN biomarker_fda_test\n              ON biomarker_fda.test_trade_name = biomarker_fda_test.test_trade_name AND\n                 biomarker_fda.test_submission = biomarker_fda_test.test_submission\n         JOIN biomarker_fda_test_use ON biomarker_fda_test.test_submission = biomarker_fda_test_use.test_submission and biomarker_fda_test.test_trade_name = biomarker_fda_test_use.test_trade_name\nWHERE biomarker.gene_symbol = 'BRAF'\n  AND biomarker_fda_test_use.actual_use = 'diagnostic'",
+      "pred": "select distinct test_manufacturer from biomarker_fda_test_use where gene_symbol = \"BRAF\"",
+      "sqlite_error": "no such column: test_manufacturer"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show cancer biomarker panels ",
+      "gold": "SELECT *\nFROM biomarker\n  JOIN\n     biomarker_edrn ON biomarker.id = biomarker_edrn.id\n    JOIN\n     biomarker_fda on biomarker.id = biomarker_fda.id\n         JOIN\n     biomarker_fda_test ON biomarker_fda.test_submission = biomarker_fda_test.test_submission and biomarker_fda.test_trade_name = biomarker_fda_test.test_trade_name\n         LEFT JOIN anatomical_entity ON anatomical_entity.id = biomarker_edrn.uberon_anatomical_id\n         JOIN cancer_tissue ON cancer_tissue.uberon_anatomical_id = anatomical_entity.id\n         JOIN disease ON disease.id = biomarker_fda_test.doid or disease.id = cancer_tissue.doid\nWHERE biomarker.test_is_a_panel = 'true'\n  AND biomarker.gene_symbol != 'NULL'",
+      "pred": "select biomarker_panel from biomarker_fda_drug",
+      "sqlite_error": "no such column: biomarker_panel"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show name of biomarkers with tests from 23andMe",
+      "gold": "select * from biomarker as b join  biomarker_fda as bf on b.id = bf.id\njoin biomarker_fda_test as bft on bf.test_trade_name = bft.test_trade_name and bf.test_submission = bft.test_submission\nwhere test_manufacturer like '23andMe'",
+      "pred": "select biomarker_name from biomarker_fda_test where test_manufacturer = \"23andMe\";",
+      "sqlite_error": "no such column: biomarker_name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show the name of all manufacturer producing tests for breast cancer biomarkers",
+      "gold": "select distinct bft.test_manufacturer\nfrom biomarker as  b join\nbiomarker_fda as  bf on b.id = bf.id\njoin biomarker_fda_test as  bft on \nbf.test_trade_name = bft.test_trade_name and bf.test_submission = bft.test_submission\nwhere b.gene_symbol like '%BRCA%'",
+      "pred": "select test_manufacturer from biomarker_fda_test where biomarker_alias = \"Breast Cancer 2\"",
+      "sqlite_error": "no such column: biomarker_alias"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show all approved tests for breast cancer biomarkers",
+      "gold": "select *\nfrom biomarker as b join\nbiomarker_fda as bf on b.id = bf.id\njoin biomarker_fda_test as bft on \nbf.test_trade_name = bft.test_trade_name and bf.test_submission = bft.test_submission\njoin biomarker_fda_test_use as  bfu on \nbfu.test_trade_name = bft.test_trade_name and bfu.test_submission = bft.test_submission\nwhere b.gene_symbol like '%BRCA%'",
+      "pred": "select test_approval_status from biomarker_fda_test_use where biomarker_alias = \"Breast Cancer 2\"",
+      "sqlite_error": "no such column: test_approval_status"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Return the anatomical entity associated with the most biomarkers",
+      "gold": "SELECT anatomical_entity.name\nFROM biomarker\nJOIN biomarker_edrn ON biomarker.id = biomarker_edrn.id\nJOIN anatomical_entity ON biomarker_edrn.uberon_anatomical_id = anatomical_entity.id\nGROUP BY anatomical_entity.name\nORDER BY COUNT(*) DESC\nLIMIT 1\n",
+      "pred": "select anatomical_entity from biomarker_alias group by anatomical_entity order by count(*) desc limit 1",
+      "sqlite_error": "no such column: anatomical_entity"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "what are the top chromosomes with more reported mutations from cosmic data source",
+      "gold": "SELECT  chromosome_id, count(*)  FROM disease_mutation where data_source = 'cosmic' group by chromosome_id order by count(*) desc limit 5 ",
+      "pred": "select top chromosome_id from disease_mutation group by chromosome_id order by count(*) desc limit 1",
+      "sqlite_error": "no such column: top"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "top 3 cancer types with more differential expression entries ",
+      "gold": "select d.name , count(*)  from differential_expression JOIN disease as d ON d.id = doid \ngroup by d.name order by  count(*) desc limit 3",
+      "pred": "select distinct disease_type from differential_expression group by disease_type order by count(*) desc limit 3;",
+      "sqlite_error": "no such column: disease_type"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Find all of the edrn biomarkers that have never been approved by the FDA ",
+      "gold": "SELECT t1.id from biomarker as t1 join biomarker_edrn as t2 on t1.id = t2.id WHERE t1.id NOT IN (SELECT t1.id from biomarker as t1 join biomarker_fda as t2 on t1.id = t2.id join biomarker_fda_test_use as bftu on t2.test_submission = bftu.test_submission)",
+      "pred": "select biomarker_edrn.biomarker_id from biomarker_fda_test_use join biomarker_fda_test_use on biomarker_fda_test_use.biomarker_id = biomarker_edrn.biomarker_id where biomarker_edrn.biomarker_id not in ( select biomarker_edrn.biomarker_id in ( biomark",
+      "sqlite_error": "incomplete input"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show all of the edrn biomarkers that have been approved by the FDA ",
+      "gold": "SELECT t1.id from biomarker as t1 join biomarker_edrn as t2 on t1.id = t2.id WHERE t1.id\nIN (SELECT t1.id from biomarker as t1 join biomarker_fda as t2 on t1.id = t2.id join biomarker_fda_test_use as bftu on t2.test_submission = bftu.test_submission)",
+      "pred": "select biomarker_edrn.biomarker_id from biomarker_fda_test_use join biomarker_fda_test_use on biomarker_fda_test_use.biomarker_id = biomarker_edrn.biomarker_id group by biomarker_edrn.biomarker_id order by count(*) desc limit 1",
+      "sqlite_error": "no such column: biomarker_edrn.biomarker_id"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "show me all the genes that relate to biomarkers of prostate cancer.",
+      "gold": "select biomarker.gene_symbol\nfrom disease as dis\njoin biomarker_fda_test as fda on dis.id = fda.doid\njoin biomarker_fda as bio_fda on bio_fda.test_trade_name = fda.test_trade_name\njoin biomarker as bio on bio.id = biomarker_fda.id\nwhere dis.name = \"prostate cancer\"",
+      "pred": "select gene_symbol from biomarker_alias where alias = \"Prostase\"",
+      "sqlite_error": "no such column: gene_symbol"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Who manufactures lung cancer prognosis tests that are approved by the FDA?",
+      "gold": "SELECT distinct(d.name), bft.test_trade_name, bft.test_manufacturer\nFROM biomarker_fda_test_use as bftu JOIN biomarker_fda_test as bft \n        ON bft.test_trade_name = bftu.test_trade_name \n        AND bft.test_submission = bftu.test_submission \nJOIN biomarker_fda as bf ON bft.test_trade_name = bf.test_trade_name \n        AND bft.test_submission = bf.test_submission \nJOIN biomarker as b ON bf.id = b.id\nJOIN disease AS d ON d.id = bft.doid\nWHERE\n        bftu.approved_indication LIKE '%prognosis%'\n                AND d.name LIKE '%lung%'",
+      "pred": "select test_manufacturer from biomarker_fda_test_use where approved_indication = \"lung cancer\"",
+      "sqlite_error": "no such column: test_manufacturer"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Which diseases can be diagnosed with a blood test?",
+      "gold": "SELECT distinct(d.name) \nFROM biomarker_fda_test_use as bftu JOIN biomarker_fda_test as bft \n        ON bft.test_trade_name = bftu.test_trade_name \n        AND bft.test_submission = bftu.test_submission \nJOIN biomarker_fda as bf ON bft.test_trade_name = bf.test_trade_name \n        AND bft.test_submission = bf.test_submission \nJOIN biomarker as b ON bf.id = b.id\nJOIN disease AS d ON d.id = bft.doid\nWHERE\n        bftu.approved_indication LIKE '%diagnosis%' \n        AND bft.specimen_type LIKE 'blood'",
+      "pred": "select disease.name from disease join biomarker_fda_test_use on disease.id = biomarker_fda_test_use.test_trade_name join disease on disease_mutation_site_annotation.disease_mutation_id = biomarker_fda_test_use.disease_mutation_id",
+      "sqlite_error": "ambiguous column name: disease.name"
+    },
+    {
+      "db_id": "oncomx_v1_0_25_small",
+      "question": "Show all the information about biomarkers and the species for which they are healthy expressed",
+      "gold": "select bio.biomarker_description, species.species\nfrom biomarker as bio\n    join biomarker_edrn as be on bio.id = be.id\n    join anatomical_entity as ae on be.uberon_anatomical_id = ae.id\n    join healthy_expression as he on ae.id = he.uberon_anatomical_id\n    join xref_gene_ensembl as xge on he.ensembl_gene_id = xge.ensembl_gene_id\n    join species as s on xge.speciesid = s.speciesid",
+      "pred": "select biomarker.biomarker, species.speciesid from biomarker join species on biomarker.speciesid = species.speciesid join healthy_expression on biomarker.id = healthy_expression.gene_id",
+      "sqlite_error": "no such column: biomarker.biomarker"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What is photometrically observed star",
+      "gold": "select p.objid from photoobj as p JOIN photo_type as pt on p.type = pt.value where pt.name = 'STAR' ",
+      "pred": "select photo_type.name from photo_type join neighbor on photoobj.objid = neighbors.objid where neighbors.neighbortype = \"STAR\";",
+      "sqlite_error": "no such table: neighbor"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all photometrically observable star that have spectral observations. Retrieve the object id, right ascension, and declination. ",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid join photo_type as pt on p.type = pt.value where pt.name = 'STAR'",
+      "pred": "select i, dec, right ascension from photo_type where i = \"STAR\"",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the object id, right ascension, and declination of photometrically observed star that have spectral observations.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid join photo_type as pt on p.type = pt.value where pt.name = 'STAR'",
+      "pred": "select i, dec, right ascension, declination from photo_type where name = 'STAR'",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all photometrically observable Galaxy that have spectral observations. Retrieve the object id, right ascension, and declination. ",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid join photo_type as pt on p.type = pt.value where  pt.name = 'GALAXY'",
+      "pred": "select i, dec, right ascension from photo_type where name = \"GALAXY\"",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the object id, right ascension and declination of photometrically observable Galaxy that have spectral observations.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid join photo_type as pt on p.type = pt.value where  pt.name = 'GALAXY'",
+      "pred": "select i, z, right ascension, declination from galspecline where specobj = 'photometrically observable'",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object ids, right ascensions and declinations of photometrically observable galaxy whose right ascension is greater than 185, right ascension is less than 186, declination is greater than 15, declination is less than 16.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p JOIN photo_type as pt on p.type = pt.value where p.ra > 185 and p.ra < 186 and p.dec > 15 and p.dec < 16 and pt.name = 'GALAXY'",
+      "pred": "select object.objectid, object.rightascension, object.declination from photo_type join specobj on photoobj.specobjid = specobj.specobjid where photo_type.name = \"PHOMETICALLY observable\" and right.ascension > 185, right.ascension > 186, declination > 16",
+      "sqlite_error": "near \",\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me object id, right ascensions and declinations of photometrically observed galaxy in a certain area, of which the right ascension is between 185 and 186, declination is bertween 15 and 16.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p JOIN photo_type as pt on p.type = pt.value where p.ra > 185 and p.ra < 186 and p.dec > 15 and p.dec < 16 and pt.name = 'GALAXY'",
+      "pred": "select object.id, right.ascension, declination from photo_type join neighbor on photoobj.objid = neighbor.objid where neighbor.neighbortype = \"photometrically observed galaxy\" and neighbor.neighbortype = \"photometrically observed galaxy\" and neighbor.declination = 16",
+      "sqlite_error": "no such table: neighbor"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object ids, right ascensions and declinations of photometrically observable star whose right ascension is greater than 185, right ascension is less than 186, declination is greater than 15, declination is less than 16.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p JOIN photo_type as pt on p.type = pt.value where p.ra > 185 and p.ra < 186 and p.dec > 15 and p.dec < 16 and pt.name = 'STAR'",
+      "pred": "select object.objectid, object.rightascension, object.declination from photo_type join neighbor on photoobj.objid = neighbors.objid where photoobj.specobjid = \"photometrically observable star\" and neighbor.neighbortype = \"null\" and neighbor.neighbortype = \"null\" and neighbor.neighbortype = \"null\"",
+      "sqlite_error": "no such table: neighbor"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me object id, right ascensions and declinations of photometrically observed star in a certain area, of which the right ascension is between 185 and 186, declination is bertween 15 and 16.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p JOIN photo_type as pt on p.type = pt.value where p.ra > 185 and p.ra < 186 and p.dec > 15 and p.dec < 16 and pt.name = 'STAR'",
+      "pred": "select object.id, right.ascension, declination from photo_type join neighbors on photoobj.objid = neighbors.objid where neighbors.neighbortype = \"photometrically observed star\" and neighbors.declination = 16",
+      "sqlite_error": "no such column: object.id"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all spectroscopic observed star,  whose right ascension is greater than 185 and less than 186, declination is greater than 15 and less than 16. Retrieve their object id, right ascension, declination, and photometric object type",
+      "gold": "select p.objid, p.ra, p.dec, s.z from Photoobj as p join specobj as s on s.bestobjid = p.objid where s.ra > 185 and s.ra < 186 AND s.dec > 15 and s.dec < 16 and s.class = 'STAR'",
+      "pred": "select object.id, photo_type.value, photo_type.description from photo_type join photoobj on photoobj.objid = specobj.specobjid join photoobj on photoobj.objid = photoobj.specobjid where photoobj.type = \"spectroscopic\" and photoobj.declination = \"phototype.dec\"",
+      "sqlite_error": "no such column: object.id"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Fetch me the object id, right ascension, declination, and redshift of spectroscopic observed star in a certain area, of which the right ascension is in an unbouded interval of 185 and 186, declination is in an unbouded interval of 15 and 16.",
+      "gold": "select p.objid, p.ra, p.dec, s.z from Photoobj as p join specobj as s on s.bestobjid = p.objid where s.ra > 185 and s.ra < 186 AND s.dec > 15 and s.dec < 16 and s.class = 'STAR'",
+      "pred": "select object.id, right.ascension, declination, redshift from photo_type join specobj on photoobj.specobjid = specobj.specobjid join photoobj on photoobj.specobjid = specobj.specobjid where specobj.specobjid = \"star\"",
+      "sqlite_error": "no such column: object.id"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find properties of all spectroscopic observed galaxy,  whose right ascension is greater than 185 and less than 186, declination is greater than 15 and less than 16.",
+      "gold": "select p.objID, p.ra, p.dec, s.z from Photoobj as p join specobj as s on s.bestobjid = p.objid where s.ra > 185 and s.ra < 186 AND s.dec > 15 and s.dec < 16 and s.class = 'GALAXY'",
+      "pred": "select properties from galspecline where right ascension > 185 and declination > 16",
+      "sqlite_error": "near \"ascension\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the object id, right ascension, declination, and redshift of spectroscopic observed galaxy in a certain area, of which the right ascension is in an unbouded interval of 185 and 186, declination is in an unbouded interval of 15 and 16.",
+      "gold": "select p.objID, p.ra, p.dec, s.z from Photoobj as p join specobj as s on s.bestobjid = p.objid where s.ra > 185 and s.ra < 186 AND s.dec > 15 and s.dec < 16 and s.class = 'GALAXY'",
+      "pred": "select object.id, right.ascension, declination, redshift from galspecline join photoobj on galspecline.specobjid = specobj.specobjid join photoobj on specobj.specobjid = photoobj.specobjid where specobj.specobjid = \"spectroscopic\"",
+      "sqlite_error": "no such column: object.id"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all photometrically observable star with a difference of magnitude u and magnitude g is less than 0.4,  the difference between magnitude g and magnitude r is less than 0.7, the difference between magnitude r and magnitude i is greater than 0.4 and the difference between magnitude i and magnitude z is greater than 0.4",
+      "gold": "select p.objid from photoobj as p JOIN photo_type as pt on p.type = pt.value where pt.name = 'STAR' and p.u - p.g < 0.4  and p.g - p.r < 0.7 and p.r - p.i > 0.4 and p.i - p.z > 0.4",
+      "pred": "select distinct u, r, z from photo_type where g = 0.4, r = 0.7, i = 0.4, z = 0.4",
+      "sqlite_error": "near \",\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the photometrically observed star with the following constraints in its color bands, u - g < 0.4, g - r < 0.7, r - i > 0.4 and i - z > 0.4",
+      "gold": "select p.objid from photoobj as p JOIN photo_type as pt on p.type = pt.value where pt.name = 'STAR' and p.u - p.g < 0.4  and p.g - p.r < 0.7 and p.r - p.i > 0.4 and p.i - p.z > 0.4",
+      "pred": "select neighbor.diff\u00e9rence from neighbors join photoobj on neighbors.objid = specobj.objid where neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighborobjid",
+      "sqlite_error": "incomplete input"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the number of photometrically observed GALAXY whose magnitude r is less than 17, extinction r is greater than 0.2.",
+      "gold": "select count(*) from photoobj as p join photo_type as pt on p.type = pt.value where p.r < 17 and p.extinction_r > 0.2 and pt.name = 'GALAXY'",
+      "pred": "select u, r, z from photo_type where magnitude g > 22 order by magnitude g",
+      "sqlite_error": "near \"g\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "How many photometrically observable GALAXY of which magnitude r is lower than 17 and extinction r is higher than 0.2.",
+      "gold": "select count(*) from photoobj as p join photo_type as pt on p.type = pt.value where p.r < 17 and p.extinction_r > 0.2 and pt.name = 'GALAXY'",
+      "pred": "select i, z from photo_type where magnitude i > 19 or magnitude u > 22.3",
+      "sqlite_error": "near \"i\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all photometric observable GALAXY whose magnitude g is brighter than 22, the difference of magnitude u and magnitude g is between -0.27 and 0.71, the difference of magnitude g and magnitude r is between -0.24 and 0.35, the difference of magnitude r and magnitude i is between -0.27 and 0.57 and the difference of magnitude i and magnitude z is between -0.35 and 0.7. Retrieve the object id and magnitude g with descent order by magnitude g. ",
+      "gold": "select p.objid, p.g from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'GALAXY' and p.g <= 22 and p.u - p.g >= -0.27 and p.u - p.g < 0.71 and p.g - p.r  >= -0.24 and p.g - p.r < 0.35 and p.r - p.i >= -0.27 and p.r - p.i < 0.57 and p.i - p.z  >= -0.35 and p.i - p.z < 0.7 order by p.g desc",
+      "pred": "select u from photoobj where i > 19 but z > 22.3 or g > 2.0",
+      "sqlite_error": "near \"but\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the photometric observed Galaxy of which the color band magnitude g is brighter than 22, and the other constraints as following, u - g >= -0.27 but < 0.71, g - r >= -0.24 but < 0.35, r - i >= -0.27 but < 0.57, and i - z >= -0.35 but < 0.7. Rerank the result with descent order by color band magnitude g ",
+      "gold": "select p.objid, p.g from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'GALAXY' and p.g <= 22 and p.u - p.g >= -0.27 and p.u - p.g < 0.71 and p.g - p.r  >= -0.24 and p.g - p.r < 0.35 and p.r - p.i >= -0.27 and p.r - p.i < 0.57 and p.i - p.z  >= -0.35 and p.i - p.z < 0.7 order by p.g desc",
+      "pred": "select objecti d, right ascension, declination from photo_type where name = \"GALAXY\" and magnitude = 2.2",
+      "sqlite_error": "no such column: objecti"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find object id, right ascension, declination of photometrically observed star whose magnitude i is brighter than 19 and fainter than 0, the difference of magnitude g and magnitude r is higher than 2.26, the difference of magnitude i and magnitude z is lower than 0.25, and either the difference of magnitude u and magnitude g is greater than 2.0 or magnitude u is fainter than 22.3",
+      "gold": "SELECT p.objid, p.ra, p.dec from photoobj AS p JOIN photo_type AS pt ON p.type = pt.value where pt.name = 'STAR' and i < 19 and i > 0 and g - r > 2.26 and i - z < 0.25 and u - g > 2.0  or  u > 22.3",
+      "pred": "select i, d, u, declination from photometrically observed galaxy where u between 140.9 and 141.1, g > 2.2",
+      "sqlite_error": "near \"galaxy\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the photometrically observable star with the color band magnitude i brighter than 19 but fainter than 0, the difference of magnitude g and r is greater than 2.26, the difference of magnitude i and z is less than 0.25, and either the difference of magnitude u and g is greater than 2.0 or the color band magnitude u is fainter than 22.3",
+      "gold": "SELECT p.objid, p.ra, p.dec from photoobj AS p JOIN photo_type AS pt ON p.type = pt.value where pt.name = 'STAR' and i < 19 and i > 0 and g - r > 2.26 and i - z < 0.25 and u - g > 2.0  or  u > 22.3",
+      "pred": "select i, z from photo_type where g between 17 and 18 and redshift between 0.05 and 0.01",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What are the photometrically observable Galaxy whose right ascension is between 140.9 and 141.1, magnitude g is brighter than 18.0 and the difference of magitude u and magnitude g is greater than 2.2. Retrieve the objecti id, right ascension and declination of these objects.",
+      "gold": "select objid, ra, dec from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'GALAXY' and p.ra between 140.9 and 141.1 and p.g < 18.0 and p.u - p.g > 2.2",
+      "pred": "select i, z from galspecline where g > 18.0, redshift > 0.05",
+      "sqlite_error": "near \",\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the object id, right ascension and declination of photometrically observed Galaxy, of which the the right ascension in a range of from 140.9 to 141.1, the magnitude g is less than 18.0 and the difference of magnitude u and g is higher than 2.2",
+      "gold": "select objid, ra, dec from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'GALAXY' and p.ra between 140.9 and 141.1 and p.g < 18.0 and p.u - p.g > 2.2",
+      "pred": "select i, d, r from photo_type where u > 0.5 intersect select g, r from photoobj where u = 0.5",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object id, right ascension and declination of spectroscopic Galaxy, which have value of magnitude g between 17 and 18 and redshift less than 0.05. ",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid where s.class = 'GALAXY' and p.g between 17 and 18 and s.z < 0.05",
+      "pred": "select u, g, i, z from photo_type where magnitude = \"U\" and magnitude = \"G\" and magnitude = \"Z\"",
+      "sqlite_error": "no such column: u"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Fetch me the object id, right ascension and declination of spectroscopic Galaxy with the color band magnitude g brighter than 18.0 but fainter than 17 and redshift lower than 0.05",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid where s.class = 'GALAXY' and p.g between 17 and 18 and s.z < 0.05",
+      "pred": "select i, z, right ascension, declination from galspecline where g > 17 but brighter than 18",
+      "sqlite_error": "near \"but\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Search for photometrically observed Star with the difference of magnitude u and magnitude g is less than 0.5. Retrieve each object id, right ascension and declination.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR' and p.u - p.g < 0.5",
+      "pred": "select i, z from galspecline where g between 17 and 18 and redshift between 0.05 and 0.01",
+      "sqlite_error": "no such column: i"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the object id, right ascension and declination of photometrically observable Star with the constraints: color band u - g < 0.5 ",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR' and p.u - p.g < 0.5",
+      "pred": "select * from photo_type where name = \"GALAXY\" and redshift between 0.05 and 17",
+      "sqlite_error": "no such column: redshift"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Search for photometrically observed Star that has a difference of magnitude u and magnitude g less than 0.5. Retrieve all magnitude values (u, g, r, i and z) of these objects.",
+      "gold": "select p.u, p.g, p.r, p.i, p.z from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR' and  p.u - p.g < 0.5",
+      "pred": "select color from galspecline where g > 17 but r > 18 and redshift > 0.05",
+      "sqlite_error": "near \"but\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Fetch all color bands (magnitude u, g, r, i, z) of photometrically observable Star where color band u - g < 0.5",
+      "gold": "select p.u, p.g, p.r, p.i, p.z from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR' and  p.u - p.g < 0.5",
+      "pred": "select object.objectid, neighbors.distance, neighbors.neighborobjid from neighbors join photoobj on neighbors.objid = photoobj.objid join neighbors on neighbors.objid = neighbors.objid where neighbors.distance = \"center\" and neighbors.distance = \"neighbor\"",
+      "sqlite_error": "no such column: object.objectid"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object id, right ascension and declination from spectroscopically observed GALAXY whose value of magnitude g fainter than 17 but brighter than 18, and redshift less than 0.05. ",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid where s.class = 'GALAXY' and p.g between 17 and 18 and s.z < 0.05",
+      "pred": "select object.id, neighbors.distance, neighbors.neighbortype, neighbors.type from neighbors join photoobj on neighbors.objid = photoobj.objid join neighbors on neighbors.objid = neighbors.objid where neighbors.neighbortype = \"nearst\" group by neighbors.objid order by distance desc limit 1;",
+      "sqlite_error": "no such column: object.id"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the spectroscopically observable Galaxy with magnitude g between 17 and 18, and redshift below 0.05. Retrieve the object id, right ascension and declination of them.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid where s.class = 'GALAXY' and p.g between 17 and 18 and s.z < 0.05",
+      "pred": "select distinct class from photo_type where right ascension > 100 intersect select distinct class from photo_type where declination > 100",
+      "sqlite_error": "near \"ascension\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all magnitude values (u, g, r, i and z) from spectroscopically observable GALAXY whose value of magnitude g between 17 and 18,  and redshift less than 0.05. ",
+      "gold": "select p.u, p.g, p.r, p.i, p.z from photoobj as p join specobj as s on s.bestobjid = p.objid where s.class = 'GALAXY' and p.g between 17 and 18 and s.z < 0.05",
+      "pred": "select distinct photo_type.class from photoobj join photoobj on photoobj.objid = specobj.specobjid join photo_type on photoobj.objid = photoobj.objid where photoobj.ra > 100 intersect select distinct photo_type.class from photoobj join photo_type on photoobj.dec",
+      "sqlite_error": "no such column: photo_type.class"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the different object type classifications of photometric objects whose right ascension is greater than 100 and declination is less than 100.",
+      "gold": "select distinct p.type from photoobj as p where p.ra > 100 and p.dec < 100",
+      "pred": "select distinct photometrical observation type from photoobj",
+      "sqlite_error": "near \"type\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Count the photometrically observable STAR",
+      "gold": "select count(*) from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR'",
+      "pred": "select object.id, photo_type.value, photo_type.type from photo_type join neighbors on photoobj.objid = neighbors.objid where neighbors.neighbortype = \"photometrically observed star\"",
+      "sqlite_error": "no such column: object.id"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all photometrically observed object types. Return only unique records.",
+      "gold": "select distinct pt.name from photo_type as pt join photoobj as p on p.type = pt.value",
+      "pred": "select photo_type.value, photo_type.dec, photo_type.type from photo_type join neighbors on photoobj.objid = neighbors.objid where neighbors.type = \"STAR\"",
+      "sqlite_error": "no such column: photo_type.dec"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the all different photometrical observation types among all photometric objects.",
+      "gold": "select distinct pt.name from photo_type as pt join photoobj as p on p.type = pt.value",
+      "pred": "select photometric objects from photo_type where class = \"GALAXY\" and magnitude u > 2.22 and magnitude g > 1",
+      "sqlite_error": "near \"u\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find everything about photometrically observable Galaxy.",
+      "gold": "select * from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'GALAXY'",
+      "pred": "select photometric objct, spectroscopic object i d from galspecline where u = 2.22 and g = 1",
+      "sqlite_error": "near \"i\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Fetch me all about photometrically observed Galaxy",
+      "gold": "select * from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'GALAXY'",
+      "pred": "select photometric object, modified julien date from photo_type where name = \"K\"",
+      "sqlite_error": "near \"date\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object ids, right ascensions, declinations and observed types of photometrically observed Star.",
+      "gold": "select p.objid, p.ra, p.dec, pt.name from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR'",
+      "pred": "select photometric object i d, modified julien date from photo_type where name = \"STAR\"",
+      "sqlite_error": "near \"i\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What is the photometrically observable Star? Retrieve their right ascension, declinations and observed type as well.",
+      "gold": "select p.objid, p.ra, p.dec, pt.name from photoobj as p join photo_type as pt on p.type = pt.value where pt.name = 'STAR'",
+      "pred": "select redshift, right ascension, declination from galspecline where r = \"starforming\";",
+      "sqlite_error": "no such column: redshift"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the photometric objects with object ids, spectroscopic object id whose spectroscopic class is 'GALAXY', with the difference of magnitude u and magnitude r greater trhan 2.22 and the difference of magnitude g and magnitude i greater than 1.",
+      "gold": "select p.objid, s.specobjid from photoobj as p join specobj as s on s.bestobjid = p.objid where s.class = 'GALAXY' and p.u - p.r > 2.22 and p.g - p.i > 1",
+      "pred": "select ra, dec from photo_type where name = \"GALAXY\"",
+      "sqlite_error": "no such column: ra"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What is the photometric object id and modified julien date of spectroscopic Star with spectral type 'K'",
+      "gold": "SELECT T2.objid, T1.mjd FROM specobj AS T1 JOIN photoobj as T2 ON T1.bestobjid = T2.objid WHERE T1.class = 'STAR' and T1.subclass like '%K%'",
+      "pred": "select galactic coordinates from galspecline where qso = 'non-stellar'",
+      "sqlite_error": "no such column: galactic"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find redshift, right ascension and declination of all photometrically observed Starforming Galaxy",
+      "gold": "SELECT T1.z, T1.ra, T1.dec FROM specobj AS T1 JOIN photoobj AS T2 ON T1.bestobjid = T2.objid JOIN photo_type AS T3 ON T2.type = T3.value WHERE T1.subclass = 'STARFORMING' AND T3.name = 'GALAXY'",
+      "pred": "select galactic latitude, longitude from galspecline where qso = 'null'",
+      "sqlite_error": "no such column: galactic"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What is the redshift of STARFORMING GALAXY, which can be observed photometrically? Retrieve their right ascension and declination as well.",
+      "gold": "SELECT T1.z, T1.ra, T1.dec FROM specobj AS T1 JOIN photoobj AS T2 ON T1.bestobjid = T2.objid JOIN photo_type AS T3 ON T2.type = T3.value WHERE T1.subclass = 'STARFORMING' AND T3.name = 'GALAXY'",
+      "pred": "select count(*) from neighbors where distance between cetner and neighbor = 0.05, difference between u and g, difference between r and i > 0.4, difference between z and u where neighbor = \"binary\"",
+      "sqlite_error": "near \",\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What are the mininum of the extinction r grouped by run number of photometric Galaxy?",
+      "gold": "SELECT min( T1.extinction_r), T1.run FROM photoobj AS T1 JOIN photo_type AS T2 ON T1.type = T2.value WHERE T2.name = 'GALAXY' GROUP BY T1.run",
+      "pred": "select neighbor.diff\u00e9rence from neighbors join photoobj on neighbors.objid = specobj.objid where neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighbors.diff\u00e9rence between neighborobjid",
+      "sqlite_error": "incomplete input"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What are the galactic coordinates of all Quasi stellar object (QSO)",
+      "gold": "SELECT T1.b, T1.l FROM photoobj AS T1 JOIN specobj AS T2 ON T1.objid = T2.bestobjid where T2.class = 'QSO'",
+      "pred": "select subclass from photo_type where name = \"STAR\" and subclass = \"carbon\"",
+      "sqlite_error": "no such column: subclass"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find me the galactic latitude and longitude of all Quasi stellar object (QSO)",
+      "gold": "SELECT T1.b, T1.l FROM photoobj AS T1 JOIN specobj AS T2 ON T1.objid = T2.bestobjid where T2.class = 'QSO'",
+      "pred": "select photometrically observable star from phototype where subclass = \"carbon\" and subclass = \"carbon\";",
+      "sqlite_error": "near \"star\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object ids, classes and subclasses of spectroscopically and photometrically observable Galaxy with AGN.",
+      "gold": "select s.specobjid, s.class, s.subclass from specobj as s join photoobj as p on s.bestobjid = p.objid join photo_type as pt on p.type = pt.value where s.subclass like '%AGN%' and s.class = 'GALAXY' and pt.name = 'GALAXY'",
+      "pred": "select neighbors.distance from neighbors join galspecline on neighbors.objid = galspecline.objid group by neighbors.objid order by distance limit 1",
+      "sqlite_error": "no such column: galspecline.objid"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the least distance of the nearst photometrically observable Star",
+      "gold": "SELECT min(n.distance) FROM neighbors AS n JOIN photo_type AS pt ON n.neighbortype = pt.value JOIN photoobj AS p ON p.objid = n.objid WHERE pt.name = 'STAR' and p.objid in (SELECT p.objid FROM photoobj AS p JOIN photo_type AS pt ON p.type = pt.value WHERE pt.name = 'STAR')",
+      "pred": "select neighbors.distance from neighbors join galspecline on neighbors.objid = galspecline.objid group by neighbors.objid order by distance limit 1",
+      "sqlite_error": "no such column: galspecline.objid"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What is the minimal distance between the nearest photometrically observed Star?",
+      "gold": "SELECT min(n.distance) FROM neighbors AS n JOIN photo_type AS pt ON n.neighbortype = pt.value JOIN photoobj AS p ON p.objid = n.objid WHERE pt.name = 'STAR' and p.objid in (SELECT p.objid FROM photoobj AS p JOIN photo_type AS pt ON p.type = pt.value WHERE pt.name = 'STAR')",
+      "pred": "select center, neighborobjid from neighbors order by distance limit 1",
+      "sqlite_error": "no such column: center"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Show me the longest distance of the photometrically observable GALAXY neighbors",
+      "gold": "SELECT max(n.distance) FROM neighbors AS n JOIN photo_type AS pt ON n.neighbortype = pt.value JOIN photoobj AS p ON p.objid = n.objid WHERE pt.name = 'GALAXY' and p.objid in (SELECT p.objid FROM photoobj AS p JOIN photo_type AS pt ON p.type = pt.value WHERE pt.name = 'GALAXY')",
+      "pred": "select redshift from neighbors order by distance limit 1",
+      "sqlite_error": "no such column: redshift"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What is the maximal distance between the nearest photometrically observed Star?",
+      "gold": "SELECT max(n.distance) FROM neighbors AS n JOIN photo_type AS pt ON n.neighbortype = pt.value JOIN photoobj AS p ON p.objid = n.objid WHERE pt.name = 'GALAXY' and p.objid in (SELECT p.objid FROM photoobj AS p JOIN photo_type AS pt ON p.type = pt.value WHERE pt.name = 'GALAXY')",
+      "pred": "select redshift from neighbors order by distance limit 1",
+      "sqlite_error": "no such column: redshift"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "What are the galactic coordinates of the center object with the least distance to its nearest neighbor. Please retrieve the distance also.",
+      "gold": "SELECT p.b, p.l, n.distance from photoobj as p join neighbors n on p.objid = n.objid where n.distance = (select min(n.distance) from neighbors as n)",
+      "pred": "select redshift from neighbors order by distance limit 1",
+      "sqlite_error": "no such column: redshift"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Fetch the least distance of the nearst neighbors. Retrieve the corresponding galactic latitude, galactic longitude as well.",
+      "gold": "SELECT p.b, p.l, n.distance from photoobj as p join neighbors n on p.objid = n.objid where n.distance = (select min(n.distance) from neighbors as n)",
+      "pred": "select redshift from neighbors order by distance limit 1",
+      "sqlite_error": "no such column: redshift"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "List all unique run numbers",
+      "gold": "select distinct p.run from photoobj as p",
+      "pred": "select class, declination, photometric type from galspecline group by class",
+      "sqlite_error": "no such column: class"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find all run numbers without duplicates",
+      "gold": "select distinct p.run from photoobj as p",
+      "pred": "select ascension, declination from galspecline where z = \"Galspecline\";",
+      "sqlite_error": "no such column: ascension"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "How many different run number are there",
+      "gold": "select count(distinct p.run) from photoobj as p",
+      "pred": "select i, photo_type.name from photo_type join neighbor on photoobj.objid = neighbor.objid where neighbor.distance > 100 and neighbor.declination = 100",
+      "sqlite_error": "no such table: neighbor"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Count all unique run numbers",
+      "gold": "select count(distinct p.run) from photoobj as p",
+      "pred": "select photo_type.name, photo_type.type from photoobj join photoobj on photoobj.objid = photoobj.objid where photoobj.i = 100 and photoobj.dec = 100 group by photoobj.i",
+      "sqlite_error": "no such column: photo_type.name"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the number of photometric objects grouped by their photometrically observed type name.",
+      "gold": "select pt.name, count(*) from photoobj as p join photo_type as pt on pt.value = p.type group by pt.name",
+      "pred": "select i, z, right ascension, declination from photometric object group by i",
+      "sqlite_error": "no such table: photometric"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "How many photometric objects for each photometrically observation type are there?",
+      "gold": "select pt.name, count(*) from photoobj as p join photo_type as pt on pt.value = p.type group by pt.name",
+      "pred": "select bestobjid, right ascension, declination from specobj join galspecline on specobj.bestobjid = specobj.bestobjid group by bestobjid having count(*) >= 1",
+      "sqlite_error": "no such column: right"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find right ascension, declination and photometric type class of equivalent width estimates of galactic-stars from these spectroscopic objects.",
+      "gold": "select p.ra, p.dec, p.type from spplines as sp join specobj as s on sp.specobjid = s.specobjid join photoobj as p on p.objid = s.bestobjid",
+      "pred": "select spectroscopic objects from galspecline where z = 'Galactic' group by spectroscopic objects having z = 'Galactic'",
+      "sqlite_error": "near \"objects\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Fetch the right ascension and declination of spectroscopic objects those have equivalent width estimates of galactic-stars",
+      "gold": "select p.ra, p.dec, p.type from spplines as sp join specobj as s on sp.specobjid = s.specobjid join photoobj as p on p.objid = s.bestobjid",
+      "pred": "select equivalence from galspecline where z = \"gallactic\" and z = \"spectroscopic objects\";",
+      "sqlite_error": "no such column: equivalence"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the object id and photometric observation type of photometric objects whose right ascension is greater than 100 and declination is less than 100.",
+      "gold": "select p.objid, pt.name from photoobj as p join photo_type as pt on p.type = pt.value where p.ra > 100 and p.dec < 100",
+      "pred": "select count(*) from galspecline where z = \"Galspecline\" group by spectroscopic object having equivalence (select z from galspecline)",
+      "sqlite_error": "near \"object\": syntax error"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Retrieve the photometric object id and type name of corresponding photometric observation from the objects with the right ascension over 100 and declination below 100.",
+      "gold": "select p.objid, pt.name from photoobj as p join photo_type as pt on p.type = pt.value where p.ra > 100 and p.dec < 100",
+      "pred": "select count(*) from galspecline where z = \"Galspecline\"",
+      "sqlite_error": "no such column: z"
+    },
+    {
+      "db_id": "skyserver_dr16_2020_11_30",
+      "question": "Find the photometric object id, right ascension and declination of corresponding spectroscopic objects, from which it has emission line estimates of galaxies.",
+      "gold": "select p.objid, p.ra, p.dec from photoobj as p join specobj as s on s.bestobjid = p.objid join galspecline as g on s.specobjid = g.specobjid",
+      "pred": "select * from galspecline where spectroscopic objects intersect select spectroscopic objects, specobjid where emission_line estimates of galaxies from galspecline",
+      "sqlite_error": "near \"objects\": syntax error"
+    }
+  ]
+}

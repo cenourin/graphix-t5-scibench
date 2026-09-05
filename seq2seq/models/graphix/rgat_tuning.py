@@ -1,9 +1,11 @@
+import dgl
 import dgl.function as fn
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from ..model_utils import FFN
 from .functions import *
+
 
 class RGAT_Layer(nn.Module):
 
@@ -29,18 +31,35 @@ class RGAT_Layer(nn.Module):
         # set the same device:
         # DGL's graph.to(device) allocates GPU memory via its own CUDA allocator
         # (dgl::runtime::CUDADeviceAPI), which is entirely separate from PyTorch's caching
-        # allocator -- on an 8GB card where the model weights alone already consume ~98% of
-        # VRAM (confirmed: 8002/8192 MiB used right after model.to(device), before any of
-        # this ever runs), whatever PyTorch is holding but not actively using in its cache
-        # is invisible to DGL's allocator and this raises a genuine CUDA OOM even though
-        # nothing is actually short on memory account-for-account. Releasing PyTorch's idle
-        # cached blocks back to the driver first gives DGL's separate allocator a chance to
-        # find the room it needs. This runs once per encoder layer (RGAT is on every encoder
-        # T5Block), which is a real per-call cost, but on an already VRAM-starved GPU that's
-        # the trade being made here.
+        # allocator -- when the model weights alone already consume ~98% of VRAM (e.g.
+        # Graphix-3B on an 8GB card: confirmed 8002/8192 MiB used right after
+        # model.to(device), before any of this ever runs), whatever PyTorch is holding but
+        # not actively using in its cache is invisible to DGL's allocator and this raises a
+        # genuine CUDA OOM even though nothing is actually short on memory
+        # account-for-account. Releasing PyTorch's idle cached blocks back to the driver
+        # first gives DGL's separate allocator a chance to find the room it needs.
+        #
+        # torch.cuda.empty_cache() forces a CUDA sync and makes the *next* allocation go
+        # through a real cudaMalloc instead of PyTorch's cache -- calling it unconditionally
+        # here (once per encoder layer, i.e. up to 12x per example on t5-base) is fine when
+        # VRAM is that tight, but is pure, severe overhead whenever it isn't: confirmed via a
+        # real ScienceBenchmark fine-tuning run on t5-base (6-7 GiB/8 GiB used, real
+        # headroom) where a single optimizer step (32 micro-batches) hadn't completed after
+        # nearly an hour with the GPU pegged at ~90-98% "utilization" that was mostly sync
+        # overhead, not useful compute. Try the allocation first; only pay for empty_cache()
+        # (and retry) on the rare case it's actually needed, so the common case (headroom
+        # available) pays nothing extra.
         if x.is_cuda:
-            torch.cuda.empty_cache()
-        g = graph.to(x.device)
+            try:
+                g = graph.to(x.device)
+            except RuntimeError as e:
+                if "out of memory" not in str(e).lower():
+                    raise
+                torch.cuda.empty_cache()
+                g = graph.to(x.device)
+        else:
+            g = graph.to(x.device)
+
         # pre-mapping q/k/v affine
         q, k, v = self.affine_q(self.feat_dropout(x)), self.affine_k(self.feat_dropout(x)), self.affine_v(self.feat_dropout(x))
         e = lgx.view(-1, self.num_heads, self.d_k) if lgx.size(-1) == q.size(-1) else \
@@ -56,12 +75,32 @@ class RGAT_Layer(nn.Module):
         # fp32 for the DGL calls -- and back down to the model's working dtype (bf16) for
         # the `affine_o`/`layernorm`/`ffn` that consume its output -- is cheap regardless
         # of device.
-        with g.local_scope():
-            g.ndata['q'], g.ndata['k'] = q.view(-1, self.num_heads, self.d_k).float(), k.view(-1, self.num_heads, self.d_k).float()
-            g.ndata['v'] = v.view(-1, self.num_heads, self.d_k).float()
-            g.edata['e'] = e.float()
-            out_x = self.propagate_attention(g)
-        out_x = out_x.to(x.dtype)
+        try:
+            with g.local_scope():
+                g.ndata['q'], g.ndata['k'] = q.view(-1, self.num_heads, self.d_k).float(), k.view(-1, self.num_heads, self.d_k).float()
+                g.ndata['v'] = v.view(-1, self.num_heads, self.d_k).float()
+                g.edata['e'] = e.float()
+                out_x = self.propagate_attention(g)
+            out_x = out_x.to(x.dtype)
+        except dgl.DGLError as err:
+            # DGL's CPU SpMM backend (libxsmm kernel codegen) has been observed to fail
+            # for a rare graph shape even when both the graph and its features were moved
+            # to CUDA -- confirmed via a real ScienceBenchmark fine-tuning crash
+            # ("Failed to generate libxsmm kernel for the SpMM operation", CPU-backend
+            # stack frames throughout, for a graph.to(device) call that succeeded moments
+            # earlier). Rather than crashing the whole run over one pathological example's
+            # graph, skip the RGAT augmentation for just this layer/example (pass the
+            # node features through unchanged, same pattern used elsewhere this session:
+            # capture, skip only the affected example, log it, never fail silently or
+            # crash the whole computation).
+            print(
+                "RGAT_Layer.forward: DGLError on propagate_attention, skipping graph "
+                "augmentation for this example (n_nodes={}, n_edges={}): {}".format(
+                    graph.number_of_nodes(), graph.number_of_edges(), err
+                ),
+                flush=True,
+            )
+            return x, lgx
 
         out_x = self.layernorm(x + self.affine_o(out_x.view(-1, self.num_heads * self.d_k)))
         out_x = self.ffn(out_x)

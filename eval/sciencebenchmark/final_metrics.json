@@ -1,0 +1,16 @@
+{
+  "exact_match": 0.0,
+  "exact_match_scored_examples": 289,
+  "exact_match_skipped_by_db": {
+    "skyserver_dr16_2020_11_30": 4
+  },
+  "exec": 0.0,
+  "exec_scored_examples": 197,
+  "exec_skipped_by_db": {
+    "oncomx_v1_0_25_small": 2
+  },
+  "exec_skipped_hang_risk_db_ids": [
+    "skyserver_dr16_2020_11_30"
+  ],
+  "exec_skipped_hang_risk_count": 94
+}

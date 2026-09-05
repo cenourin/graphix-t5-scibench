@@ -43,13 +43,17 @@ def inject_syntax_dataset(processor, dataset, output_path=None):
         pickle.dump(syntax_dataset, open(output_path, "wb"))
     return syntax_dataset
 
-def inject_syntax_dataset_json(processor, dataset, mode='train', output_path=None):
+def inject_syntax_dataset_json(processor, dataset, mode='train', output_path=None, dev_graph_idx_offset=8577):
     syntax_dataset = []
     for idx, data in enumerate(dataset):
         entry = processor.inject_syntax(data)
         if mode == 'dev':
-            # please switch the length of your training data.
-            entry['graph_idx'] = idx + 8577 
+            # dev's graph_idx is offset so it doesn't collide with train's when both are
+            # merged into one graph_pedia_total.bin (graph_pedia_merge.py) keyed by this
+            # same graph_idx -- the offset must equal the *train* split's example count.
+            # Default (8577) is Spider's train size; pass --dev_graph_idx_offset for any
+            # other dataset (e.g. 0 if dev's graph_pedia is kept standalone, not merged).
+            entry['graph_idx'] = idx + dev_graph_idx_offset
         else:
             entry['graph_idx'] = idx
         syntax_dataset.append(entry)
@@ -114,6 +118,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--database_path', type=str, required=False, help='database path')
     arg_parser.add_argument('--mode', type=str, required=False, default = "train", help='train or dev')
     arg_parser.add_argument('--output_path', type=str, help='output path', default = "data/syntax.bin")
+    arg_parser.add_argument('--dev_graph_idx_offset', type=int, required=False, default=8577,
+                             help='offset added to dev graph_idx (must equal the train split example count it will be merged with; 0 if dev graph_pedia is kept standalone)')
     # arg_parser.add_argument('--raw_table_path', type=str, required=False, help='raw table path')
     # arg_parser.add_argument('--plm_path', type=str, required=True, help='plm path')
     args = arg_parser.parse_args()
@@ -129,7 +135,8 @@ if __name__ == '__main__':
     dep = DEP(parser=parser)
 
 
-    syntax_dataset = inject_syntax_dataset_json(dep, dataset=dataset, mode=args.mode, output_path=args.output_path)
+    syntax_dataset = inject_syntax_dataset_json(dep, dataset=dataset, mode=args.mode, output_path=args.output_path,
+                                                 dev_graph_idx_offset=args.dev_graph_idx_offset)
 
 
     print("successfully processed to {}".format(str(args.output_path)))

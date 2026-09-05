@@ -1141,8 +1141,22 @@ class T5Stack(T5PreTrainedModel):
                     use_cache = False
 
                 def create_custom_forward(module):
+                    # graph_batch/relation_emb are closed over here (not passed through
+                    # checkpoint()'s own positional args) -- they're plain Python
+                    # objects (a list of dicts holding DGL graphs / an nn.Embedding),
+                    # not differentiable tensors checkpoint needs to manage, so closing
+                    # over them is both correct and simpler than threading them through
+                    # checkpoint()'s recompute machinery. Without this, gradient
+                    # checkpointing silently ran T5Block.forward with graph_batch=None,
+                    # which either crashed (graph_caption iterates None) or, for decoder
+                    # blocks where no RGAT layer exists at all, produced results with no
+                    # graph augmentation applied on any block -- confirmed missing during
+                    # a real attempt to enable gradient_checkpointing for training.
                     def custom_forward(*inputs):
-                        return tuple(module(*inputs, use_cache, output_attentions))
+                        return tuple(module(
+                            *inputs, use_cache, output_attentions,
+                            graph_batch=graph_batch, relation_emb=self.relation_emb,
+                        ))
 
                     return custom_forward
 

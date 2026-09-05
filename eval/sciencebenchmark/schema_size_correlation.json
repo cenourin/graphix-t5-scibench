@@ -1,0 +1,1760 @@
+[
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 593,
+    "question": "Find the total cost of the project Theseus"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 593,
+    "question": "Show total cost of project with title Theseus"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": 575,
+    "question": "Show me the acronyms of projects that started in 2018"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 572,
+    "question": "Get acronyms of projects beginning in 2018"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 574,
+    "question": "Show me the titles of projects that started before 2016"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 573,
+    "question": "Find titles of projects which started earlier than 2016"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 583,
+    "question": "Find institutions from the region of Nordjylland"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 585,
+    "question": "Show the name of institutions based in Nordjylland"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "Find the name of principal investigators in projects that started in 2014"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 597,
+    "question": "Show the full name of people being investigators in projects that began in 2014"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find projects whose subject area is \u201cMathematics and Statistics\u201d"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the acronym and subject area description of projects with subject area \u201cMathematics and Statistics\u201d"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 574,
+    "question": "Find all different topics of projects that ended in 2014"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 576,
+    "question": "Find distinct titles of topics of projects that with end year 2014"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Show the acronym of projects with a member from Greece"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 585,
+    "question": "Show names of institutions from France or Germany"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Show names of institutions which are not from France"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 571,
+    "question": "Count the projects that started in 2016"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 595,
+    "question": "Show the title of the project with the highest total cost"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the name of members in projects costing less than the average project cost."
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the id of projects with at least 100 members"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the code and title of the funding scheme which funded the highest number of projects."
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": 571,
+    "question": "Show the total costs of all projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Show me the title of projects which have an end year and a start year after 2006"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Find the projects which lasted the longest and have an end year and a start year"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Show me topic titles which starts with 'Raw materials'"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Show me topic titles which contain the word 'climate'"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 584,
+    "question": "Show me the number of projects where Thomas Bell was principal investigator"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 590,
+    "question": "Show me the all different names of people"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": 579,
+    "question": "Find the acronym of projects which have total costs between 100000 and 200000"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": 575,
+    "question": "Show the title of projects with costs higher than 1000000"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 576,
+    "question": "Show the title of projects with costs higher than a million"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the project title and member name where the member has a partner role "
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What different research domains do exist?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the country name of all institutes."
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the country of all institutes."
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": null,
+    "question": "What is the country code 2 and country code 3 for Andorra?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": 581,
+    "question": "Find the code of the funding scheme for Framework Partnership Agreement"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Show me the full title of the program which is called 'Transport' in short."
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Find member name and role code of project members in project with acronym GTBB"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 580,
+    "question": "Find member name and role code of project members in project GTBB"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": 595,
+    "question": "Show titles of programmes which have FP7 as parent program"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 598,
+    "question": "Show titles of programmes which have program with code FP7 as parent program"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Get panel descriptions from research domain Life Sciences"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Get panel descriptions from research domain life sciences"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "Find project members of type Research Organisations"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": false,
+    "n_nodes": null,
+    "question": "Get names of project members who's activity type description is Research Organisations"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the objective of DEEPCARBON?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": null,
+    "question": "What is the objective of the project with acronym DEEPCARBON?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Get the title of projects having the term 'carbon capturing' in it's objective."
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": true,
+    "n_nodes": null,
+    "question": "How many projects have an objective which contains 'carbon capturing'?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 592,
+    "question": "Show all names of institutions from France except institutions from the territorial region of Paris"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 586,
+    "question": "Show institutions from France except the ones from Paris"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 580,
+    "question": "Which institutions have never been project coordinators"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 578,
+    "question": "Show all of the instituions that have never coordinated a project"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 595,
+    "question": "Show all of the names of people who have worked on multiple projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 591,
+    "question": "Which people have worked on more than one project"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 579,
+    "question": "What is the title of the subject area that has been granted the most funding"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which subject area has recieved the highest funding contribution?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "Which subject area has recieved the least funding contribution"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 581,
+    "question": "What is the title of the subject area that has been granted the least amount of funding"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 572,
+    "question": "Which institution has participated in the most projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "Show the institution that has been involved in the highest number of projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 573,
+    "question": "Which institution has participated in the fewest projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "Show the institution that has been involved in the least amount of projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 571,
+    "question": "Which funding scheme provided the most funding"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 571,
+    "question": "Which funding scheme provided the least funding"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 599,
+    "question": "Show the industrial partners that have worked on projects and the amount of funding they have recieved in order from most to least"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 599,
+    "question": "Show the amount of funding and corresponding list of industrial partners that have worked on projects in order from the most funding to the least funding"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 576,
+    "question": "Show the title and the start year of the most recent projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which projects have started most recently?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 575,
+    "question": "Show title and the starting year of the least recent projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which projects have started the least recently?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 574,
+    "question": "What is the starting date of the first recorded project"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "On which date did the first project start?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 592,
+    "question": "Show the titles of all of the projects in the subject area of Climate change and Carbon cycle research"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the titles of all of the projects that share the subject area code 'CCC"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "List all of the possible roles that project members can have in projects"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are all of the ways that projects members can participate in projects?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 605,
+    "question": "How many erc panels are dedicated to Life Sciences"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 608,
+    "question": "Count the number of erc panels that are part of Life Sciences"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 615,
+    "question": "List all of the european research council panels related to social sciences and humanities"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 614,
+    "question": "How many european research council panels are related to social sciences and humanities"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 576,
+    "question": "Show all of the project members that are private for profit entities"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which project members are businesses?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many project members are businesses?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many project members are Higher or Secondary Education Establishments?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 575,
+    "question": "Count the number of project members that are Educational Establishments"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many projects have been related to Robotics?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the number of projects that have been carried out in the subject area of Robotics?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which non-EU entity has recieved the most funding through a project?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which entity located outside of the EU has received the most funding?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which non-EU entity has recieved the least funding through a project?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which entity located outside of the EU has received the least funding?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many non-EU entities have participated in projects?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which entities that are located outside of the European Union have participated in projects?"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 576,
+    "question": "Show all of the programmes with titles that are related to climate"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 577,
+    "question": "List the programms that have the term climate in the title"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "Show the title and amount of funds that have been allocated per programme"
+  },
+  {
+    "db_id": "cordis_temporary",
+    "exact": 0,
+    "n_nodes": 582,
+    "question": "List all of the titles and the amount of funding that has been dispersed per programme"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1031,
+    "question": "Show me all disease mutations with ref_aa E"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "In how many FDA tests was manufacturer 23andMe involved?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": null,
+    "question": "What is the common name for species 'Mus'?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What species are there?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1024,
+    "question": "Show me all disease mutations"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1028,
+    "question": "Get a list of all biomarker descriptions"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": null,
+    "question": "In how many fda test trials was test manufacturer 'ABBOTT MOLECULAR INC' involved?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the gene symbol and the description of cancer biomarkers with panel = 'false'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show all information about diseases where the name contains 'cancer'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": 1047,
+    "question": "Show me all biomarker titles and QA states for biomarker on EDRN in phase Two"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": 1040,
+    "question": "Show me biomarker titles and qa states for biomarker in phase Two"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": 1031,
+    "question": "Show me all gene symbols of biomarkers"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me all biomarkers on the EDRN platform which are not of type protein."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the title of biomarkers on the EDRN platform with biomarker type different from Protein."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1041,
+    "question": "Identify a list of genes expressed in lung cancer"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show biomarker gene symbol and description for 'breast cancer'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the different biomarker EDRN phases?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "List the platform method an the test study design for FDA tests from test manufacturer Dako Denmark A/S"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Get the p-value of differential expressions for the disease 'lung cancer'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1034,
+    "question": "Show disease mutation chromosome positions for skin cancer"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": 1037,
+    "question": "List all disease mutation chromosome positions data for disease skin cancer"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Show me all information about disease mutations with amino acid residue (ref_aa) equal to E"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "How many FDA tests did manufacturer 23andMe?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the name of cancer types where the A1BG gene expression is significantly increased (up regulated)"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1024,
+    "question": "Show me all information about species"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Return the symbol and p-value for the expression of EGFR in lung cancer "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Return gen symbol and pvalue for the expression of gene with symbol 'EGFR' in lung cancer "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": 1025,
+    "question": "Show all information about disease mutations"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many healthy expression are there for 'late adult stage'?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show name of diseases where the A1BG gene expression is statistically significant"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show name of diseases where the gene expression with symbol A1BG has a statistical significance of 'Yes'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1027,
+    "question": "Show me the description of all biomarkers"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1041,
+    "question": "Show the gene symbol and the description of cancer biomarkers which are not in a panel"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "What is the test trade name for FDA tests which are actually used for predisposition?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": 1031,
+    "question": "Show me the gene symbol of biomarkers"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me all biomarkers on the EDRN platform with type protein in phase two."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Show me the title of all biomarkers on the EDRN platform with biomarker type Protein in phase Two."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Get the biomarker gene symbol and biomarker description for disease with name 'breast cancer'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1030,
+    "question": "Get all distinct biomarker EDRN phases"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1038,
+    "question": "Show the pvalue of differential expression of lung cancer"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many genes are there for species Homo?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many genes ensembles are there for species with genus Homo?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show tests built by a manufacturer starting with 'Roche' "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Show submissions of biomarker FDA tests from test manufacturer starting with 'Roche' "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which diseases (name) have a mutation with a coding sequence position of 102997?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": null,
+    "question": "Show me all diseases having a mutation with a coding sequence position (cds_pos) of 102997?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1040,
+    "question": "Show me all gene symbols expressed with a pvalue between 0.39 and 0.41"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Get all gene symbols from expressions with a p-value between 0.39 and 0.41"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the distinct chromosome id's in mutations of breast cancer"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show the different chromosome id's in mutations of disease 'breast cancer'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1055,
+    "question": "Show me the names of all anatomical entities which have a healthy expression with relative gene expression level LOW and a relative anatomical expression level of HIGH"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1050,
+    "question": "List the names of anatomical entities having an expression with relative gene expression level LOW and a relative anatomical expression level of HIGH"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "Get the name of all anatomical entities starting with 'bone'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": null,
+    "question": "What is the common name for species with genus Mus?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the name of diseases where the expression of gene with symbol A1BG is up regulated (expression change direction)"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many healthy expression are there for stage name starting with 'late adult'?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": null,
+    "question": "Show number of fda test trials with test manufacturer 'ABBOTT MOLECULAR INC'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": null,
+    "question": "What is the test trade name for FDA tests where actual use is 'predisposition'?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show all symbols of genes expressed in the disease 'lung cancer'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the platform method an the study design for FDA tests from manufacturer 'Dako Denmark A/S'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the description for FDA approved biomarkers with test approval status 'class II'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "List the descriptions of biomarkers for fda tests with approval status 'class II'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Return all information from healthy expressions which have an expression score above the average."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Return all expressions which have an expression score higher than the average expression score."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the symbols for biomarkers with type genomic for anatomical entity breast?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the symbols for biomarkers on the EDRN platform with biomarker type Genomic for anatomical entity 'breast'?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": false,
+    "n_nodes": null,
+    "question": "What disease can occur in the liver?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "List the name of diseases that can occur in the anatomical entity 'liver'"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show distinct manufacturer of tests for gene BRAF "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show all FDA test manufacturer for biomarkers of gene BRAF "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1032,
+    "question": "Show me the name of anatomical entities and species for all species"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the distinct healthy organs where the gene A1BG is expressed."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1047,
+    "question": "Give me symbol and description of biomarkers related to breast at the EDRN phase one"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the name of the anatomical entity and the expression score of where either gene ENSMUSG00000000037 or gene ENSMUSG00000000078 is expressed in."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What's the NCIt term for biomarker with symbol ALDH4A1?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1036,
+    "question": "Show all information about disease mutations of the anatomical entity liver"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "List all disease mutations which belong to anatomical entity liver."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the gene symbol of biomarkers that have an approval status of 'PMP' from the FDA"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the desctiptions of biomarkers related to breast cancer?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many biomarkers are associated with each anatomical entity?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": true,
+    "n_nodes": 1035,
+    "question": "Show me all information about disease mutations with ref_aa equal to F"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1029,
+    "question": "Show all information about diseases which contain cancer in the name"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show distinct manufacturer of diagnostic tests for gene BRAF "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show cancer biomarker panels "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show name of biomarkers with tests from 23andMe"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1053,
+    "question": "Show the name of all manufacturer producing tests for breast cancer biomarkers"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1049,
+    "question": "Show all approved tests for breast cancer biomarkers"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1031,
+    "question": "Return the anatomical entity associated with the most biomarkers"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1036,
+    "question": "what are the top chromosomes with more reported mutations from cosmic data source"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "top 3 cancer types with more differential expression entries "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all of the edrn biomarkers that have never been approved by the FDA "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show all of the edrn biomarkers that have been approved by the FDA "
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "which cosmic data source reported the most mutations for each chromosome?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "show me all the genes that relate to biomarkers of prostate cancer."
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many fda test have been executed for each biomarker for each test use?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1039,
+    "question": "What are the test names that have been approved by the FDA for diagnosis"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Who manufactures lung cancer prognosis tests that are approved by the FDA?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Which diseases can be diagnosed with a blood test?"
+  },
+  {
+    "db_id": "oncomx_v1_0_25_small",
+    "exact": 0,
+    "n_nodes": 1035,
+    "question": "Show all the information about biomarkers and the species for which they are healthy expressed"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 367,
+    "question": "What is photometrically observed star"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 370,
+    "question": "Show me all photometrically observable star"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all photometrically observable star that have spectral observations. Retrieve the object id, right ascension, and declination. "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the object id, right ascension, and declination of photometrically observed star that have spectral observations."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 369,
+    "question": "What is photometrically observed Galaxy"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 372,
+    "question": "Find Galaxy that are photometrically observable"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all photometrically observable Galaxy that have spectral observations. Retrieve the object id, right ascension, and declination. "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the object id, right ascension and declination of photometrically observable Galaxy that have spectral observations."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object ids, right ascensions and declinations of photometrically observable galaxy whose right ascension is greater than 185, right ascension is less than 186, declination is greater than 15, declination is less than 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me object id, right ascensions and declinations of photometrically observed galaxy in a certain area, of which the right ascension is between 185 and 186, declination is bertween 15 and 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object ids, right ascensions and declinations of photometrically observable star whose right ascension is greater than 185, right ascension is less than 186, declination is greater than 15, declination is less than 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me object id, right ascensions and declinations of photometrically observed star in a certain area, of which the right ascension is between 185 and 186, declination is bertween 15 and 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all spectroscopic observed star,  whose right ascension is greater than 185 and less than 186, declination is greater than 15 and less than 16. Retrieve their object id, right ascension, declination, and photometric object type"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch me the object id, right ascension, declination, and redshift of spectroscopic observed star in a certain area, of which the right ascension is in an unbouded interval of 185 and 186, declination is in an unbouded interval of 15 and 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find properties of all spectroscopic observed galaxy,  whose right ascension is greater than 185 and less than 186, declination is greater than 15 and less than 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the object id, right ascension, declination, and redshift of spectroscopic observed galaxy in a certain area, of which the right ascension is in an unbouded interval of 185 and 186, declination is in an unbouded interval of 15 and 16."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all photometrically observable star with a difference of magnitude u and magnitude g is less than 0.4,  the difference between magnitude g and magnitude r is less than 0.7, the difference between magnitude r and magnitude i is greater than 0.4 and the difference between magnitude i and magnitude z is greater than 0.4"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the photometrically observed star with the following constraints in its color bands, u - g < 0.4, g - r < 0.7, r - i > 0.4 and i - z > 0.4"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": null,
+    "n_nodes": null,
+    "question": "Find all star in photometrically observable binary star system, of which the neighbor's distance less than 0.05,  the difference of magnitude u and magnitude g is lower than 0.4, the difference of magnitude g and magnitude r is lower than 0.7, the difference of magnitude r and magnitude i is higher than 0.4 and the difference of magnitude i and magnitude z is higher than 0.4"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": null,
+    "n_nodes": null,
+    "question": "What is the star in photometrically observed binary star system, of which the neighbor's distance is less than 0.05 and has the following constraints in its color bands, u - g < 0.4, g - r < 0.7, r - i > 0.4 and i - z > 0.4 "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the number of photometrically observed GALAXY whose magnitude r is less than 17, extinction r is greater than 0.2."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many photometrically observable GALAXY of which magnitude r is lower than 17 and extinction r is higher than 0.2."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all photometric observable GALAXY whose magnitude g is brighter than 22, the difference of magnitude u and magnitude g is between -0.27 and 0.71, the difference of magnitude g and magnitude r is between -0.24 and 0.35, the difference of magnitude r and magnitude i is between -0.27 and 0.57 and the difference of magnitude i and magnitude z is between -0.35 and 0.7. Retrieve the object id and magnitude g with descent order by magnitude g. "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the photometric observed Galaxy of which the color band magnitude g is brighter than 22, and the other constraints as following, u - g >= -0.27 but < 0.71, g - r >= -0.24 but < 0.35, r - i >= -0.27 but < 0.57, and i - z >= -0.35 but < 0.7. Rerank the result with descent order by color band magnitude g "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find object id, right ascension, declination of photometrically observed star whose magnitude i is brighter than 19 and fainter than 0, the difference of magnitude g and magnitude r is higher than 2.26, the difference of magnitude i and magnitude z is lower than 0.25, and either the difference of magnitude u and magnitude g is greater than 2.0 or magnitude u is fainter than 22.3"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the photometrically observable star with the color band magnitude i brighter than 19 but fainter than 0, the difference of magnitude g and r is greater than 2.26, the difference of magnitude i and z is less than 0.25, and either the difference of magnitude u and g is greater than 2.0 or the color band magnitude u is fainter than 22.3"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the photometrically observable Galaxy whose right ascension is between 140.9 and 141.1, magnitude g is brighter than 18.0 and the difference of magitude u and magnitude g is greater than 2.2. Retrieve the objecti id, right ascension and declination of these objects."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the object id, right ascension and declination of photometrically observed Galaxy, of which the the right ascension in a range of from 140.9 to 141.1, the magnitude g is less than 18.0 and the difference of magnitude u and g is higher than 2.2"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object id, right ascension and declination of spectroscopic Galaxy, which have value of magnitude g between 17 and 18 and redshift less than 0.05. "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch me the object id, right ascension and declination of spectroscopic Galaxy with the color band magnitude g brighter than 18.0 but fainter than 17 and redshift lower than 0.05"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Search for photometrically observed Star with the difference of magnitude u and magnitude g is less than 0.5. Retrieve each object id, right ascension and declination."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the object id, right ascension and declination of photometrically observable Star with the constraints: color band u - g < 0.5 "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Search for photometrically observed Star that has a difference of magnitude u and magnitude g less than 0.5. Retrieve all magnitude values (u, g, r, i and z) of these objects."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch all color bands (magnitude u, g, r, i, z) of photometrically observable Star where color band u - g < 0.5"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object id, right ascension and declination from spectroscopically observed GALAXY whose value of magnitude g fainter than 17 but brighter than 18, and redshift less than 0.05. "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the spectroscopically observable Galaxy with magnitude g between 17 and 18, and redshift below 0.05. Retrieve the object id, right ascension and declination of them."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all magnitude values (u, g, r, i and z) from spectroscopically observable GALAXY whose value of magnitude g between 17 and 18,  and redshift less than 0.05. "
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch all color bands (magnitude u, g, r, i, z) of spectroscopically observable Galaxy with color band g fainter than 17 but brighter than 18 and redshift lower than 0.05"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the photometric objects with object ids, nearst neighbor ids, distance of center-neighbors, center types."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch me the object id, nearst neighbor ids, distance of center to neighbors and center type from all of the nearst neighbors"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the different object type classifications of photometric objects whose right ascension is greater than 100 and declination is less than 100."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 385,
+    "question": "What is the unique object type classifications of photometrically observed objects with right ascension higher than 100 and declination lower than 100"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 369,
+    "question": "Find the number of photometrically observed STAR"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 369,
+    "question": "Count the photometrically observable STAR"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all photometrically observed object types. Return only unique records."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the all different photometrical observation types among all photometric objects."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find everything about photometrically observable Galaxy."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 371,
+    "question": "Fetch me all about photometrically observed Galaxy"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object ids, right ascensions, declinations and observed types of photometrically observed Star."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the photometrically observable Star? Retrieve their right ascension, declinations and observed type as well."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the photometric objects with object ids, spectroscopic object id whose spectroscopic class is 'GALAXY', with the difference of magnitude u and magnitude r greater trhan 2.22 and the difference of magnitude g and magnitude i greater than 1."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the photometric objct id and corresponding spectroscopic object id of the spectroscopically observable Galaxy with the constraints in color bands, where u - r > 2.22 and g - i > 1"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the photometric object id and modified julien date for all 'K' type Star"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the photometric object id and modified julien date of spectroscopic Star with spectral type 'K'"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find redshift, right ascension and declination of all photometrically observed Starforming Galaxy"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the redshift of STARFORMING GALAXY, which can be observed photometrically? Retrieve their right ascension and declination as well."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the mininum of the extinction r grouped by run number of photometric Galaxy?"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 383,
+    "question": "Find the minimal value of the extinction r for each run number across the photometrically observed Galaxy"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the galactic coordinates of all Quasi stellar object (QSO)"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find me the galactic latitude and longitude of all Quasi stellar object (QSO)"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many photometrically observable Binary Star system we can find, in which it has a distance from cetner to nearest neighbor of under 0.05, a difference of magnitude u and g below 0.4, a difference of magnitude g and r below 0.7, a difference of magnitude r and i above 0.4, and a difference of magnitude i and z above 0.4."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Count the number of photometrically observed Binary Star system, where the distance between center and neighbor below 0.05 and with the following constraints, u - g < 0.4, g - r < 0.7, r - i > 0.4, i - z > 0.4"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": null,
+    "n_nodes": null,
+    "question": "Count all star in photometrically observable Binary Star system, of which the neighbor's distance less than 0.05, the difference of magnitude u and magnitude g is lower than 0.4, the difference of magnitude g and magnitude r is lower than 0.7, the difference of magnitude r and magnitude i is higher than 0.4 and the difference of magnitude i and magnitude z is higher than 0.4"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": null,
+    "n_nodes": null,
+    "question": "How many photometrically observable Binary Star system were found, of which the distance to nearst neighbor below 0.05, the difference of magnitude u and g less than 0.4, the difference of magnitude g and r less than 0.7, the difference of magnitude r and i greater than 0.4, and the difference of magnitude i and z greater than 0.4."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find all star observed both photometrically and spectroscopically whose subclass is 'Carbon'"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the photometrically observable Star with subclass of Carbon, which was spectroscopically observed as well"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 371,
+    "question": "Find the number of photometrically observed Galaxy"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 373,
+    "question": "Count the number of photometrically observable Galaxy"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object ids, classes and subclasses of spectroscopically and photometrically observable Galaxy with AGN."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch me the spectroscopic object id, the spectroscopic class and subclass of Galaxy with AGN observed both spectroscopically and photometrically."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 377,
+    "question": "Show me the least distance of the nearst photometrically observable Star"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the minimal distance between the nearest photometrically observed Star?"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 377,
+    "question": "Show me the longest distance of the photometrically observable GALAXY neighbors"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the maximal distance between the nearest photometrically observed Star?"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the galactic coordinates of the center object with the least distance to its nearest neighbor. Please retrieve the distance also."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch the least distance of the nearst neighbors. Retrieve the corresponding galactic latitude, galactic longitude as well."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What are the galactic coordinates of the center object with the least distance to its nearest neighbor. Please retrieve the distance also."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Show me the galactic coordinates of the center object with the least distance to the nearest neighbors. Return the distance as well."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 372,
+    "question": "Show me the redshift of the center object with the least distance to its nearest neighbor"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 373,
+    "question": "What is the redshift of the center object that has the minimal distance to the nearest neighbor"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 372,
+    "question": "Show me the redshift of the center object with the least distance to its nearest neighbor"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 373,
+    "question": "What is the redshift of the center object that has the minimal distance to the nearest neighbor"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 360,
+    "question": "List all unique run numbers"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 362,
+    "question": "Find all run numbers without duplicates"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 362,
+    "question": "How many different run number are there"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": 360,
+    "question": "Count all unique run numbers"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the number of photometric objects grouped by their photometrically observed type name."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "How many photometric objects for each photometrically observation type are there?"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find right ascension, declination and photometric type class of equivalent width estimates of galactic-stars from these spectroscopic objects."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Fetch the right ascension and declination of spectroscopic objects those have equivalent width estimates of galactic-stars"
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the object id and photometric observation type of photometric objects whose right ascension is greater than 100 and declination is less than 100."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Retrieve the photometric object id and type name of corresponding photometric observation from the objects with the right ascension over 100 and declination below 100."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "Find the photometric object id, right ascension and declination of corresponding spectroscopic objects, from which it has emission line estimates of galaxies."
+  },
+  {
+    "db_id": "skyserver_dr16_2020_11_30",
+    "exact": 0,
+    "n_nodes": null,
+    "question": "What is the best photometric object to the corresponding spectroscopic object that has emission line estimates of galaxies? Return me the object id, right ascension and declination of the best object."
+  }
+]

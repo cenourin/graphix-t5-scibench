@@ -8,10 +8,57 @@
 """
 
 import difflib
+import os
 from typing import List, Optional, Tuple
 from rapidfuzz import fuzz
 import sqlite3
 import functools
+
+# get_column_picklist below is @lru_cache'd, so a "SELECT DISTINCT col FROM table"
+# only reruns once per unique (table, column, db_path) -- fine for Spider's small
+# SQLite DBs. But on ScienceBenchmark's real-world DBs (sdss.neighbors alone has
+# 76.8M rows) even that single first call fetches every distinct value into Python
+# memory, which is its own OOM/slowness risk (same root cause diagnosed and fixed
+# for data_all_in/preprocess/common_utils.py::schema_linking). Skip content-based
+# matching for columns in tables above this size; _ROW_COUNT_CACHE avoids re-running
+# COUNT(*) once per column of the same table.
+#
+# This threshold is much lower than common_utils.py's 500k, and deliberately so: the
+# matching cost here isn't just fetching the picklist (that part's memory-bound, same
+# as common_utils.py), it's get_matched_entries() below, which runs an UNCACHED
+# per-character difflib.SequenceMatcher against every picklist entry, on every call
+# (i.e. every example, not just once per column). Measured empirically against
+# cordis_temporary: ~15us/comparison for short values, but ~0.4ms/comparison against
+# projects.objective (long paragraph text, up to 4000 chars) -- at that table's actual
+# 62,679 rows (under the old 500k cap), that one column alone cost ~25s per example
+# that touched it. Cost scales with rows * value length, not just rows, so this cap
+# has to be conservative for both dimensions at once.
+MAX_CONTENT_MATCH_ROWS = int(os.environ.get('GRAPHIX_MAX_CONTENT_MATCH_ROWS', '10000'))
+_ROW_COUNT_CACHE = {}
+
+# MAX_CONTENT_MATCH_ROWS only gates whether get_column_picklist fetches at all -- it
+# does NOT bound get_matched_entries()'s cost once a picklist comes back, and that's
+# the actually-expensive part (one uncached SequenceMatcher construction per picklist
+# entry, PER EXAMPLE that touches the column -- not cached like the SQL fetch is).
+# A column under the row cap can still return thousands of distinct values; confirmed
+# via a real ScienceBenchmark fine-tuning run stalling >4 CPU-minutes on a single
+# example with no forward progress (flat RSS, no I/O wait) before this cap existed.
+# Truncating the picklist HERE (inside the lru_cache'd function) means the cap is
+# paid once per unique (table, column, db_path), not once per example.
+MAX_CONTENT_MATCH_PICKLIST_SIZE = int(os.environ.get('GRAPHIX_MAX_CONTENT_MATCH_PICKLIST_SIZE', '500'))
+
+# Picklist *count* isn't the only cost driver -- per-comparison cost in
+# get_matched_entries() also scales with value LENGTH (the file's own prior comment:
+# "0.4ms/comparison against projects.objective, long paragraph text, up to 4000
+# chars"), and that dimension isn't bounded by MAX_CONTENT_MATCH_PICKLIST_SIZE at all.
+# Confirmed empirically: capping picklist size to 500 alone did NOT unblock a real
+# ScienceBenchmark fine-tuning run that stalled multiple minutes on a single example
+# with no forward progress. Free-text columns (long values) are also the columns this
+# literal-substring-match heuristic is least useful for in the first place -- it's
+# designed to catch short categorical/code/name values that appear verbatim in the
+# question, not paragraph-length text -- so dropping long values from the picklist
+# entirely is a correctness-neutral way to remove the actual cost driver.
+MAX_CONTENT_MATCH_VALUE_LENGTH = int(os.environ.get('GRAPHIX_MAX_CONTENT_MATCH_VALUE_LENGTH', '200'))
 
 # fmt: off
 _stopwords = {'who', 'ourselves', 'down', 'only', 'were', 'him', 'at', "weren't", 'has', 'few', "it's", 'm', 'again',
@@ -203,12 +250,22 @@ def get_column_picklist(table_name: str, column_name: str, db_path: str) -> list
         conn = sqlite3.connect(db_path)
         conn.text_factory = bytes
         c = conn.cursor()
+        row_count_key = (db_path, table_name)
+        if row_count_key not in _ROW_COUNT_CACHE:
+            c.execute("SELECT COUNT(*) FROM `{}`".format(table_name))
+            _ROW_COUNT_CACHE[row_count_key] = c.fetchone()[0]
+        if _ROW_COUNT_CACHE[row_count_key] > MAX_CONTENT_MATCH_ROWS:
+            return []
         c.execute(fetch_sql)
         picklist = set()
         for x in c.fetchall():
             if isinstance(x[0], str):
+                if len(x[0]) > MAX_CONTENT_MATCH_VALUE_LENGTH:
+                    continue
                 picklist.add(x[0].encode("utf-8"))
             elif isinstance(x[0], bytes):
+                if len(x[0]) > MAX_CONTENT_MATCH_VALUE_LENGTH:
+                    continue
                 try:
                     picklist.add(x[0].decode("utf-8"))
                 except UnicodeDecodeError:
@@ -216,6 +273,14 @@ def get_column_picklist(table_name: str, column_name: str, db_path: str) -> list
             else:
                 picklist.add(x[0])
         picklist = list(picklist)
+        if len(picklist) > MAX_CONTENT_MATCH_PICKLIST_SIZE:
+            print(
+                "get_column_picklist: truncating {}.{} ({}) from {} to {} distinct values "
+                "-- see MAX_CONTENT_MATCH_PICKLIST_SIZE comment".format(
+                    table_name, column_name, db_path, len(picklist), MAX_CONTENT_MATCH_PICKLIST_SIZE
+                )
+            )
+            picklist = picklist[:MAX_CONTENT_MATCH_PICKLIST_SIZE]
     finally:
         conn.close()
     return picklist

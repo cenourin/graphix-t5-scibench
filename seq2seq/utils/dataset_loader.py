@@ -98,6 +98,14 @@ def load_dataset(
         path=data_args.metric_paths["spider_dk"], config_name=data_args.metric_config, test_suite_db_dir=data_args.test_suite_db_dir
     )
 
+    #adding sciencebenchmark dataset, metric, using schema and preprocess functions of spider as it is
+    _sciencebenchmark_dataset_dict : Callable[[], DatasetDict] = lambda: datasets.load.load_dataset(
+        path=data_args.dataset_paths['sciencebenchmark'], cache_dir=model_args.cache_dir
+    )
+    _sciencebenchmark_metric: Callable[[], Metric] = lambda: datasets.load.load_metric(
+        path=data_args.metric_paths["sciencebenchmark"], config_name=data_args.metric_config, test_suite_db_dir=data_args.test_suite_db_dir
+    )
+
     _prepare_splits_kwargs = {
         "data_args": data_args,
         "training_args": training_args,
@@ -140,6 +148,14 @@ def load_dataset(
         metric = _spider_syn_metric()
         dataset_splits = prepare_splits(
             dataset_dict= _spider_syn_dataset_dict(),
+            add_serialized_schema=_spider_add_serialized_schema,
+            pre_process_function=_spider_pre_process_function,
+            **_prepare_splits_kwargs,
+        )
+    elif data_args.dataset == "sciencebenchmark":
+        metric = _sciencebenchmark_metric()
+        dataset_splits = prepare_splits(
+            dataset_dict= _sciencebenchmark_dataset_dict(),
             add_serialized_schema=_spider_add_serialized_schema,
             pre_process_function=_spider_pre_process_function,
             **_prepare_splits_kwargs,

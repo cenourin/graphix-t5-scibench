@@ -6,20 +6,21 @@
     "picard_mode": "parse_with_guards",
     "picard_schedule": "incremental",
     "picard_max_tokens_to_check": 2,
-    "model_name_or_path": "t5-large",
+    "model_name_or_path": "data_all_in/t5-large",
     "config_name": null,
     "tokenizer_name": null,
     "cache_dir": "/transformers_cache",
     "use_fast_tokenizer": true,
     "model_revision": "main",
     "use_auth_token": false,
-    "dataset": "spider",
+    "dataset": "sciencebenchmark",
     "dataset_paths": {
         "spider": "./seq2seq/datasets/spider",
         "cosql": "./seq2seq/datasets/cosql",
         "spider_realistic": "./seq2seq/datasets/spider_realistic",
         "spider_syn": "./seq2seq/datasets/spider_syn",
-        "spider_dk": "./seq2seq/datasets/spider_dk"
+        "spider_dk": "./seq2seq/datasets/spider_dk",
+        "sciencebenchmark": "./seq2seq/datasets/sciencebenchmark"
     },
     "metric_config": "both",
     "metric_paths": {
@@ -27,7 +28,8 @@
         "spider_realistic": "./seq2seq/metrics/spider",
         "cosql": "./seq2seq/metrics/cosql",
         "spider_syn": "./seq2seq/metrics/spider",
-        "spider_dk": "./seq2seq/metrics/spider"
+        "spider_dk": "./seq2seq/metrics/spider",
+        "sciencebenchmark": "./seq2seq/metrics/spider"
     },
     "test_suite_db_dir": null,
     "data_config_file": null,
@@ -79,7 +81,7 @@
     "log_level": -1,
     "log_level_replica": -1,
     "log_on_each_node": true,
-    "logging_dir": "/train_data/runs/Jun04_06-06-00_e5eb828b6655",
+    "logging_dir": "/train_data/runs/Sep02_13-10-28_0040bee5644f",
     "logging_strategy": "steps",
     "logging_first_step": true,
     "logging_steps": 4,
