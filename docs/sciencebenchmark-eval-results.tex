@@ -594,3 +594,161 @@ teste cego) continuam válidas e sugerem que essa conclusão é específica
 deste orçamento experimental, não necessariamente uma propriedade
 fundamental da arquitetura RGAT -- mas dentro do escopo efetivamente
 testado, o T5 puro foi tanto mais eficaz quanto mais barato de treinar.
+
+\section{Tabela consolidada e curvas de treino}
+\label{sec:consolidated}
+
+Esta seção reúne, para as sete configurações avaliadas, todas as métricas
+relevantes num só lugar (Tabela~\ref{tab:consolidated-main} para as
+métricas de qualidade, Tabela~\ref{tab:consolidated-supp} para custo/cobertura),
+acrescenta \textbf{Precision/Recall/F1} por componente SQL (o \emph{partial
+match} oficial do avaliador do Spider) como uma dimensão adicional, e traz
+as curvas de treino e a matriz de erro por banco para cada uma das quatro
+configurações que passaram por fine-tuning.
+
+\subsection{Tabela principal: métricas de qualidade}
+
+\begin{table}[h]
+\centering
+\caption{Métricas de qualidade de todas as configurações avaliadas. Precision/Recall/F1 são a média macro sobre os 10 componentes SQL do avaliador oficial do Spider -- ver nota\textsuperscript{a} sobre o F1.}
+\label{tab:consolidated-main}
+\begin{tabular}{lrrrrrrl}
+\toprule
+\textbf{Configuração} & \textbf{EM} & \textbf{exec} & \textbf{eval\_loss} & \textbf{P} & \textbf{R} & \textbf{F1}\textsuperscript{a} & \textbf{Observação} \\
+\midrule
+Zero-shot (greedy)              & 9,00\%  & 8,87\%  & --     & 37,5\% & 21,0\% & 54,7\% & referência \\
+Zero-shot + beam4                & \textbf{9,34\%}  & \textbf{9,56\%}  & 0,6885 & 39,4\% & 22,0\% & 35,9\% & melhor resultado geral \\
+Zero-shot + PICARD               & 9,00\%  & 8,87\%  & --     & 37,5\% & 21,0\% & 54,7\% & PICARD inerte (\S\ref{sec:picard-attempt}) \\
+Completo, sem \texttt{oncomx}    & 0,00\%  & 0,34\%  & 2,7353\textsuperscript{b} & 14,6\% & 12,3\% & 73,2\% & checkpoint recuperado manualmente (\S\ref{sec:finetuning-full}) \\
+Few-shot                         & 0,00\%  & 0,00\%  & 4,8754 & 7,5\%  & 10,0\% & 98,6\% & pior exec de todas (\S\ref{sec:finetuning-fewshot}) \\
+Completo + \texttt{oncomx} (gc)  & 0,00\%  & 0,34\%  & 1,6765 & 14,6\% & 13,3\% & 53,5\% & eval\_loss $2,5\times$ menor (\S\ref{sec:gc-fix}) \\
+t5-small \textbf{sem} RGAT        & 1,38\%  & 1,37\%  & \textbf{1,1825} & 23,4\% & 16,1\% & 57,6\% & supera todo fine-tuning com RGAT (\S\ref{sec:t5small-baseline}) \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+{\footnotesize
+\textsuperscript{a}O F1 aqui é a média macro dos 10 tipos de componente
+SQL (\texttt{select}, \texttt{where}, \texttt{group}, \texttt{order},
+\texttt{and/or}, \texttt{IUEN}, \texttt{keywords}, etc.) definidos pelo
+avaliador oficial do Spider. Quando nem a previsão nem o gold usam um
+componente (ex.: nenhum dos dois tem \texttt{ORDER BY}), esse componente
+conta F1=1 por definição do avaliador (\emph{acordo vazio}) -- por isso o
+F1 do \emph{few-shot} (98,6\%) é alto mesmo com exact match/exec em 0\%: a
+maioria dos componentes simplesmente não aparece em nenhum dos dois lados.
+O F1 macro não deve ser lido como "qualidade geral" nesta tabela; Precision
+e Recall (calculados só sobre os componentes realmente usados) são mais
+informativos para comparar configurações. Ver Figura~\ref{fig:prf1}.\\
+\textsuperscript{b}Este é o \texttt{eval\_loss} do checkpoint efetivamente
+salvo como "melhor" pelo Trainer (checkpoint-50, vítima do bug de empate
+descrito em \S\ref{sec:limitations}, item v) -- \textbf{não} o do
+checkpoint-300 usado para o exact match/exec reportados nesta linha, que
+foi reavaliado manualmente e não tem um \texttt{eval\_loss} de treino
+comparável salvo. Os dois números vêm de pesos diferentes; ver
+Figura~\ref{fig:full_no_oncomx_training} para a curva completa de
+\texttt{eval\_loss} durante o treino (que atinge 1,77 no passo 300, um
+terceiro valor ainda, já que a reavaliação manual usou uma configuração de
+ambiente ligeiramente diferente da usada nos evals periódicos do treino).}
+\end{table}
+
+\subsection{Tabela suplementar: custo e cobertura}
+
+\begin{table}[h]
+\centering
+\caption{Custo de treino e cobertura da avaliação (exemplos pontuados de 293 no split de dev).}
+\label{tab:consolidated-supp}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Configuração} & \textbf{train\_loss} & \textbf{tempo de treino} & \textbf{exemplos (EM / exec)} \\
+\midrule
+Zero-shot / beam4 / PICARD       & -- & -- & 289 / 287 \\
+Completo, sem \texttt{oncomx}    & 0,469  & 44min (treino) + 1h09 (reaval.\ manual) & 289 / 287 \\
+Few-shot                         & 2,610  & 1h08                                    & 289 / 287 \\
+Completo + \texttt{oncomx} (gc)  & 2,215  & 9h42                                    & 289 / 287 \\
+t5-small sem RGAT                & 1,045  & 2h53                                    & 289 / 287 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.3em}
+{\footnotesize Todas as configurações pontuam sobre os mesmos 289/287
+exemplos (de 293 no split de dev) -- 4 exemplos do \texttt{sdss} são
+descartados por gold SQL não-parseável pelo \texttt{process\_sql.py} do
+Spider (mesma limitação da Seção~\ref{sec:sciencebenchmark-eval}), de
+forma consistente em todas as sete configurações.}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/overview_comparison.png}
+\caption{Exact match e execution accuracy de todas as sete configurações.}
+\label{fig:overview}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/prf1_comparison.png}
+\caption{Precision/Recall/F1 macro por componente SQL -- note como o F1 (dourado) frequentemente destoa de precision/recall por causa do acordo vazio explicado na nota (a) da Tabela~\ref{tab:consolidated-main}.}
+\label{fig:prf1}
+\end{figure}
+
+\clearpage
+\subsection{Curvas de treino e matriz de erro por configuração}
+
+Para as quatro configurações com fine-tuning, as figuras abaixo mostram
+(esquerda) a \emph{loss} de treino e validação ao longo das épocas com a
+taxa de aprendizado sobreposta no eixo direito, (direita) exact
+match/exec de validação nos mesmos pontos, e uma matriz de erro
+(categoria de erro $\times$ banco, sobre as previsões do checkpoint
+final/melhor de cada configuração) construída executando cada SQL
+previsto diretamente contra o banco SQLite real e classificando o tipo de
+falha -- metodologia própria deste trabalho, não o mesmo procedimento
+manual usado na análise qualitativa da Seção~\ref{sec:sciencebenchmark-eval}
+(que reproduz os totais dessa seção apenas para as previsões zero-shot).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/full_no_oncomx_training.png}
+\caption{Fine-tuning completo (sem \texttt{oncomx}) -- curvas de treino.}
+\label{fig:full_no_oncomx_training}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/full_no_oncomx_error_matrix.png}
+\caption{Fine-tuning completo (sem \texttt{oncomx}) -- matriz de erro (checkpoint-300, reavaliação manual).}
+\end{figure}
+
+\clearpage
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fewshot_training.png}
+\caption{Fine-tuning few-shot -- curvas de treino.}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/fewshot_error_matrix.png}
+\caption{Fine-tuning few-shot -- matriz de erro (checkpoint-47, melhor por eval\_loss).}
+\end{figure}
+
+\clearpage
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/full_gc_oncomx_training.png}
+\caption{Fine-tuning completo com \texttt{oncomx} + gradient checkpointing -- curvas de treino.}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/full_gc_oncomx_error_matrix.png}
+\caption{Fine-tuning completo com \texttt{oncomx} + gradient checkpointing -- matriz de erro (checkpoint-420, o último, melhor por eval\_loss).}
+\end{figure}
+
+\clearpage
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/t5small_plain_training.png}
+\caption{Baseline t5-small sem RGAT -- curvas de treino.}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/t5small_plain_error_matrix.png}
+\caption{Baseline t5-small sem RGAT -- matriz de erro (checkpoint-400, o último, melhor por eval\_loss).}
+\end{figure}
