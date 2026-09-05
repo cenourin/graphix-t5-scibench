@@ -691,6 +691,86 @@ forma consistente em todas as sete configurações.}
 \label{fig:prf1}
 \end{figure}
 
+\subsection{Justificativa dos hiperparâmetros a partir das curvas de treino}
+\label{sec:hparam-justification}
+
+Os hiperparâmetros usados em todos os fine-tunings deste trabalho
+($5\times10^{-5}$ com \texttt{adafactor}, lote efetivo 32 via
+\texttt{gradient\_accumulation\_steps}, \texttt{no\_repeat\_ngram\_size=3},
+\texttt{warmup\_ratio=0,1}) não vieram de uma busca sistemática -- o
+orçamento de uma única GPU de 8\,GB, com treinos de horas cada, tornou uma
+varredura de grade (\emph{grid search}) inviável neste trabalho. Em vez
+disso, a justificativa é \emph{empírica e a posteriori}: as próprias
+curvas de treino já coletadas (Figuras~\ref{fig:full_no_oncomx_training}
+a~\ref{fig:t5small_plain_training}, adiante) servem de evidência de que as
+escolhas feitas foram razoáveis, e revelam pelo menos um caso claro em que
+um hiperparâmetro alternativo (usado numa tentativa inicial) foi
+efetivamente pior.
+
+\textbf{Taxa de aprendizado e otimizador.} Em todas as quatro
+configurações fine-tunadas -- que variam entre si em tamanho de modelo
+(t5-small a t5-base), presença de RGAT, e domínio (\texttt{cordis}/
+\texttt{oncomx}/\texttt{sdss}) -- a curva de \emph{loss} de treino cai de
+forma monotônica e sem oscilações ou divergência visível, mesmo com um
+otimizador de baixa memória (\texttt{adafactor}, sem estado de momento
+completo) e sem \emph{gradient clipping} explícito. Isso é evidência de
+que $5\times10^{-5}$ está numa faixa estável para esta família de
+modelos/tarefa -- uma taxa maior tenderia a produzir oscilação ou
+divergência precoce, que não aparece em nenhuma das quatro curvas.
+
+\textbf{\emph{Warmup} de taxa de aprendizado.} Este é o hiperparâmetro com
+a evidência mais direta e comparável entre duas tentativas reais: o
+primeiro fine-tuning completo (\S\ref{sec:finetuning-full},
+\texttt{warmup\_ratio=0,0}, LR salta direto para o pico no passo 1) contra
+os três fine-tunings seguintes (\texttt{warmup\_ratio=0,1}, LR sobe
+gradualmente por 10\% do treino antes de decair). A Figura~\ref{fig:warmup}
+sobrepõe a taxa de aprendizado e o \texttt{exec} de validação dessas duas
+condições (usando \texttt{full\_no\_oncomx} e \texttt{t5small\_plain} como
+representantes de cada uma -- uma comparação aproximada, já que os dois
+também diferem em modelo base e presença de RGAT, não é um par
+perfeitamente controlado). Ainda assim, o padrão é nítido: a configuração
+\emph{sem} warmup fica com \texttt{exec=0\%} até a época 2,27, enquanto a
+configuração \emph{com} warmup já tem \texttt{exec} não-nulo a partir da
+época 1,02 -- mais de uma época de vantagem. Isso é consistente com a
+limitação (iv) já documentada (\S\ref{sec:limitations}): sem warmup, o
+salto abrupto de LR no início do treino provocou um colapso temporário de
+geração (repetição de n-gramas) que atrasou o aparecimento de saídas
+válidas.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/warmup_comparison.png}
+\caption{Efeito do \emph{warmup} de LR: taxa de aprendizado (esquerda) e execution accuracy de validação (direita), comparando a única configuração sem warmup (\texttt{full\_no\_oncomx}) contra uma configuração com warmup=0,1 (\texttt{t5small\_plain}).}
+\label{fig:warmup}
+\end{figure}
+
+\textbf{Épocas e critério de parada.} O número de épocas foi escolhido de
+forma diferente por dataset, não por busca: 5 épocas para o checkpoint
+Spider-treinado (seguindo a metodologia original do Graphix-T5), 3 épocas
+para os fine-tunings completos no ScienceBenchmark (orçamento de tempo de
+GPU), e 10 épocas para o \emph{few-shot} (compensando o volume de dados
+$\sim$16$\times$ menor). Olhando as curvas de \texttt{eval\_loss} nas
+Figuras~\ref{fig:full_no_oncomx_training}--\ref{fig:t5small_plain_training},
+nenhuma das quatro atinge um platô claro dentro do orçamento de épocas
+usado -- todas ainda estão caindo (ainda que mais lentamente) no último
+ponto avaliado. Isso sugere que mais épocas provavelmente continuariam
+reduzindo o \texttt{eval\_loss} nas quatro configurações, mas, dado o
+achado central deste trabalho (Seção~\ref{sec:t5small-baseline} e
+\ref{sec:gc-fix}) de que \texttt{eval\_loss} menor não implica
+\texttt{exact\_match}/\texttt{exec} melhores, não há garantia de que mais
+épocas por si só mudariam a conclusão -- apenas mais treino com um
+critério de parada baseado nas métricas discretas (não só em
+\texttt{eval\_loss}) permitiria confirmar isso, o que fica registrado como
+trabalho futuro.
+
+\textbf{\texttt{metric\_for\_best\_model}.} A Figura~\ref{fig:full_no_oncomx_training}
+(direita) é, ela mesma, a justificativa visual para a correção descrita na
+limitação (v): \texttt{exact\_match} fica em 0,0\% por praticamente todo o
+treino visível no gráfico, o que tornaria a seleção de "melhor checkpoint"
+por essa métrica arbitrária (qualquer checkpoint empatado serve). A partir
+do fine-tuning seguinte, a troca para \texttt{eval\_loss} -- visivelmente
+monotônica e sem empates nas quatro curvas -- eliminou esse problema.
+
 \clearpage
 \subsection{Curvas de treino e matriz de erro por configuração}
 
