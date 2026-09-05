@@ -832,3 +832,84 @@ manual usado na análise qualitativa da Seção~\ref{sec:sciencebenchmark-eval}
 \includegraphics[width=0.7\textwidth]{figures/t5small_plain_error_matrix.png}
 \caption{Baseline t5-small sem RGAT -- matriz de erro (checkpoint-400, o último, melhor por eval\_loss).}
 \end{figure}
+
+\clearpage
+\section{Ablação completa: RGAT vs.\ T5 puro em Spider e ScienceBenchmark}
+\label{sec:full-ablation}
+
+As seções anteriores estabeleceram, no ScienceBenchmark, que um
+t5-small sem RGAT superou o fine-tuning completo com RGAT
+(\S\ref{sec:t5small-baseline}). Esse achado levantou uma pergunta óbvia:
+será que RGAT também não ajuda no \emph{próprio} Spider -- o benchmark
+para o qual a arquitetura foi desenhada -- quando comparado a um T5 puro
+treinado com o mesmo orçamento? E será que o resultado do ScienceBenchmark
+se sustenta com o tamanho de modelo controlado (t5-small vs.\ t5-small,
+não t5-small vs.\ t5-base)? Uma rodada adicional de experimentos,
+documentada em detalhe em dois relatórios complementares no diretório
+\texttt{estudo/} deste repositório
+(\texttt{estudo/spider\_ablation.tex} e
+\texttt{estudo/scibench\_ablation.tex}), respondeu as duas perguntas.
+
+\begin{table}[h]
+\centering
+\caption{Matriz completa de ablação: tamanho do modelo $\times$ presença de RGAT, nos dois benchmarks.}
+\label{tab:full-ablation}
+\begin{tabular}{llrr}
+\toprule
+\textbf{Benchmark} & \textbf{Configuração} & \textbf{exact match} & \textbf{exec} \\
+\midrule
+Spider (dev, 1034 ex.) & t5-base + RGAT (referência, pré-treinado) & 41,9\% & 44,8\% \\
+Spider (dev, 1034 ex.) & t5-base \textbf{sem} RGAT (5 épocas)         & 41,10\% & 43,81\% \\
+Spider (dev, 1034 ex.) & t5-small \textbf{sem} RGAT (5 épocas)        & 13,93\% & 16,25\% \\
+\midrule
+ScienceBenchmark (dev, 289/287 ex.) & t5-base \textbf{sem} RGAT        & \textbf{7,27\%} & \textbf{8,19\%} \\
+ScienceBenchmark (dev, 289/287 ex.) & t5-small \textbf{sem} RGAT       & 1,38\% & 1,37\% \\
+ScienceBenchmark (dev, 289/287 ex.) & t5-small \textbf{com} RGAT (do zero) & 1,04\% & 0,68\% \\
+ScienceBenchmark (dev, 289/287 ex.) & t5-base \textbf{com} RGAT (completo, +oncomx, gc) & 0,0\% & 0,34\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{No Spider}, o resultado surpreendeu: t5-base sem RGAT
+(41,10\%/43,81\%) praticamente empata com o checkpoint RGAT de
+referência (41,9\%/44,8\%) -- uma diferença de menos de 1 ponto
+percentual, mesmo no benchmark de esquemas pequenos e homogêneos para o
+qual o RGAT foi originalmente validado. t5-small sem RGAT fica bem atrás
+(13,93\%/16,25\%), mas essa diferença é atribuível ao tamanho do modelo
+(60M vs.\ 220M parâmetros), não à ausência de RGAT -- não há uma
+variante t5-small+RGAT pré-treinada no Spider para isolar as duas
+variáveis nesse benchmark.
+
+\textbf{No ScienceBenchmark}, a comparação mais controlada de todo o
+trabalho -- t5-small \textbf{com} vs.\ \textbf{sem} RGAT, mesmo modelo,
+mesmos dados, mesmos hiperparâmetros, ambos treinados do zero (sem
+pré-treino no Spider) -- deu o resultado mais direto: sem RGAT venceu em
+ambas as métricas (1,38\%/1,37\% vs.\ 1,04\%/0,68\%) e treinou mais
+rápido (2h53min vs.\ 3h46min). E t5-base sem RGAT (7,27\%/8,19\%) não só
+venceu sua contraparte com RGAT como se tornou, disparado, a melhor
+configuração de todo o ScienceBenchmark -- incluindo o zero-shot.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{../estudo/scibench_ablation_comparison.png}
+\caption{Execution accuracy de validação, as quatro configurações do ScienceBenchmark (t5-small/t5-base $\times$ com/sem RGAT). Detalhes completos em \texttt{estudo/scibench\_ablation.tex}.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{../estudo/spider_ablation_comparison.png}
+\caption{Execution accuracy de validação no Spider, t5-small vs.\ t5-base sem RGAT, com a referência RGAT marcada. Detalhes completos em \texttt{estudo/spider\_ablation.tex}.}
+\end{figure}
+
+\textbf{Síntese}: juntando as quatro comparações independentes (2
+tamanhos de modelo $\times$ 2 benchmarks), nenhuma delas favoreceu o
+RGAT. Isso fortalece substancialmente a conclusão da
+Seção~\ref{sec:t5small-baseline} -- o achado não é uma peculiaridade do
+ScienceBenchmark ou de uma combinação específica de hiperparâmetros, mas
+um padrão consistente dentro do orçamento de treino usado neste
+trabalho (uma única GPU de 8\,GB, poucas horas por configuração). Isso
+não prova que RGAT seja inútil de forma geral -- os experimentos
+originais do Graphix-T5 (que motivaram este trabalho) usaram orçamentos
+de treino muito maiores -- mas indica que, sob restrições de hardware
+comparáveis às de um TCC individual, investir em modelos maiores rende
+mais do que investir em estrutura de grafo adicional.
