@@ -1,7 +1,38 @@
-# Data-only image: carries the ScienceBenchmark SQLite databases (cordis,
-# oncomx, sdss/skyserver) so they can be pulled instead of regenerated via
-# data_all_in/download_sciencebenchmark.sh. Never `docker run` this image —
-# there's no entrypoint. Extract the files with `docker create` + `docker cp`
-# (see docker/scibench-data/README.md).
+# Generated: one COPY per file so each becomes its own layer/blob.
+# The network here can't sustain one huge long-lived upload connection
+# (confirmed via TCP stats: cwnd collapse after a few GB on a single flow),
+# so skyserver's 15GB .sqlite is pre-split into ~500MB .part files that get
+# reassembled with cat on extraction (see README.md).
 FROM scratch
-COPY . /data/sciencebenchmark/database
+COPY cordis_temporary/cordis_temporary.sqlite /data/sciencebenchmark/database/cordis_temporary/cordis_temporary.sqlite
+COPY oncomx_v1_0_25_small/oncomx_v1_0_25_small.sqlite /data/sciencebenchmark/database/oncomx_v1_0_25_small/oncomx_v1_0_25_small.sqlite
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.000.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.000.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.001.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.001.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.002.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.002.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.003.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.003.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.004.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.004.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.005.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.005.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.006.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.006.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.007.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.007.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.008.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.008.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.009.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.009.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.010.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.010.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.011.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.011.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.012.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.012.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.013.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.013.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.014.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.014.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.015.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.015.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.016.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.016.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.017.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.017.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.018.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.018.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.019.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.019.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.020.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.020.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.021.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.021.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.022.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.022.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.023.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.023.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.024.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.024.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.025.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.025.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.026.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.026.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.027.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.027.part
+COPY skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.028.part /data/sciencebenchmark/database/skyserver_dr16_2020_11_30/skyserver_dr16_2020_11_30.sqlite.028.part
+CMD ["/data/sciencebenchmark/database"]
