@@ -913,3 +913,52 @@ originais do Graphix-T5 (que motivaram este trabalho) usaram orçamentos
 de treino muito maiores -- mas indica que, sob restrições de hardware
 comparáveis às de um TCC individual, investir em modelos maiores rende
 mais do que investir em estrutura de grafo adicional.
+
+\subsection{Revisão: o RGAT precisava de mais treino?}
+\label{sec:more-epochs-review}
+
+Antes de aceitar a conclusão acima como definitiva, testamos
+explicitamente a hipótese de confusão mais óbvia: as quatro comparações
+desta seção usaram apenas 3 épocas de treino, e o RGAT adiciona camadas
+de atenção sobre grafo inicializadas do zero (sem pré-treino próprio,
+ao contrário do backbone T5) -- talvez 3 épocas simplesmente não bastem
+para essas camadas convergirem. Re-treinamos as duas configurações com
+RGAT no ScienceBenchmark (t5-small+RGAT e t5-base+RGAT completo) por
+\textbf{10 épocas}, mantendo todos os demais hiperparâmetros idênticos.
+O relatório completo está em \texttt{estudo/more\_epochs\_ablation.tex}.
+
+\begin{table}[h]
+\centering
+\caption{Efeito de mais épocas de treino nas duas configurações com RGAT (dev set do ScienceBenchmark, melhor checkpoint por eval\_loss).}
+\label{tab:more-epochs-summary}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Configuração} & \textbf{eval\_loss} & \textbf{exact match} & \textbf{exec} \\
+\midrule
+t5-small + RGAT, 3 épocas   & 1,1517 & 1,04\% & 0,68\% \\
+t5-small + RGAT, 10 épocas  & 0,9243 & 5,19\% & 4,10\% \\
+\midrule
+t5-base + RGAT completo, 3 épocas  & 1,6765 & 0,0\% & 0,34\% \\
+t5-base + RGAT completo, 10 épocas & 1,4567 & 0,0\% & 2,73\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O resultado confirma que sub-treino era, de fato, parte real da
+explicação: com o triplo de épocas, o \emph{eval\_loss} de ambos os
+modelos continua caindo de forma quase monotônica (sem sinal de platô
+até a época 9--10) e a \emph{execution accuracy} sobe
+$6\times$ no t5-small e $8\times$ no t5-base+RGAT completo. A conclusão
+``RGAT precisa de mais treino'' está, portanto, \textbf{confirmada}
+como fator real, não descartável.
+
+Isso não invalida, porém, a síntese acima -- ela precisa apenas ser
+qualificada. Mesmo com 10 épocas, o t5-base+RGAT completo
+(exec 2,73\%) continua bem atrás do t5-base sem RGAT
+(exec 8,19\%, Tabela~\ref{tab:full-ablation}), e precisou de mais que
+o \emph{dobro} do tempo de treino para chegar lá (16h13min vs.\
+4h13min). Ou seja: mais treino ajuda claramente o RGAT, mas não fecha
+a lacuna para o T5 puro dentro do orçamento testado neste trabalho --
+a comparação de 3 épocas subestimava o potencial da arquitetura, mas o
+custo-benefício computacional observado originalmente permanece
+válido.
