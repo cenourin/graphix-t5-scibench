@@ -14,6 +14,16 @@
 
 \section{Introdução}
 
+\paragraph{Errata (26/09/2026).} A célula ``t5-base com RGAT'' desta
+comparação (\texttt{graphix-scibench-finetune-gc}) \textbf{é inválida}: o run
+não carregou o checkpoint do Spider e treinou a partir de pesos aleatórios
+(perda inicial de 15,5, contra 2,9 do t5-base sem RGAT). A comparação com
+RGAT vs.\ sem RGAT no tamanho base tem, portanto, um fator de confusão e fica
+em aberto. A comparação no tamanho small (os dois partindo do t5-small
+original) continua válida. Ver \texttt{RISCOS.md}, R0.1, e a errata em
+\texttt{docs/sciencebenchmark-eval-results.tex}.
+
+
 Esta nota completa a matriz 2$\times$2 de ablação (tamanho do modelo
 $\times$ presença de RGAT) no ScienceBenchmark, complementando
 \texttt{docs/sciencebenchmark-eval-results.tex} (t5-small sem RGAT,

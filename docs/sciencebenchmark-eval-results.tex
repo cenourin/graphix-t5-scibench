@@ -179,6 +179,28 @@ geração gulosa em tarefas de geração estruturada.
 \section{Fine-tuning no ScienceBenchmark}
 \label{sec:finetuning}
 
+
+\paragraph{Errata (26/09/2026): resultados desta seção inválidos.}
+Os fine-tunings desta seção (\texttt{graphix-scibench-finetune},
+\texttt{graphix-scibench-fewshot} e \texttt{graphix-scibench-finetune-gc}) e
+o run de 10 épocas \texttt{graphix-scibench-finetune-gc-10ep}
+\textbf{não partiram do checkpoint treinado no Spider}. O wrapper de treino
+(\texttt{models/graphix/rgat.Model}) carrega o checkpoint com
+\texttt{from\_pretrained}, mas os pesos salvos têm o prefixo
+\texttt{pretrain\_model.}, que não bate com os nomes esperados. O HuggingFace
+descarta todos os pesos e inicializa o modelo inteiro (T5 e RGAT) de forma
+aleatória, emitindo apenas um aviso. Evidência: a perda de treino no primeiro
+passo fica entre 14,5 e 15,5 nesses runs, contra 2,9 a 4,3 nos runs que
+partem do T5 original. Estes números medem, portanto, treino a partir de
+pesos aleatórios, e não fine-tuning. As conclusões desta seção não se
+sustentam, em especial ``fine-tuning pior que o zero-shot'' e a explicação
+pela exclusão do \texttt{oncomx}. Os runs são mantidos no documento por
+rastreabilidade. Os resultados zero-shot (seção anterior) usam o carregador
+de avaliação (\texttt{rgat\_picard.Model}), que remove o prefixo, e
+\textbf{não são afetados}. Por decisão de escopo, o estudo seguinte treina
+todos os modelos a partir do T5 original, e o fine-tuning a partir do
+checkpoint Graphix não foi refeito. Detalhes: \texttt{RISCOS.md}, R0.1.
+
 A partir do mesmo checkpoint zero-shot, foram conduzidos dois experimentos de
 ajuste fino sobre os dados de treino do ScienceBenchmark (4732 exemplos,
 seed+synth combinados): um fine-tuning completo (todas as épocas sobre o
