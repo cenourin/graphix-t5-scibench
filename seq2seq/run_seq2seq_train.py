@@ -249,6 +249,11 @@ def main() -> None:
         tokenizer=tokenizer,
     )
 
+    # max_train_samples was previously honored only by the HF-datasets split and never
+    # reached this TokenizedDataset, which trained on every example. No existing train
+    # config sets it, so behavior is unchanged for them; it now enables tiny smoke runs.
+    if data_training_args.max_train_samples is not None:
+        seq2seq_train_dataset = seq2seq_train_dataset[:data_training_args.max_train_samples]
     train_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
                                      seq2seq_train_dataset, graph_pedia_train) if seq2seq_train_dataset else None
     eval_dataset = TokenizedDataset(data_training_args, training_args, tokenizer,
@@ -313,6 +318,26 @@ def main() -> None:
             trainer = CoSQLTrainer(**trainer_kwargs)
         else:
             raise NotImplementedError()
+
+        # Opt-in extras, all off unless their env var is set, so existing configs/runs
+        # behave exactly as before. Early stopping needs load_best_model_at_end +
+        # metric_for_best_model (already set in every train config).
+        patience = os.environ.get("GRAPHIX_EARLY_STOPPING_PATIENCE")
+        if patience:
+            from transformers import EarlyStoppingCallback
+            trainer.add_callback(EarlyStoppingCallback(early_stopping_patience=int(patience)))
+        # Loss-only evaluation: skip generation + exact-match/exec scoring (used by the
+        # Optuna search, where only eval_loss is needed and generation dominates eval time).
+        if os.environ.get("GRAPHIX_LOSS_ONLY_EVAL") == "1":
+            trainer.compute_metrics = None
+        if os.environ.get("GRAPHIX_OPTUNA_TRIAL_ID"):
+            from seq2seq.utils.optuna_callback import OptunaPruningCallback
+            trainer.add_callback(OptunaPruningCallback(
+                storage=os.environ["GRAPHIX_OPTUNA_STORAGE"],
+                study_name=os.environ["GRAPHIX_OPTUNA_STUDY"],
+                trial_id=int(os.environ["GRAPHIX_OPTUNA_TRIAL_ID"]),
+                pruned_marker=os.environ["GRAPHIX_OPTUNA_PRUNED_MARKER"],
+            ))
 
         # Training
         if training_args.do_train:

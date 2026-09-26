@@ -21,3 +21,6 @@ __pycache__/
 # Editor / backup cruft
 *.backup
 *~
+
+# Optuna study DBs + pip packages installed into the container at runtime
+optuna_studies/
