@@ -19,3 +19,7 @@ __pycache__/
 # Editor / backup cruft
 *.backup
 *~
+
+# SchemaGraphSQL secrets — never commit
+.env
+.openwebui-key
