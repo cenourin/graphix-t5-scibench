@@ -14,6 +14,16 @@
 
 \section{Motivação}
 
+\paragraph{Errata (26/09/2026).} As duas configurações ``t5-base + RGAT
+completo'' deste relatório (\texttt{graphix-scibench-finetune-gc}, 3 épocas, e
+\texttt{graphix-scibench-finetune-gc-10ep}, 10 épocas) \textbf{são
+inválidas}: não carregaram o checkpoint do Spider e treinaram a partir de
+pesos aleatórios (perda inicial de 15,5). Os números delas, incluindo os
+2,73\% de exec, não medem o efeito de mais épocas num fine-tuning. Os
+resultados do t5-small + RGAT (a partir do t5-small original) continuam
+válidos. Ver \texttt{RISCOS.md}, R0.1.
+
+
 \texttt{estudo/scibench\_ablation.tex} concluiu, a partir de quatro
 comparações controladas (2 tamanhos de modelo $\times$ 2 benchmarks,
 todas com 3 épocas de treino), que o RGAT nunca supera sua contraparte
@@ -77,7 +87,7 @@ monotônica até a época 9--10, e a \emph{execution accuracy} sobe junto
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.95\textwidth]{more_epochs_ablation_curves.png}
-\caption{Eval loss e métricas discretas por época, 3 vs.\ 10 épocas, para os dois modelos com RGAT.}
+\caption{Eval loss (linha cheia, eixo esquerdo) e execution accuracy (linha tracejada, eixo direito) por época, 3 vs.\ 10 épocas, para os dois modelos com RGAT.}
 \label{fig:curves}
 \end{figure}
 
@@ -87,6 +97,50 @@ monotônica até a época 9--10, e a \emph{execution accuracy} sobe junto
 \caption{Comparação final (melhor checkpoint) entre as quatro rodadas.}
 \label{fig:summary}
 \end{figure}
+
+\section{Under- ou overfitting?}
+\label{sec:under-overfitting}
+
+A Figura~\ref{fig:curves} mostra apenas \emph{eval\_loss} e \emph{exec}.
+Para diagnosticar se o treino de 10 épocas cruzou de sub-treino para
+sobreajuste, é preciso comparar \emph{eval\_loss} com o
+\emph{train\_loss} (medido nos próprios lotes de treino) -- a
+assinatura clássica de \emph{overfitting} é \emph{eval\_loss} subindo
+enquanto \emph{train\_loss} continua caindo.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{more_epochs_train_vs_eval_loss.png}
+\caption{Train loss (linha fina, por passo) vs.\ eval loss (linha grossa, por checkpoint), 10 épocas.}
+\label{fig:train-vs-eval}
+\end{figure}
+
+Nenhum dos dois modelos mostra \emph{eval\_loss} subindo -- portanto,
+overfitting completo não ocorreu em nenhum caso. Mas o padrão difere
+entre os dois:
+
+\begin{itemize}
+\item \textbf{t5-small + RGAT}: \emph{train\_loss} achata por volta da
+      época 2--3 e fica praticamente estável dali em diante, enquanto
+      \emph{eval\_loss} continua caindo até o fim (1,51 $\to$ 0,92).
+      O modelo de validação ainda melhora mesmo com o treino já
+      estabilizado -- sinal inequívoco de \textbf{underfitting}, sem
+      ressalvas.
+\item \textbf{t5-base + RGAT completo}: \emph{train\_loss} cai de
+      forma suave e contínua o treino inteiro (sem platô visível), mas
+      \emph{eval\_loss} desacelera fortemente nas últimas épocas
+      (1,497 $\to$ 1,470 $\to$ 1,457 $\to$ 1,4567 entre as épocas
+      6 e 10 -- praticamente reto). Esse é o \textbf{início do padrão
+      de overfitting} (\emph{gap} entre as duas curvas se abrindo),
+      embora ainda não configure overfitting completo, já que
+      \emph{eval\_loss} nunca inverte e volta a subir.
+\end{itemize}
+
+\textbf{Implicação prática}: o t5-small provavelmente ainda se
+beneficiaria de mais épocas de treino; o t5-base+RGAT completo está no
+limiar -- treiná-lo por mais tempo com os mesmos hiperparâmetros
+provavelmente teria retorno decrescente e arriscaria cruzar para
+overfitting, em vez de continuar fechando a lacuna para o T5 puro.
 
 \section{O que isso muda na conclusão anterior}
 
@@ -122,5 +176,89 @@ confirmado} mesmo com o triplo de épocas; o gargalo observado
 originalmente é uma combinação de sub-treino (agora corrigido em
 parte) e um custo-benefício computacional que ainda favorece o T5 puro
 neste conjunto de experimentos.
+
+\section{Log de validação, por configuração}
+\label{sec:logs}
+
+As quatro tabelas abaixo listam, em ordem cronológica, todos os
+\emph{checkpoints} de avaliação (\texttt{eval\_loss}, \emph{exact
+match}, \emph{exec}) registrados durante o treino de cada configuração,
+extraídos diretamente de \texttt{trainer\_state.json}.
+
+\begin{table}[h]
+\centering
+\caption{t5-small + RGAT, 3 épocas (\texttt{graphix-scibench-t5small-rgat}).}
+\begin{tabular}{rrrr}
+\toprule
+\textbf{Época} & \textbf{eval\_loss} & \textbf{exact match} & \textbf{exec} \\
+\midrule
+0,34 & 2,0544 & 0,00\% & 0,00\% \\
+0,68 & 1,5306 & 0,00\% & 0,00\% \\
+1,02 & 1,3561 & 0,35\% & 0,68\% \\
+1,36 & 1,2649 & 1,04\% & 1,02\% \\
+1,70 & 1,2252 & 1,04\% & 1,02\% \\
+2,04 & 1,1843 & 1,38\% & 2,05\% \\
+2,38 & 1,1609 & 1,38\% & 1,37\% \\
+2,72 & \textbf{1,1517} & 1,04\% & 0,68\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{t5-small + RGAT, 10 épocas (\texttt{graphix-scibench-t5small-rgat-10ep}).}
+\begin{tabular}{rrrr}
+\toprule
+\textbf{Época} & \textbf{eval\_loss} & \textbf{exact match} & \textbf{exec} \\
+\midrule
+1,02 & 1,5148 & 0,00\% & 0,00\% \\
+2,04 & 1,1662 & 0,69\% & 1,37\% \\
+3,06 & 1,0633 & 1,73\% & 3,41\% \\
+4,08 & 1,0114 & 2,08\% & 1,71\% \\
+5,10 & 0,9687 & 2,77\% & 2,73\% \\
+6,12 & 0,9640 & 3,46\% & 3,75\% \\
+7,14 & 0,9423 & 5,54\% & 4,10\% \\
+8,16 & 0,9350 & 4,50\% & 3,75\% \\
+9,18 & \textbf{0,9243} & 5,19\% & 4,10\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{t5-base + RGAT completo, 3 épocas (\texttt{graphix-scibench-finetune-gc}).}
+\begin{tabular}{rrrr}
+\toprule
+\textbf{Época} & \textbf{eval\_loss} & \textbf{exact match} & \textbf{exec} \\
+\midrule
+0,41 & 3,1330 & 0,00\% & 0,00\% \\
+0,82 & 2,2575 & 0,00\% & 0,00\% \\
+1,22 & 1,9604 & 0,00\% & 0,00\% \\
+1,63 & 1,7988 & 0,00\% & 0,00\% \\
+2,04 & 1,7232 & 0,00\% & 0,00\% \\
+2,45 & 1,6932 & 0,00\% & 0,00\% \\
+2,86 & \textbf{1,6765} & 0,00\% & 0,34\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{t5-base + RGAT completo, 10 épocas (\texttt{graphix-scibench-finetune-gc-10ep}).}
+\begin{tabular}{rrrr}
+\toprule
+\textbf{Época} & \textbf{eval\_loss} & \textbf{exact match} & \textbf{exec} \\
+\midrule
+1,22 & 2,2130 & 0,00\% & 0,00\% \\
+2,45 & 1,6860 & 0,00\% & 0,00\% \\
+3,67 & 1,5863 & 0,00\% & 1,37\% \\
+4,90 & 1,5142 & 0,00\% & 2,05\% \\
+6,12 & 1,4971 & 0,00\% & 1,71\% \\
+7,35 & 1,4702 & 0,35\% & 4,44\% \\
+8,57 & 1,4570 & 0,00\% & 3,41\% \\
+9,80 & \textbf{1,4567} & 0,00\% & 2,73\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
