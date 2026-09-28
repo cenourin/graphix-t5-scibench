@@ -141,4 +141,9 @@ O código roda a partir de um snapshot (`train_db_id/t5base_study_code/`, com `C
 
 ## 10. Desvios
 
-(nenhum até agora)
+- **2026-09-28, antes de qualquer resultado do estudo:** a contagem de vazamento no dev do ScienceBenchmark (§7, item 3) passou de 3 para **5** exemplos, todos do `oncomx` (índices 103, 114, 124, 152 e 158 do dev). A checagem original comparava o texto exato do SQL. A implementada em `scripts/analyze_study.py` ignora caixa e espaços, que não mudam a query. O critério continua o mesmo, SQL idêntico ao do train; só a contagem foi corrigida.
+- **2026-09-28, antes de qualquer resultado do estudo:** detalhe de como o EX é calculado, encontrado ao validar `scripts/score_predictions.py`. Um exemplo cujo SQL de gabarito falha ao executar (timeout de 60 s, comum no `skyserver` de 15 GB, ou erro do avaliador) não é pontuável. Quais exemplos falham depende da carga da máquina: no mesmo run, foram 5 com a CPU livre e 7 com o treino rodando ao lado.
+  - Na tabela por célula, o EX é reportado sobre os pontuáveis, junto com o n.
+  - Nos testes pareados, entram só os exemplos pontuáveis nas duas células.
+  - As 4 células são pontuadas pelo mesmo pontuador offline, depois do fim do treino e com a máquina ociosa.
+  - O EX do `eval_results.json` (convenção do avaliador: falha conta como erro, denominador total) também é reportado, como referência.
