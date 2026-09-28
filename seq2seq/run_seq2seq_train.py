@@ -18,6 +18,7 @@ import re
 import shelve
 from pathlib import Path
 import pickle
+import torch
 from contextlib import nullcontext
 from dataclasses import asdict, fields
 from transformers.hf_argparser import HfArgumentParser
@@ -91,6 +92,12 @@ def _filter_by_graph_size(dataset, graph_pedia, max_nodes):
         )
     return kept
 
+
+# Remember each eval example's position in the unfiltered file: the metric pairs the
+# i-th prediction with the i-th HF-loaded example (dataset_splits.eval_split.examples),
+# which is never filtered, so main() must drop the same positions there too.
+for _pos, _item in enumerate(seq2seq_eval_dataset):
+    _item['_eval_pos'] = _pos
 
 seq2seq_train_dataset = _filter_by_graph_size(seq2seq_train_dataset, graph_pedia_train, MAX_GRAPH_NODES)
 seq2seq_eval_dataset = _filter_by_graph_size(seq2seq_eval_dataset, graph_pedia_eval, MAX_GRAPH_NODES)
@@ -249,6 +256,23 @@ def main() -> None:
         tokenizer=tokenizer,
     )
 
+    # Without this, any filtered eval example shifted every later prediction onto the
+    # wrong gold SQL (ScienceBenchmark dev: 6 dropped from position 216 on, 76/293
+    # predictions scored against another example's gold in all runs before this fix).
+    # Only when metrics are computed: with GRAPHIX_LOSS_ONLY_EVAL the eval file may be a
+    # validation slice carved from train, which has no counterpart in the HF dev split.
+    eval_split = dataset_splits.eval_split
+    scored_eval = eval_split is not None and os.environ.get("GRAPHIX_LOSS_ONLY_EVAL") != "1"
+    if scored_eval and data_training_args.max_val_samples is not None:
+        # eval_split.examples is truncated to the first max_val_samples; match it.
+        seq2seq_eval_dataset = [it for it in seq2seq_eval_dataset
+                                if it['_eval_pos'] < data_training_args.max_val_samples]
+    if scored_eval and len(eval_split.examples) != len(seq2seq_eval_dataset):
+        kept = [item['_eval_pos'] for item in seq2seq_eval_dataset]
+        assert len(eval_split.examples) > max(kept), "eval dataset file and HF dev split differ"
+        eval_split.examples = eval_split.examples.select(kept)
+        logger.warning("Aligned eval examples to the %d filtered eval items", len(kept))
+
     # max_train_samples was previously honored only by the HF-datasets split and never
     # reached this TokenizedDataset, which trained on every example. No existing train
     # config sets it, so behavior is unchanged for them; it now enables tiny smoke runs.
@@ -283,6 +307,15 @@ def main() -> None:
         else:
             from models.graphix.rgat import Model
         model = Model(tokenizer, model_cls_wrapper, model_args, config, graph_pedia_train, graph_pedia_eval)
+        # model_name_or_path pointing at a checkpoint saved by this script does NOT load
+        # its weights (keys carry a `pretrain_model.` prefix that from_pretrained ignores;
+        # see RISCOS.md R0.1). To evaluate a trained run, keep model_name_or_path on the
+        # stock T5 dir and point this at the run's pytorch_model.bin: strict, so any key
+        # mismatch fails loudly instead of silently evaluating untrained weights.
+        init_state_dict = os.environ.get("GRAPHIX_INIT_STATE_DICT")
+        if init_state_dict:
+            model.load_state_dict(torch.load(init_state_dict, map_location="cpu"), strict=True)
+            logger.info("Loaded weights (strict) from %s", init_state_dict)
     
         if isinstance(model, T5ForConditionalGeneration):
             model.resize_token_embeddings(len(tokenizer))
@@ -330,6 +363,18 @@ def main() -> None:
         # Optuna search, where only eval_loss is needed and generation dominates eval time).
         if os.environ.get("GRAPHIX_LOSS_ONLY_EVAL") == "1":
             trainer.compute_metrics = None
+        # Stop after N epochs while keeping num_train_epochs (and so the LR schedule) as
+        # configured: an Optuna trial is then an exact prefix of the final run it predicts.
+        stop_after = os.environ.get("GRAPHIX_STOP_AFTER_EPOCHS")
+        if stop_after:
+            from transformers import TrainerCallback
+
+            class _StopAfterEpochs(TrainerCallback):
+                def on_epoch_end(self, args, state, control, **kwargs):
+                    if state.epoch is not None and state.epoch >= int(stop_after) - 1e-6:
+                        control.should_training_stop = True
+
+            trainer.add_callback(_StopAfterEpochs())
         if os.environ.get("GRAPHIX_OPTUNA_TRIAL_ID"):
             from seq2seq.utils.optuna_callback import OptunaPruningCallback
             trainer.add_callback(OptunaPruningCallback(
@@ -360,6 +405,10 @@ def main() -> None:
                 else len(dataset_splits.train_split.dataset)
             )
             metrics["train_samples"] = min(max_train_samples, len(dataset_splits.train_split.dataset))
+            if torch.cuda.is_available():
+                metrics["train_peak_vram_gb"] = round(torch.cuda.max_memory_allocated() / 2**30, 2)
+                metrics["train_peak_vram_reserved_gb"] = round(torch.cuda.max_memory_reserved() / 2**30, 2)
+                metrics["train_gpu"] = torch.cuda.get_device_name(0)
 
             trainer.log_metrics("train", metrics)
             trainer.save_metrics("train", metrics)
@@ -381,6 +430,10 @@ def main() -> None:
                 else len(dataset_splits.eval_split.dataset)
             )
             metrics["eval_samples"] = min(max_val_samples, len(dataset_splits.eval_split.dataset))
+            if torch.cuda.is_available():
+                metrics["eval_peak_vram_gb"] = round(torch.cuda.max_memory_allocated() / 2**30, 2)
+                metrics["eval_peak_vram_reserved_gb"] = round(torch.cuda.max_memory_reserved() / 2**30, 2)
+                metrics["eval_gpu"] = torch.cuda.get_device_name(0)
 
             trainer.log_metrics("eval", metrics)
             trainer.save_metrics("eval", metrics)

@@ -24,3 +24,7 @@ __pycache__/
 
 # Optuna study DBs + pip packages installed into the container at runtime
 optuna_studies/
+
+# pod export (scripts/pack_for_pod.sh)
+graphix_study_data.tar
+pod_data.sha256

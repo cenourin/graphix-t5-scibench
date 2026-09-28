@@ -34,6 +34,10 @@ def parse_args():
     p.add_argument("--n-trials", type=int, default=15)
     p.add_argument("--timeout-hours", type=float, default=None)
     p.add_argument("--max-epochs", type=int, default=10)
+    p.add_argument("--schedule-epochs", type=int, default=None,
+                   help="num_train_epochs for the LR schedule; trials stop after --max-epochs. "
+                        "Default: same as --max-epochs")
+    p.add_argument("--warmup-max", type=float, default=0.2, help="upper bound of the warmup_ratio search range")
     p.add_argument("--patience", type=int, default=3, help="early stopping patience, in epochs")
     p.add_argument("--startup-trials", type=int, default=4)
     p.add_argument("--warmup-steps", type=int, default=2)
@@ -42,16 +46,16 @@ def parse_args():
     return p.parse_args()
 
 
-def sample(trial):
+def sample(trial, warmup_max=0.2):
     return {
         "learning_rate": trial.suggest_float("learning_rate", 2e-5, 1e-3, log=True),
-        "warmup_ratio": trial.suggest_float("warmup_ratio", 0.0, 0.2),
+        "warmup_ratio": trial.suggest_float("warmup_ratio", 0.0, warmup_max),
         "gradient_accumulation_steps": trial.suggest_categorical("gradient_accumulation_steps", [8, 16, 32, 64]),
         "weight_decay": trial.suggest_categorical("weight_decay", [0.0, 0.01, 0.1]),
     }
 
 
-def trial_config(base, params, out_dir, max_epochs):
+def trial_config(base, params, out_dir, schedule_epochs):
     cfg = dict(base)
     cfg.update(params)
     for k in ("eval_steps", "save_steps"):
@@ -59,7 +63,7 @@ def trial_config(base, params, out_dir, max_epochs):
     cfg.update({
         "run_name": f"optuna-{Path(out_dir).name}",
         "output_dir": str(out_dir),
-        "num_train_epochs": max_epochs,
+        "num_train_epochs": schedule_epochs,
         "evaluation_strategy": "epoch",
         "save_strategy": "epoch",
         "save_total_limit": 2,
@@ -90,11 +94,11 @@ def main():
     done = len([t for t in study.trials if t.state.is_finished()])
     while done < a.n_trials and (deadline is None or time.time() < deadline):
         trial = study.ask()
-        params = sample(trial)
+        params = sample(trial, a.warmup_max)
         out_dir = out_root / f"trial_{trial.number}"
         out_dir.mkdir(parents=True, exist_ok=True)
         cfg_path = out_dir / "trial_config.json"
-        json.dump(trial_config(base, params, out_dir / "run", a.max_epochs), open(cfg_path, "w"), indent=2)
+        json.dump(trial_config(base, params, out_dir / "run", a.schedule_epochs or a.max_epochs), open(cfg_path, "w"), indent=2)
         marker = out_dir / "PRUNED"
         if marker.exists():
             marker.unlink()
@@ -110,6 +114,8 @@ def main():
             "GRAPHIX_OPTUNA_STARTUP_TRIALS": str(a.startup_trials),
             "GRAPHIX_OPTUNA_WARMUP_STEPS": str(a.warmup_steps),
         })
+        if a.schedule_epochs and a.schedule_epochs > a.max_epochs:
+            env["GRAPHIX_STOP_AFTER_EPOCHS"] = str(a.max_epochs)
         t0 = time.time()
         with open(out_dir / "train.log", "w") as log:
             rc = subprocess.call([sys.executable, "seq2seq/run_seq2seq_train.py", str(cfg_path)],

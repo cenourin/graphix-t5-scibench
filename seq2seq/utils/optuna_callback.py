@@ -33,6 +33,12 @@ class OptunaPruningCallback(TrainerCallback):
     def on_evaluate(self, args, state, control, metrics=None, **kwargs):
         if not metrics or "eval_loss" not in metrics:
             return
+        # The final trainer.evaluate() after training (load_best_model_at_end) runs at the
+        # same global_step as the last epoch's evaluation; reporting it again would add a
+        # phantom step the pruner could use to prune an already finished trial.
+        if state.global_step == getattr(self, "_last_step", None):
+            return
+        self._last_step = state.global_step
         self.trial.report(float(metrics["eval_loss"]), self.step)
         self.step += 1
         if self.trial.should_prune():
