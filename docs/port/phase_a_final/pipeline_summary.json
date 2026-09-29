@@ -1,0 +1,65 @@
+{
+ "time_utc": "2026-09-29T15:45:42Z",
+ "commit": "e98c5ba042779487dbc55c73680dc124fd3d8f5c",
+ "legacy_image": "eyuansu62/graphix-text-to-sql:v2",
+ "modern_image": "silveirabruno/graphix-modern@sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037",
+ "status": "passed",
+ "steps": [
+  {
+   "test": "T2",
+   "result": "passed"
+  },
+  {
+   "test": "T1",
+   "result": "passed"
+  },
+  {
+   "test": "T3",
+   "result": "passed"
+  },
+  {
+   "test": "A4_build",
+   "result": "passed"
+  },
+  {
+   "test": "T4",
+   "result": "passed"
+  },
+  {
+   "test": "T5",
+   "result": "passed"
+  },
+  {
+   "test": "T6",
+   "result": "passed"
+  },
+  {
+   "test": "TD",
+   "result": "passed"
+  },
+  {
+   "test": "TW",
+   "result": "passed"
+  },
+  {
+   "test": "TRACE",
+   "result": "passed"
+  },
+  {
+   "test": "T9",
+   "result": "passed"
+  },
+  {
+   "test": "T8",
+   "result": "passed"
+  },
+  {
+   "test": "T10",
+   "result": "passed"
+  },
+  {
+   "test": "T7",
+   "result": "passed"
+  }
+ ]
+}

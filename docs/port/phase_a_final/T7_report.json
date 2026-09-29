@@ -1,0 +1,54 @@
+{
+ "test": "T7",
+ "G1": {
+  "global_step": {
+   "B": 50,
+   "D": 50
+  },
+  "lr_equal_A_31_50": true,
+  "passed": true
+ },
+ "G2": {
+  "items_31_50_equal_A": true,
+  "order_log_lengths": {
+   "A": 406,
+   "D": 201
+  },
+  "passed": true
+ },
+ "G3": {
+  "step31_loss": {
+   "B": 0.473,
+   "D": 0.473,
+   "E": 0.473
+  },
+  "B_vs_D_abs": 0.0,
+  "passed": true
+ },
+ "G4": {
+  "steps": [
+   32,
+   33,
+   34,
+   35
+  ],
+  "B_vs_D": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "B_vs_E_control": [
+   0.006299999999999972,
+   0.0050000000000000044,
+   0.0027000000000000357,
+   0.0015000000000000013
+  ],
+  "passed": true
+ },
+ "post_resume_drift_31_50": {
+  "B_vs_D_max_abs": 0.0019000000000000128,
+  "B_vs_A_max_abs": 0.044499999999999984
+ },
+ "passed": true
+}
