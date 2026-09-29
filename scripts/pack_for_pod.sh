@@ -3,6 +3,8 @@
 # root), with a sha256 manifest. Extract on the pod from the repo root:
 #   tar -xf graphix_study_data.tar && sha256sum -c pod_data.sha256
 # Usage: scripts/pack_for_pod.sh [output_dir]      (~31 GB; see docs/RUNPOD.md)
+#        scripts/pack_for_pod.sh - | ssh POD 'cd /workspace/graphix-t5-scibench && tar -xf -'
+#          streams instead of writing the tar, so the pod never holds tar + extracted copy.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${1:-$REPO}"
@@ -22,7 +24,11 @@ FILES=(
   $SB/output/graph_pedia_dev.bin
   $SB/database
 )
-for f in "${FILES[@]}"; do [ -e "$f" ] || { echo "missing: $f"; exit 1; }; done
+for f in "${FILES[@]}"; do [ -e "$f" ] || { echo "missing: $f" >&2; exit 1; }; done
 find "${FILES[@]}" -type f -print0 | sort -z | xargs -0 sha256sum > pod_data.sha256
-tar -cf "$OUT/graphix_study_data.tar" pod_data.sha256 "${FILES[@]}"
-ls -lh "$OUT/graphix_study_data.tar"
+if [ "$OUT" = "-" ]; then
+  tar -cf - pod_data.sha256 "${FILES[@]}"
+else
+  tar -cf "$OUT/graphix_study_data.tar" pod_data.sha256 "${FILES[@]}"
+  ls -lh "$OUT/graphix_study_data.tar"
+fi

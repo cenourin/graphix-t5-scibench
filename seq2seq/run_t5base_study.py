@@ -70,7 +70,15 @@ def parse_args():
     p.add_argument("--smoke", action="store_true",
                    help="end-to-end check on tiny data: separate *_smoke studies/dirs, 32 train "
                         "examples, 1 search epoch, 2 final epochs, 20 dev examples")
+    p.add_argument("--probe", action="store_true",
+                   help="cost probe before the real study: per cell, one real trial of one epoch "
+                        "on the full data (separate *_probe studies), no final training; logs "
+                        "time per epoch, peak VRAM and the projected cost of the cell")
     return p.parse_args()
+
+
+def suffix(a):
+    return ("_smoke" if a.smoke else "") + ("_probe" if a.probe else "")
 
 
 def base_config(spec, a):
@@ -81,6 +89,28 @@ def base_config(spec, a):
     path = f"{STUDY_DIR}/smoke_{Path(spec['base_config']).name}"
     json.dump(cfg, open(path, "w"), indent=2)
     return path
+
+
+def environment():
+    """What PROTOCOLO.md §2.2 needs to trace a run to its hardware and software."""
+    import platform
+    import torch
+    import transformers
+    import dgl
+    env = {"code_commit": os.environ.get("GRAPHIX_CODE_COMMIT"), "python": platform.python_version(),
+           "torch": torch.__version__, "torch_cuda": torch.version.cuda,
+           "cudnn": torch.backends.cudnn.version(), "transformers": transformers.__version__,
+           "dgl": dgl.__version__, "allow_tf32": os.environ.get("GRAPHIX_ALLOW_TF32") == "1"}
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
+        env.update(gpu=props.name, gpu_capability=f"{props.major}.{props.minor}",
+                   gpu_memory_gb=round(props.total_memory / 2**30, 1))
+    try:
+        env["driver"] = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"], text=True).strip()
+    except Exception:
+        env["driver"] = None
+    return env
 
 
 def log(event, **kw):
@@ -108,7 +138,7 @@ def run(cmd, env, log_path):
 
 
 def search(bench, arm, spec, a):
-    study_name = f"{bench}_t5base_{arm}" + ("_smoke" if a.smoke else "")
+    study_name = f"{bench}_t5base_{arm}" + suffix(a)
     storage = f"sqlite:///{a.storage_dir}/{study_name}.db"
     study = optuna.create_study(study_name=study_name, storage=storage, load_if_exists=True,
                                 direction="minimize")
@@ -142,7 +172,7 @@ def search(bench, arm, spec, a):
 
 
 def final(bench, arm, spec, study, a):
-    out = Path(f"{RUNS_DIR}/study-t5base-{bench}-{arm}" + ("-smoke" if a.smoke else ""))
+    out = Path(f"{RUNS_DIR}/study-t5base-{bench}-{arm}" + suffix(a).replace("_", "-"))
     # Trainer output goes to out/run: HF refuses a non-empty output_dir without a
     # checkpoint, and out/ already holds the config and log written below.
     run_dir = out / "run"
@@ -197,15 +227,45 @@ def dev_eval(arm, spec, final_dir, a):
     log("dev_end", cell=final_dir.name, rc=rc, results=res)
 
 
+def probe_report(study, plan):
+    """Time and memory of the probe's single epoch, and the worst-case cost of the cell:
+    every trial runs all search epochs and the final run all its epochs (no pruning, no
+    early stopping). Real runs are cheaper; this is the budget ceiling."""
+    trial_dir = Path(f"{RUNS_DIR}/optuna/{study.study_name}/trial_0")
+    res = trial_dir / "run" / "train_results.json"
+    state = trial_dir / "run" / "trainer_state.json"
+    if not res.exists() or not state.exists():
+        log("probe_result", study=study.study_name, error="trial produced no results; see train.log")
+        return
+    r = json.load(open(res))
+    evals = [h for h in json.load(open(state))["log_history"] if "eval_runtime" in h]
+    epoch_min = (r["train_runtime"] + (evals[0]["eval_runtime"] if evals else 0)) / 60
+    wall_min = next((json.loads(l)["minutes"] for l in open(trial_dir.parent / "trials.jsonl")), None)
+    epochs = plan["n_trials"] * plan["search_epochs"] + plan["final_epochs"]
+    hours = (epochs * epoch_min + plan["n_trials"] * max(0.0, (wall_min or epoch_min) - epoch_min)) / 60
+    price = os.environ.get("GRAPHIX_PRICE_PER_HOUR")
+    log("probe_result", study=study.study_name, minutes_per_epoch=round(epoch_min, 1),
+        trial_wall_minutes=wall_min, train_steps_per_second=r.get("train_steps_per_second"),
+        peak_vram_gb=r.get("train_peak_vram_gb"), peak_vram_reserved_gb=r.get("train_peak_vram_reserved_gb"),
+        gpu=r.get("train_gpu"), worst_case_epochs=epochs, worst_case_hours=round(hours, 1),
+        worst_case_cost=round(hours * float(price), 2) if price else None)
+
+
 def main():
     a = parse_args()
+    plan = {"n_trials": a.n_trials, "search_epochs": a.search_epochs, "final_epochs": a.final_epochs}
     if a.smoke:
         a.n_trials, a.search_epochs, a.final_epochs, a.final_patience = 2, 1, 2, 1
-    log("pipeline_start", args=vars(a))
+    if a.probe:
+        a.n_trials, a.search_epochs = 1, 1
+    log("pipeline_start", args=vars(a), environment=environment())
     for bench in a.benches:
         spec = BENCHES[bench]
         for arm in a.arms:
             study = search(bench, arm, spec, a)
+            if a.probe:
+                probe_report(study, plan)
+                continue
             if not [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]:
                 log("no_complete_trials", study=study.study_name)
                 continue

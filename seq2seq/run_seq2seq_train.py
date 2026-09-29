@@ -211,6 +211,12 @@ def main() -> None:
 
     # Initialize random number generators
     set_seed(training_args.seed)
+    # torch 1.9 enables TF32 matmul/cuDNN by default on Ampere+ GPUs, which would silently
+    # turn the protocol's fp32 into TF32 on e.g. an RTX 4090 (no-op on the GTX 1070, which
+    # has no TF32). Opt back in only with GRAPHIX_ALLOW_TF32=1, recorded as a deviation.
+    tf32 = os.environ.get("GRAPHIX_ALLOW_TF32") == "1"
+    torch.backends.cuda.matmul.allow_tf32 = tf32
+    torch.backends.cudnn.allow_tf32 = tf32
 
     # Initialize config
     config = AutoConfig.from_pretrained(

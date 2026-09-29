@@ -22,6 +22,7 @@ fi
 docker run -d --name "$NAME" --gpus all \
   --user "$(id -u):$(id -g)" \
   --env HOME=/tmp --env DGLBACKEND=pytorch --env CUDA_VISIBLE_DEVICES=0 \
+  --env GRAPHIX_CODE_COMMIT="$(cat "$SNAP/COMMIT")$( [ -s "$SNAP/uncommitted.diff" ] && echo +uncommitted )" \
   --mount type=bind,source="$BASE_DIR/train_db_id",target=/train_db_id \
   --mount type=bind,source="$BASE_DIR/transformers_cache",target=/transformers_cache \
   --mount type=bind,source="$BASE_DIR/optuna_studies",target=/optuna_studies \
