@@ -139,7 +139,15 @@ t9() {
   modern -e CUDA_VISIBLE_DEVICES= -- python scripts/port_t9_optimizer.py run modern >/dev/null 2>&1 &&
   modern -- python scripts/port_t9_optimizer.py compare
 }
+# --- T8: greedy generation, both arms, two weight sets, GPU -------------------------
+t8() {
+  { [ -f "$OUT/T8/trained_state_dict.npz" ] || modern -- python scripts/port_t8_generation.py prepare; } &&
+  legacy --gpus all -- python scripts/port_t8_generation.py run legacy >/dev/null 2>&1 &&
+  modern --gpus all -- python scripts/port_t8_generation.py run modern >/dev/null 2>&1 &&
+  modern -- python scripts/port_t8_generation.py compare
+}
 step TRACE trace
 step T9 t9
-# (T7, T8, T10 are appended here as the port advances)
+step T8 t8
+# (T7, T10 are appended here as the port advances)
 finish passed

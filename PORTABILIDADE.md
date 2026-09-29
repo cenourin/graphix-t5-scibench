@@ -201,7 +201,8 @@ O profiling é ativado por variável de ambiente e fica desligado nas runs norma
 | T9 | ✅ 2026-09-29 | Adafactor com os mesmos hiperparâmetros e agrupamento de parâmetros, mesmo scheduler e **LR idêntico em cada passo** (diferença 0,0) em três configurações do estudo. `max_steps` 6885 no Spider, igual ao do trial legado de 2026-09-28. |
 | Pipeline na `a5` | ✅ 2026-09-29 | T2, T1, T3, A4_build, T4, T5, T6, TD, TW e TRACE verdes na imagem `silveirabruno/graphix-modern:a5` (`sha256:371f61af…`), commit `33d939f`. |
 | Smoke do ponto de entrada | ✅ 2026-09-29 | Spider, 64 exemplos, 2 épocas e GA 16 na GTX 1070: treino com avaliação só da loss (2,912 → 2,680), melhor checkpoint recarregado, `model.safetensors`, `profile.json`. Depois, avaliação no dev (20 exemplos) com `GRAPHIX_INIT_STATE_DICT` estrito: geração, EM/EX pelos avaliadores e decodificação com a limpeza de espaços do legado. Arquivos em `data_all_in/data/port_tests/TE/`. |
-| T7, T8, T10 (A7) | pendentes | |
+| T8 | ✅ 2026-09-29 | Geração greedy pelo mesmo caminho do `prediction_step`: `max_length` 512, cache (`Cache` da 4.57), `graph_idx`, decode com a limpeza de espaços do legado. **Tokens gerados idênticos em 14/14 exemplos** nos três cenários: RGAT com pesos do T4, RGAT treinado no smoke e plain com o T5 padrão. |
+| T7, T10 (A7) | em execução | |
 
 **Achados do smoke do ponto de entrada:**
 1. **`adam_eps` é uma chave morta nas configs.** O `TrainingArguments` chama o campo de `adam_epsilon`, e a 4.17 ignorava chaves desconhecidas em silêncio, então o valor nunca foi usado. Isso não afeta o estudo, porque o Adafactor não usa o epsilon do Adam. O port aceita chaves extras, como o legado, mas lista quais ignora.
