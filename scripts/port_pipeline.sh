@@ -148,6 +148,25 @@ t8() {
 }
 step TRACE trace
 step T9 t9
+# --- T10 (A7): short real training, both entrypoints, with noise envelope; T7: resume ---
+t10() {
+  legacy -- python scripts/port_t10_training.py prepare >/dev/null 2>&1 || return 1
+  local T=data_all_in/data/port_tests/T10 SP=data_all_in/data
+  local R=(-e GRAPHIX_TRAIN_DATASET_PATH=$SP/splits/spider_train.json -e GRAPHIX_TRAIN_GRAPH_PEDIA_PATH=$SP/output/graph_pedia_total.bin
+           -e GRAPHIX_EVAL_DATASET_PATH=$SP/splits/spider_val.json -e GRAPHIX_EVAL_GRAPH_PEDIA_PATH=$SP/output/graph_pedia_total.bin
+           -e GRAPHIX_MAX_GRAPH_NODES=512 -e GRAPHIX_INIT_STATE_DICT=$T/init_state_dict.bin -e HARNESS_NO_DROPOUT=1)
+  legacy --gpus all "${R[@]}" -e HARNESS_ORDER_LOG=$T/legacy/order.json -- \
+    python scripts/port_entry_harness.py legacy $T/legacy/config.json > $T/legacy/train.log 2>&1 &&
+  modern --gpus all "${R[@]}" -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True -e HARNESS_ORDER_LOG=$T/modern/order.json -- \
+    python scripts/port_entry_harness.py modern $T/modern/config.json > $T/modern/train.log 2>&1 &&
+  bash scripts/port_t10_noise.sh >/dev/null 2>&1 &&
+  python3 scripts/port_t10_training.py compare
+}
+t7() {
+  bash scripts/port_t7_resume2.sh >/dev/null 2>&1 &&
+  modern -- python scripts/port_t7_resume.py
+}
 step T8 t8
-# (T7, T10 are appended here as the port advances)
+step T10 t10
+step T7 t7
 finish passed

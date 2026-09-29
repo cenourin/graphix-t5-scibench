@@ -1,61 +1,58 @@
 #!/usr/bin/env python
-"""Test T7 (PORTABILIDADE.md, step A6.3): a modern run interrupted and resumed from its
-checkpoint ends where the uninterrupted run ends. Modern image only (the legacy has no
-resume path of its own to compare).
+"""Test T7 (PORTABILIDADE.md, step A6.3): resuming from a checkpoint restores the training
+state exactly (model, optimizer, scheduler, data position). Modern image only.
 
-Same setup as T10 (modern config, dropout neutralized, common initial weights, 50 steps).
-  A   uninterrupted run
-  A'  the same again: measures run-to-run noise (DGL's atomic scatter-sums on GPU)
-  B   stopped after step 30 with a checkpoint (HARNESS_STOP_AT_STEP), then resumed from it
-      (overwrite_output_dir false -> last checkpoint) to step 50
-Gate: B's final global_step is 50; LR identical to A at every step 31-50; the loss gap
-B vs A over steps 31-50 and the final-weights gap B vs A are no larger than A' vs A (plus a
-small floor). The resumed run exercises checkpoint save/load of model (safetensors),
-optimizer and scheduler (loaded with weights_only, graphix_modern/trainer.py), RNG state,
-and the 4.17 data-skip logic.
-  python scripts/port_t7_resume.py compare   (runs are driven from the host, see pipeline)
+GPU training is not bitwise reproducible (T10), so a resumed run cannot be compared with a
+separate uninterrupted run step by step: they have already drifted apart before the
+checkpoint. The resume is isolated instead, with every compared run starting from the SAME
+checkpoint-30 (runs from scripts/port_t10_noise.sh and scripts/port_t7_resume2.sh):
+  A  uninterrupted run to 50            B  stopped at 30 with checkpoint-30, resumed to 50
+  D  a second resume from B's checkpoint-30, logging the item order
+  E  resume from checkpoint-30 with the Adafactor state emptied (negative control)
+Gates:
+  G1 B and D reach global_step 50, with the LR of A at every step 31-50 (scheduler state);
+  G2 the items trained at steps 31-50 by D are exactly A's (data position, sampler, RNG);
+  G3 step 31 (same weights, same batch): B and D agree within the loss log's rounding
+     (4 decimals), so model weights and data are restored;
+  G4 over steps 32-35, B vs D stays far below B vs E: the optimizer state is restored and
+     matters (without it the updates change measurably).
 """
 import json
 import sys
 from pathlib import Path
 
-import numpy as np
-
 OUT = Path("data_all_in/data/port_tests/T7")
-FLOOR = 1e-6
+ROUND = 1.0e-4  # trainer logs round the loss to 4 decimals
 
 
-def weights(run_dir):
-    from safetensors.numpy import load_file
-    return load_file(str(Path(run_dir) / "model.safetensors"))
-
-
-def logs(run_dir):
-    st = json.load(open(str(Path(run_dir) / "trainer_state.json")))
+def logs(run):
+    st = json.load(open(str(OUT / run / "run" / "trainer_state.json")))
     return st, {h["step"]: h for h in st["log_history"] if "loss" in h}
 
 
-def max_weight_gap(a, b):
-    return max(float(np.abs(a[k].astype(np.float64) - b[k].astype(np.float64)).max()) for k in a)
-
-
 def compare():
-    stA, la = logs(OUT / "A" / "run")
-    stA2, la2 = logs(OUT / "A2" / "run")
-    stB, lb = logs(OUT / "B" / "run")
-    steps = [s for s in range(31, 51)]
-    gap = lambda x, y: max(abs(x[s]["loss"] - y[s]["loss"]) for s in steps)
-    lr_same = all(la[s]["learning_rate"] == lb[s]["learning_rate"] for s in steps)
-    wA, wA2, wB = weights(OUT / "A" / "run"), weights(OUT / "A2" / "run"), weights(OUT / "B" / "run")
-    res = {"test": "T7",
-           "global_step": {"A": stA["global_step"], "A2": stA2["global_step"], "B": stB["global_step"]},
-           "resumed_from": 30, "lr_identical_steps_31_50": lr_same,
-           "loss_gap_31_50": {"B_vs_A": gap(lb, la), "A2_vs_A (noise)": gap(la2, la)},
-           "final_weight_gap": {"B_vs_A": max_weight_gap(wB, wA), "A2_vs_A (noise)": max_weight_gap(wA2, wA)}}
-    res["passed"] = (stB["global_step"] == stA["global_step"] == 50 and lr_same
-                     and res["loss_gap_31_50"]["B_vs_A"] <= res["loss_gap_31_50"]["A2_vs_A (noise)"] + FLOOR
-                     and res["final_weight_gap"]["B_vs_A"] <= res["final_weight_gap"]["A2_vs_A (noise)"] + FLOOR)
-    OUT.mkdir(parents=True, exist_ok=True)
+    (stA, A), (stB, B), (stD, D), (stE, E) = logs("A"), logs("B"), logs("D"), logs("E")
+    orderA = json.load(open("data_all_in/data/port_tests/T10/modern/order.json"))  # A = the T10 modern run
+    orderD = json.load(open(str(OUT / "D" / "order.json")))
+    trained_after_30 = 20 * 8  # 20 updates x GA 8, all inside epoch 2
+    res = {"test": "T7"}
+    res["G1"] = {"global_step": {"B": stB["global_step"], "D": stD["global_step"]},
+                 "lr_equal_A_31_50": all(A[s]["learning_rate"] == B[s]["learning_rate"] == D[s]["learning_rate"]
+                                         for s in range(31, 51))}
+    res["G1"]["passed"] = stB["global_step"] == stD["global_step"] == 50 and res["G1"]["lr_equal_A_31_50"]
+    res["G2"] = {"items_31_50_equal_A": orderA[-trained_after_30:] == orderD[-trained_after_30:],
+                 "order_log_lengths": {"A": len(orderA), "D": len(orderD)}}
+    res["G2"]["passed"] = res["G2"]["items_31_50_equal_A"]
+    d31 = abs(B[31]["loss"] - D[31]["loss"])
+    res["G3"] = {"step31_loss": {"B": B[31]["loss"], "D": D[31]["loss"], "E": E[31]["loss"]}, "B_vs_D_abs": d31,
+                 "passed": d31 <= ROUND}
+    bd = [abs(B[s]["loss"] - D[s]["loss"]) for s in range(32, 36)]
+    be = [abs(B[s]["loss"] - E[s]["loss"]) for s in range(32, 36)]
+    res["G4"] = {"steps": [32, 33, 34, 35], "B_vs_D": bd, "B_vs_E_control": be,
+                 "passed": sum(bd) * 10 <= sum(be) and sum(be) > 10 * ROUND}
+    res["post_resume_drift_31_50"] = {"B_vs_D_max_abs": max(abs(B[s]["loss"] - D[s]["loss"]) for s in range(31, 51)),
+                                      "B_vs_A_max_abs": max(abs(B[s]["loss"] - A[s]["loss"]) for s in range(31, 51))}
+    res["passed"] = all(res[g]["passed"] for g in ("G1", "G2", "G3", "G4"))
     json.dump(res, open(str(OUT / "T7_report.json"), "w"), indent=1)
     print(json.dumps(res, indent=1))
     print("T7", "PASSED" if res["passed"] else "FAILED")
