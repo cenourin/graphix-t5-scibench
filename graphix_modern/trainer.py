@@ -36,7 +36,21 @@ from transformers import Seq2SeqTrainer
 from transformers.trainer_callback import ExportableState, TrainerState
 from transformers.trainer_utils import PredictionOutput, TrainOutput, has_length, speed_metrics
 
+from .profiling import section
+
 logger = logging.getLogger(__name__)
+
+
+def _timed_batches(dataloader):
+    """Iterate a DataLoader unchanged, timing the wait for each batch (GRAPHIX_PROFILE=1)."""
+    it = iter(dataloader)
+    while True:
+        with section("data_wait"):
+            try:
+                batch = next(it)
+            except StopIteration:
+                return
+        yield batch
 
 
 class LegacyRandomSampler(torch.utils.data.Sampler):
@@ -87,7 +101,8 @@ class LegacyLoopTrainer(Seq2SeqTrainer):
     # ---- one micro-batch: loss / GA, plain backward, OOM fatal --------------------------
     def training_step(self, model, inputs, num_items_in_batch=None):
         model.train()
-        inputs = self._prepare_inputs(inputs)
+        with section("prepare_inputs"):
+            inputs = self._prepare_inputs(inputs)
         try:
             with self.compute_loss_context_manager():
                 loss = self.compute_loss(model, inputs)
@@ -95,7 +110,8 @@ class LegacyLoopTrainer(Seq2SeqTrainer):
                 loss = loss.mean()
             if self.args.gradient_accumulation_steps > 1:
                 loss = loss / self.args.gradient_accumulation_steps
-            loss.backward()
+            with section("backward"):
+                loss.backward()
             return loss.detach()
         except RuntimeError as e:
             if "out of memory" not in str(e).lower() or os.environ.get("GRAPHIX_ALLOW_OOM_SKIP") != "1":
@@ -186,7 +202,7 @@ class LegacyLoopTrainer(Seq2SeqTrainer):
             steps_in_epoch = len(train_dataloader)
             self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
             step = -1
-            for step, inputs in enumerate(train_dataloader):
+            for step, inputs in enumerate(_timed_batches(train_dataloader)):
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
                     if steps_trained_in_current_epoch == 0:
@@ -205,11 +221,12 @@ class LegacyLoopTrainer(Seq2SeqTrainer):
 
                 if (step + 1) % args.gradient_accumulation_steps == 0 or (
                         steps_in_epoch <= args.gradient_accumulation_steps and (step + 1) == steps_in_epoch):
-                    if args.max_grad_norm is not None and args.max_grad_norm > 0:
-                        grad_norm = nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-                    self.optimizer.step()
-                    self.lr_scheduler.step()
-                    model.zero_grad()
+                    with section("optimizer"):
+                        if args.max_grad_norm is not None and args.max_grad_norm > 0:
+                            grad_norm = nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                        self.optimizer.step()
+                        self.lr_scheduler.step()
+                        model.zero_grad()
                     self.state.global_step += 1
                     self.state.epoch = epoch + (step + 1) / steps_in_epoch
                     self.control = self.callback_handler.on_step_end(args, self.state, self.control)
@@ -264,8 +281,12 @@ class GraphixSeq2SeqTrainer(LegacyLoopTrainer):
     def _post_process_function(self, examples, features, predictions, stage):
         raise NotImplementedError()
 
-    def evaluate(self, eval_dataset=None, eval_examples=None, ignore_keys=None, metric_key_prefix="eval",
-                 max_length=None, max_time=None, num_beams=None):
+    def evaluate(self, *args, **kwargs):
+        with section("evaluate"):
+            return self._evaluate_impl(*args, **kwargs)
+
+    def _evaluate_impl(self, eval_dataset=None, eval_examples=None, ignore_keys=None, metric_key_prefix="eval",
+                       max_length=None, max_time=None, num_beams=None):
         self._max_length, self._max_time, self._num_beams = max_length, max_time, num_beams
         self._memory_tracker.start()
         eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset

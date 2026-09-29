@@ -18,6 +18,7 @@ import torch.nn as nn
 
 from .functions import div_by_z, scaled_exp, src_sum_edge_mul_dst, src_sum_edge_mul_edge
 from .model_utils import FFN
+from .profiling import section
 
 
 class RGAT_Layer(nn.Module):
@@ -41,7 +42,8 @@ class RGAT_Layer(nn.Module):
                 lgx: edge feats, num_edges x edim
                 graph: dgl.graph
         """
-        g = graph.to(x.device)
+        with section("graph_to"):  # timing only (GRAPHIX_PROFILE=1); no-op otherwise
+            g = graph.to(x.device)
 
         # pre-mapping q/k/v affine
         q, k, v = self.affine_q(self.feat_dropout(x)), self.affine_k(self.feat_dropout(x)), self.affine_v(self.feat_dropout(x))

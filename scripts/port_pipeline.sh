@@ -133,6 +133,13 @@ step T5 t5
 step T6 t6
 step TD td
 step TW tw
+# --- T9: optimizer and LR schedule (CPU) ----------------------------------------------
+t9() {
+  legacy -e CUDA_VISIBLE_DEVICES= -- python scripts/port_t9_optimizer.py run legacy >/dev/null 2>&1 &&
+  modern -e CUDA_VISIBLE_DEVICES= -- python scripts/port_t9_optimizer.py run modern >/dev/null 2>&1 &&
+  modern -- python scripts/port_t9_optimizer.py compare
+}
 step TRACE trace
-# (T7..T10 are appended here as the port advances)
+step T9 t9
+# (T7, T8, T10 are appended here as the port advances)
 finish passed

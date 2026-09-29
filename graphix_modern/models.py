@@ -18,6 +18,8 @@ from transformers import PreTrainedModel
 
 from seq2seq.models.graphix.constants import GRAPHIX_RELATIONS
 
+from .profiling import section
+
 _TIED = ["pretrain_model.encoder.embed_tokens.weight", "pretrain_model.decoder.embed_tokens.weight",
          "pretrain_model.lm_head.weight"]
 
@@ -59,15 +61,16 @@ class RGATModel(_Wrapper):
         self.rel2id = {r: i for i, r in enumerate(GRAPHIX_RELATIONS)}
 
     def graph_factory(self, kwargs):
-        graph_idx_batch = kwargs.pop("graph_idx", None)
-        device = graph_idx_batch.device
-        store = self.graph_pedia if self.training else self.graph_pedia_eval
-        batch = []
-        for idx in graph_idx_batch.tolist():
-            entry = store[int(idx)]
-            batch.append({"graph": entry["graph"],
-                          "edges": torch.as_tensor(entry["rel_ids"], dtype=torch.long, device=device)})
-        return batch
+        with section("graph_build"):  # timing only (GRAPHIX_PROFILE=1); no-op otherwise
+            graph_idx_batch = kwargs.pop("graph_idx", None)
+            device = graph_idx_batch.device
+            store = self.graph_pedia if self.training else self.graph_pedia_eval
+            batch = []
+            for idx in graph_idx_batch.tolist():
+                entry = store[int(idx)]
+                batch.append({"graph": entry["graph"],
+                              "edges": torch.as_tensor(entry["rel_ids"], dtype=torch.long, device=device)})
+            return batch
 
     def forward(self, input_ids, attention_mask, labels, **kwargs):
         graph_batch = self.graph_factory(kwargs)
