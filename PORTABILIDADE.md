@@ -125,6 +125,31 @@ Cada passo termina num teste verde, e nenhum passo da Fase B começa com a Fase 
 | A6 | Infra de treino e avaliação (#6–#14, #16–#18) | **T7**: checkpoint salvo e recarregado sem perdas. **T8**: geração greedy com SQL idêntico. **T9**: mesmo otimizador e hiperparâmetros efetivos |
 | A7 | Treino curto de 50 passos, mesma seed e mesma ordem de dados, legado × moderno | **T10**: curvas de loss com divergência ≤ ~1e-3 nos primeiros passos. Qualquer divergência maior precisa ser explicada antes de seguir |
 
+**Profiling desde a Fase A (decidido em 2026-09-28).** Medir o tempo de cada etapa, sem mudar nenhum comportamento: sem sincronizar a GPU fora do modo de profiling e sem mudar ordem, dtype ou dispositivo. Serve para, na Fase B, atacar o gargalo real em vez de supor que ele está no T5. Nada é otimizado antes de T1 a T10 ficarem verdes.
+
+| Etapa medida | Onde |
+|---|---|
+| DataLoader (espera por batch) | loop de treino |
+| Montagem e reconstrução do grafo (`graph_factory`) | `rgat.Model` |
+| Cópia CPU → GPU do batch | `Trainer._prepare_inputs` |
+| `graph.to(device)` | `RGAT_Layer.forward` |
+| RGAT (`propagate_attention` + FFN) | `RGAT_Layer.forward` |
+| Encoder T5 (sem o RGAT) | `T5Stack` do encoder |
+| Decoder T5 + `lm_head` | `T5Stack` do decoder |
+| Backward | `Trainer.training_step` |
+| Passo do otimizador | loop de treino |
+
+O profiling é ativado por variável de ambiente e fica desligado nas runs normais. Com ele ligado, cada medida usa `torch.cuda.synchronize()` nos limites da etapa, o que atrasa a execução; por isso os números de throughput do benchmark (B6) vêm de runs **sem** o profiling.
+
+**O que não muda nas Fases A e B**, até uma discussão separada depois do B7, porque mudaria a dinâmica numérica do treino e não é portabilidade:
+- batch físico 1;
+- acumulação de gradiente em {8, 16, 32, 64};
+- filtros de exemplos;
+- seeds;
+- splits;
+- Adafactor;
+- schedule de learning rate.
+
 - **Onde rodam os testes:** na CPU, nos dois ambientes, para comparação determinística. Depois, na GPU: na 1070 aqui, com o mesmo build cu121, e na 4090 no pod.
 - **Conjunto fixo:** 8 exemplos do Spider e 8 do ScienceBenchmark, incluindo grafos grandes do `oncomx`.
 - **Diferenças numéricas esperadas:**
