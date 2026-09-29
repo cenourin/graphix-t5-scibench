@@ -19,6 +19,12 @@ Os arquivos são **idênticos, byte a byte,** às cabeças dos forks que o PICAR
 | `test_suite/exec_eval.py` | `ab33ee23b22f859cf6c83e09240ef5b494667f675b888539a51ad967824cd31d` |
 | `test_suite/parse.py` | `0e364a7465d3603934a4a23ba01543824317febed100c1aaf221e1b8156d26a5` |
 | `test_suite/process_sql.py` | `54fe3816de82cf240fa06b62529925a80ef596b18d7aae8f9dff33e0d5ee9e83` |
+| `spider/preprocess/get_tables.py` | `dcb2562d5df18bab97409fb2ffbdff12db71dc4e676b0c8725f36fb24e551e5b` |
+| `spider/preprocess/schema.py` | `bd7cb516814d87ceb22c93512c301eb67856169bf7ce553f7c551158893463ca` |
+| `spider/preprocess/parse_raw_json.py` | `37498678b379b78e1c4214063e1f8c7f1fc2ed851af6cd817b240141b4090fcd` |
+| `spider/preprocess/parse_sql_one.py` | `6aaaf401f985fe77c1ad015b281ac4238f617a5a1b02609920070d4264091102` |
+
+`spider/preprocess/` foi acrescentado em 2026-09-29 (passo A6.2a). O script de dataset `seq2seq/datasets/spider/spider.py` importa `get_tables.dump_db_json_schema` para ler o esquema dos bancos SQLite. A pasta é idêntica à de `elementai/spider@2965d67`.
 
 ## Não são os avaliadores oficiais
 

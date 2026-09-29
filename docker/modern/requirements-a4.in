@@ -1,0 +1,46 @@
+# MODERN_A top-level requirements, image a4 (PORTABILIDADE.md §3.1, step A6). Resolved into
+# requirements-a4.lock by docker/modern/lock.sh; the image installs only the lock.
+#
+# Base image (pinned by digest in the Dockerfile) already provides:
+#   Python 3.11.9, torch 2.4.0 (CUDA 12.1, cuDNN 9.1.0), numpy 1.26.4.
+# torch is 2.4.0, not 2.4.1: the dgl 2.4.0+cu121 wheel declares Requires-Dist torch<=2.4.0.
+
+# core
+dgl==2.4.0+cu121
+transformers==4.57.6
+datasets==2.21.0
+numpy==1.26.4
+
+# tokenizer: the T5 fast tokenizer is converted from spiece.model when tokenizer.json is absent
+sentencepiece==0.2.0
+protobuf==5.28.2
+
+# Transitive dependencies that the resolver would otherwise take at their newest release
+# (pandas 3.x, pyarrow 25.x, scipy 1.17.x, protobuf 7.x), all far newer than datasets
+# 2.21.0 (2024-08) and dgl 2.4.0 (2024-09). Pinned to releases of the same period.
+pandas==2.2.3
+pyarrow==17.0.0
+scipy==1.14.1
+fsspec==2024.6.1
+
+# A6: evaluators (third_party/, the ElementAI forks the legacy image uses) at the legacy
+# image's versions: exact match goes through nltk's word_tokenize, so nltk and its punkt
+# data (docker/modern/nltk_data, copied from the legacy image) must be the same.
+nltk==3.7
+sqlparse==0.4.2
+# tqdm: the legacy 4.63.0 is impossible (datasets 2.21 needs tqdm>=4.66.3); it only draws
+# progress bars and takes no part in any computation, so it is left to the resolver.
+
+# A6: Optuna search, at the versions the legacy runs installed at runtime (optuna<4)
+optuna==3.6.2
+sqlalchemy==1.4.54
+alembic==1.12.1
+
+# A6.2a: the data pipeline's bridge_content_encoder uses rapidfuzz.fuzz.ratio. The legacy
+# 2.0.5 has no Python 3.11 wheel; 2.10.0 is the closest release that has one. The A6.2a
+# equivalence test compares the resulting serialized schemas example by example.
+rapidfuzz==2.10.0
+
+# A6.2: transformers' Trainer requires accelerate>=0.26.0 (the transformers[torch] extra).
+# 1.0.1 (2024-10) is contemporary with the other pins and supports torch 2.4.
+accelerate==1.0.1
