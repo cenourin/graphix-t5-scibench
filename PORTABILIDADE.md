@@ -175,6 +175,15 @@ O profiling é ativado por variável de ambiente e fica desligado nas runs norma
 | B6 | Instrumentação por run (GPU, capability, driver, versões, precisão, TF32, compile, batch, acumulação, tokens/s, passos/s, s/época, pico de VRAM) e benchmark na 4090: A fp32, B fp32+TF32, C bf16, D bf16+compile, no mesmo conjunto |
 | B7 | Recomendação da configuração para a 4090. **A mudança no protocolo vem só depois disso, como proposta separada.** |
 
+### 5.1 Andamento
+
+| Passo | Status | Evidência |
+|---|---|---|
+| A0 | ✅ 2026-09-29 | **T2 passou em 100%**: 14 642 grafos (9611 do Spider, 4732 do train e 299 do dev do ScienceBenchmark), 125,2 milhões de arestas e 14 642 associações exemplo ↔ grafo. Export rodado a partir do commit `dbf5832`; uma segunda execução gerou artefatos idênticos byte a byte. Evidências em `data_all_in/data/graph_export/manifest.json` e `T2_report.json`. |
+| A1 | ✅ 2026-09-29 | Imagem `graphix-modern:a1` (commit `7c46c63`), publicada como `silveirabruno/graphix-modern:a1`, digest `sha256:7f9513344460f65cda11f29236ea724025ae0786c86bf441efc5d6c14d276a75` |
+| A2 | ✅ 2026-09-29 | **T1 passou**: `input_ids`, `labels` e `attention_mask` idênticos nos 14 642 exemplos. O tokenizador tem os mesmos 32 102 tokens, e os tokens extras `" <="`/`" <"` ficam em 32100/32101. Relatório em `data_all_in/data/port_tests/T1/T1_report.json` (`scripts/port_t1_tokenizer.py`). |
+| A3 a A7 | pendentes | |
+
 ## 6. Alterações Graphix no T5 (o que o port preserva)
 
 O `seq2seq/models/modeling_t5.py` é o `modeling_t5.py` da transformers 4.17 (1845 linhas) com 199 linhas alteradas.
