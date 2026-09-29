@@ -2,15 +2,15 @@
 # Noise envelope for T10 and the T7 resume runs (PORTABILIDADE.md, A7). GTX 1070.
 # Same setup as scripts/port_t10_training.py (run its `prepare` first, and the T10 legacy and
 # modern runs), then:
-#   legacy2    the legacy run again           -> legacy run-to-run noise
-#   modern2    the modern run again           -> modern run-to-run noise (also T7's A')
+#   legacy2, legacy3   the legacy run again, twice   -> legacy run-to-run noise
+#   modern2, modern3   the modern run again, twice   -> modern run-to-run noise (modern2 is T7's A')
 #   perturbed  modern, initial weights x (1 + 1e-6 * N(0,1)), seed 0
 #              -> how much 1e-6 relative perturbations grow over 50 steps
 #   T7 B       modern stopped after step 30 with a checkpoint, then resumed to step 50
 set -u
 cd "$(dirname "$0")/.."
 T=data_all_in/data/port_tests/T10; T7=data_all_in/data/port_tests/T7; SP=data_all_in/data
-mkdir -p $T/legacy2 $T/modern2 $T/perturbed $T7/A $T7/A2 $T7/B
+mkdir -p $T/legacy2 $T/legacy3 $T/modern2 $T/modern3 $T/perturbed $T7/A $T7/A2 $T7/B
 M="-v $PWD/seq2seq:/app/seq2seq:ro -v $PWD/graphix_modern:/app/graphix_modern:ro -v $PWD/scripts:/app/scripts:ro -v $PWD/tests:/app/tests:ro -v $PWD/configs:/app/configs:ro -v $PWD/data_all_in:/app/data_all_in -w /app"
 E="--user $(id -u):$(id -g) -e HOME=/tmp -e DGLBACKEND=pytorch -e HF_HOME=/tmp/hf -e HF_MODULES_CACHE=/tmp/hf/modules -e HF_DATASETS_CACHE=/tmp/hf/datasets -e GRAPHIX_TRAIN_DATASET_PATH=$SP/splits/spider_train.json -e GRAPHIX_TRAIN_GRAPH_PEDIA_PATH=$SP/output/graph_pedia_total.bin -e GRAPHIX_EVAL_DATASET_PATH=$SP/splits/spider_val.json -e GRAPHIX_EVAL_GRAPH_PEDIA_PATH=$SP/output/graph_pedia_total.bin -e GRAPHIX_MAX_GRAPH_NODES=512 -e HARNESS_NO_DROPOUT=1"
 # expandable_segments: allocator setting only (the 1070 fragments at 8 GB; see PORTABILIDADE.md)
@@ -33,10 +33,16 @@ torch.save({k: v * (1 + 1e-6 * torch.randn_like(v)) for k, v in s.items()}, '$T/
 cfg legacy $T/legacy2/run '{}' $T/legacy2/config.json
 docker run --rm --gpus all $E -e GRAPHIX_INIT_STATE_DICT=$T/init_state_dict.bin -e HARNESS_ORDER_LOG=$T/legacy2/order.json $M $LEGACY \
   python scripts/port_entry_harness.py legacy $T/legacy2/config.json > $T/legacy2/train.log 2>&1; rc $? "legacy2"
+cfg legacy $T/legacy3/run '{}' $T/legacy3/config.json
+docker run --rm --gpus all $E -e GRAPHIX_INIT_STATE_DICT=$T/init_state_dict.bin -e HARNESS_ORDER_LOG=$T/legacy3/order.json $M $LEGACY \
+  python scripts/port_entry_harness.py legacy $T/legacy3/config.json > $T/legacy3/train.log 2>&1; rc $? "legacy3"
 
 cfg modern $T/modern2/run '{}' $T/modern2/config.json
 docker run --rm --gpus all $ME -e GRAPHIX_INIT_STATE_DICT=$T/init_state_dict.bin -e HARNESS_ORDER_LOG=$T/modern2/order.json $M $MODERN \
   python scripts/port_entry_harness.py modern $T/modern2/config.json > $T/modern2/train.log 2>&1; rc $? "modern2"
+cfg modern $T/modern3/run '{}' $T/modern3/config.json
+docker run --rm --gpus all $ME -e GRAPHIX_INIT_STATE_DICT=$T/init_state_dict.bin -e HARNESS_ORDER_LOG=$T/modern3/order.json $M $MODERN \
+  python scripts/port_entry_harness.py modern $T/modern3/config.json > $T/modern3/train.log 2>&1; rc $? "modern3"
 
 cfg modern $T/perturbed/run '{}' $T/perturbed/config.json
 docker run --rm --gpus all $ME -e GRAPHIX_INIT_STATE_DICT=$T/init_state_dict_perturbed.bin -e HARNESS_ORDER_LOG=$T/perturbed/order.json $M $MODERN \
