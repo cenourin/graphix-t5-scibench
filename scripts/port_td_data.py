@@ -10,7 +10,8 @@ For each benchmark (study config), compares:
      validation slices (splits/) and the official dev;
   E  every HF dev example (all fields) and the aligned eval examples after filtering;
   P  the HF preprocessing of the dev split (input_ids/labels, including the serialized
-     schema with database content matched through rapidfuzz);
+     schema with database content matched through rapidfuzz): reported, not gated (see
+     compare());
   S  schemas; and the size of the HF train split.
   dump ENV BENCH  |  compare
 """
@@ -142,9 +143,16 @@ def compare():
         r["train_split_len"] = [a["train_split_len"], b["train_split_len"]]
         r["counts"] = {role: [a["filters"][role]["n"], a["filters"][role]["after_size"], len(a["filters"][role]["kept"])]
                        for role in a["filters"]}
+        # P (HF-preprocessed dev inputs) is reported but not gated: a known, non-functional
+        # difference (PORTABILIDADE.md, A6.2a). Nothing consumes it (the model reads
+        # TokenizedDataset, T1; the metric reads the eval examples, E), and it has no
+        # stable reference: bridge_content_encoder collects DB values in a set() and
+        # SELECT DISTINCT without ORDER BY, so two runs of the same legacy image already
+        # differ on 9 Spider dev examples, and legacy vs modern still differ with the same
+        # rapidfuzz 2.0.5 and PYTHONHASHSEED=0.
+        r["eval_preprocessed"]["gated"] = False
         r["passed"] = (all(r["filters"].values()) and r["eval_examples"]["equal"] and r["eval_examples_aligned"]["equal"]
-                       and r["eval_preprocessed"]["equal"] and r["schemas_equal"]
-                       and a["train_split_len"] == b["train_split_len"])
+                       and r["schemas_equal"] and a["train_split_len"] == b["train_split_len"])
         ok = ok and r["passed"]
         report["benches"][bench] = r
         print(bench, json.dumps(r))

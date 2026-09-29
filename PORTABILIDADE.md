@@ -192,7 +192,29 @@ O profiling é ativado por variável de ambiente e fica desligado nas runs norma
 | A3 | ✅ 2026-09-29 | RGAT portado para `graphix_modern/rgat_tuning.py` com escopo mínimo (`copy_e`; `DGLError` não é mais capturado; sai o `empty_cache`+retry). **T3 na GPU passou**: saída da camada com max\|Δ\| entre 9,5e-7 e 2,3e-6 nos 16 exemplos do conjunto fixo (`tests/port/fixture.json`). Relatório estágio a estágio em `data_all_in/data/port_tests/T3/T3_report_cuda.json`. |
 | A4 | ✅ 2026-09-29 | T5 da transformers 4.57.6 com as alterações Graphix, gerado por `scripts/port_build_modeling_t5.py` (diff para o upstream em `docs/port/modeling_t5_graphix.diff`). **T4 passou nos 7 gates**: 451 `named_parameters` idênticos; o checkpoint legado carrega com `strict=True` (0 ausentes, 0 inesperadas, tudo bit a bit). **T5 passou**: nos 14 exemplos usáveis, \|Δloss\| ≤ 9,5e-7 e logits com erro relativo ≤ 9,0e-7, sem nenhum ponto de controle interno acima de 1e-4. Os 2 grafos do Spider maiores que 512 tokens, que o treino descarta, ficaram de fora. |
 | A5 | ✅ 2026-09-29 | **T6 passou.** Os gradientes foram acumulados sobre os exemplos em três cenários: R1, Spider sem checkpointing; R2, Spider com checkpointing; R3, ScienceBenchmark com checkpointing. O cosseno mínimo por tensor foi 1,00000000 / 1,00000000 / 0,99999916 (gate: 0,9999). O conjunto de parâmetros com gradiente é o mesmo (438, sendo 181 Graphix; 13 sem gradiente, incluindo o `filter` e o `relation_emb` do decoder). Dentro de cada ambiente, o checkpointing não altera os gradientes (diferença relativa ~1e-6). |
-| A6 e A7 | pendentes | |
+| A6.1 | ✅ 2026-09-29 | Avaliadores em `third_party/`: são os forks ElementAI do PICARD, **não os oficiais**; procedência e implicações em `third_party/PROVENANCE.md`. nltk 3.7 e o mesmo `punkt` do legado, com `word_tokenize` idêntico. |
+| A6.2a | ✅ 2026-09-29 | **TD passou.** Filtros (treino, validação e dev), exemplos do dev (gabaritos), alinhamento, esquemas e tamanho do treino são idênticos nas duas bases. O campo P fica fora do gate, como "diferença conhecida e não funcional" (ver achados). |
+| A6.2b | ✅ 2026-09-29 | **TW passou.** `graph_batch` idêntico nos 14 exemplos, e \|Δloss\| ≤ 9,5e-7 no braço RGAT e ≤ 1,4e-6 no plain. |
+| A6.2c | ✅ 2026-09-29 | **Gate TRACE passou**, idêntico ao legado: N=10, GA=4, 3 épocas; 6 atualizações; sobras atravessando a fronteira (`w.grad` 1,5); LR por passo; ordem nas 3 épocas. Trainer em `graphix_modern/trainer.py`: laço da 4.17, sampler do torch 1.9, loss ÷ GA, OOM fatal. |
+| A6.2d, A6.2e, T7 a T9, A7 | pendentes | |
+
+**Achados do A6:**
+1. **Imagem `a5` consolidada.** O accelerate 1.3.0 é o mínimo que funciona com a transformers 4.57.6: o metadado declara ≥ 0.26, mas a 1.1.1 e a 1.2.1 falham em `unwrap_model(keep_torch_compile=...)`. O rapidfuzz 2.0.5 do legado não tem wheel para Python 3.11 e o sdist traz Cython incompatível com 3.11. Um estágio de build regenera o Cython (3.0.0b1, porque a 3.0.0a10 pedida saiu do PyPI) a partir do `.pyx` original, com o SHA-256 do sdist conferido. O algoritmo, em C++, não muda. O `fuzz.ratio` dá o mesmo valor do legado.
+2. **O campo P (dev pré-processado pelo `datasets`, com valores do banco) é uma diferença conhecida e não funcional.** Três evidências:
+   - **nenhum consumidor funcional:** o modelo lê o `TokenizedDataset` (T1), a métrica lê os exemplos do dev (E), e o P só aparece num log de duplicatas;
+   - **sem referência estável:** o `bridge_content_encoder` junta valores num `set()` e usa `SELECT DISTINCT` sem `ORDER BY`, e **duas execuções do mesmo legado já divergem em 9 exemplos do Spider**;
+   - **não é problema de versão:** a diferença persiste entre legado e moderno com o mesmo rapidfuzz 2.0.5 e `PYTHONHASHSEED=0`.
+
+   O rapidfuzz 2.0.5 foi fixado mesmo assim.
+3. **`decode` do tokenizador.** O padrão de `clean_up_tokenization_spaces` mudou (4.17 `True`, 4.57 `False`). O trainer moderno fixa `True` explicitamente nas três decodificações (entradas, labels e SQL predito).
+4. **Semântica de treino da 4.17, confirmada empiricamente** (`scripts/port_trace_epochs.py`):
+   - ⌊N/GA⌋ atualizações por época;
+   - as sobras entram na 1ª atualização da época seguinte, cada micro-batch ÷GA;
+   - na última época, o treino para em `max_steps` e **as sobras nem são processadas**.
+
+   O Trainer padrão da 4.57 faz 9 atualizações em vez de 6 e, com um `forward(**kwargs)`, **não divide a loss por GA**.
+5. **`RandomSampler` do torch 2.x.** Ele consome uma permutação extra por época (`randperm(n)[:num_samples % n]`, avaliado mesmo com resto 0), o que muda a ordem dos exemplos a partir da época 2. O port usa o `__iter__` do torch 1.9.
+6. **Retomada com torch < 2.6.** O Trainer 4.57 bloqueia o `torch.load` de `optimizer.pt` e `scheduler.pt`. O port carrega esses arquivos com `weights_only=True` direto, **só** para checkpoints dos nossos próprios runs; a CVE-2025-32434 torna perigoso carregar arquivos de terceiros.
 
 **Achados do A5:**
 1. **A maior diferença relativa por elemento (1,4e-2, no R3) fica no `ffn.feedforward.0` do RGAT**, o `Linear` que vem **antes** de uma ReLU. O `feedforward.2`, depois da ReLU, quase não diverge. É o padrão de ReLU no limiar: a diferença de ~1e-6 do forward vira o sinal de algumas pré-ativações muito próximas de zero, e a derivada da ReLU é descontínua. O L2 relativo do tensor fica em 1,3e-3, e o cosseno em 0,9999992.

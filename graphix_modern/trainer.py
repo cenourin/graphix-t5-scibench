@@ -31,12 +31,29 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 import numpy as np
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, RandomSampler
+from torch.utils.data import DataLoader
 from transformers import Seq2SeqTrainer
 from transformers.trainer_callback import ExportableState, TrainerState
 from transformers.trainer_utils import PredictionOutput, TrainOutput, has_length, speed_metrics
 
 logger = logging.getLogger(__name__)
+
+
+class LegacyRandomSampler(torch.utils.data.Sampler):
+    """torch 1.9's RandomSampler.__iter__ (replacement=False): one randperm per epoch.
+    torch 2.x's version also evaluates randperm(n)[:num_samples % n] after the epoch's
+    permutation even when that slice is empty, drawing a second, discarded permutation
+    from the generator every epoch, which changes the example order from epoch 2 on
+    (seen in scripts/port_trace_epochs.py). randperm itself is identical across versions."""
+
+    def __init__(self, data_source, generator):
+        self.data_source, self.generator = data_source, generator
+
+    def __iter__(self):
+        yield from torch.randperm(len(self.data_source), generator=self.generator).tolist()
+
+    def __len__(self):
+        return len(self.data_source)
 
 
 class EvalPrediction(NamedTuple):
@@ -57,7 +74,7 @@ class LegacyLoopTrainer(Seq2SeqTrainer):
         generator = torch.Generator()
         generator.manual_seed(int(seed) if seed is not None else int(torch.empty((), dtype=torch.int64).random_().item()))
         self._sampler_seed = generator.initial_seed()
-        return RandomSampler(dataset, generator=generator)
+        return LegacyRandomSampler(dataset, generator=generator)
 
     def get_train_dataloader(self):
         if self.train_dataset is None:
@@ -345,21 +362,29 @@ class GraphixSeq2SeqTrainer(LegacyLoopTrainer):
 class SpiderTrainer(GraphixSeq2SeqTrainer):
     """Port of seq2seq/utils/spider.py::SpiderTrainer."""
 
+    # transformers 4.17's decode defaulted to clean_up_tokenization_spaces=True ("a, b");
+    # 4.57's T5 tokenizer defaults to False ("a , b"). Fixed explicitly to the legacy value
+    # so decoded inputs, labels and predicted SQL do not depend on the library default.
+    CLEANUP = True
+
     def _post_process_function(self, examples, features, predictions, stage):
         import json
         tok = self.processing_class
-        inputs = tok.batch_decode([f["input_ids"] for f in features], skip_special_tokens=True)
+        inputs = tok.batch_decode([f["input_ids"] for f in features], skip_special_tokens=True,
+                                  clean_up_tokenization_spaces=self.CLEANUP)
         label_ids = [f["labels"] for f in features]
         if self.ignore_pad_token_for_loss:
             _label_ids = np.where(label_ids != -100, label_ids, tok.pad_token_id)
-        decoded_label_ids = tok.batch_decode(_label_ids, skip_special_tokens=True)
+        decoded_label_ids = tok.batch_decode(_label_ids, skip_special_tokens=True,
+                                             clean_up_tokenization_spaces=self.CLEANUP)
         metas = [
             {"query": x["query"], "question": x["question"], "context": context, "label": label,
              "db_id": x["db_id"], "db_path": x["db_path"], "db_table_names": x["db_table_names"],
              "db_column_names": x["db_column_names"], "db_foreign_keys": x["db_foreign_keys"]}
             for x, context, label in zip(examples, inputs, decoded_label_ids)
         ]
-        predictions = tok.batch_decode(predictions, skip_special_tokens=True)
+        predictions = tok.batch_decode(predictions, skip_special_tokens=True,
+                                       clean_up_tokenization_spaces=self.CLEANUP)
         assert len(metas) == len(predictions)
         with open(f"{self.args.output_dir}/predictions_{stage}.json", "w") as f:
             json.dump([dict(**{"prediction": p}, **m) for p, m in zip(predictions, metas)], f, indent=4)
