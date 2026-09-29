@@ -98,6 +98,14 @@ class LegacyLoopTrainer(Seq2SeqTrainer):
                           drop_last=self.args.dataloader_drop_last, num_workers=self.args.dataloader_num_workers,
                           pin_memory=self.args.dataloader_pin_memory)
 
+    # ---- keep every batch key (graph_idx) -------------------------------------------------
+    def _get_collator_with_removed_columns(self, data_collator, description=None):
+        """4.57 wraps the collator of torch Datasets in a RemoveColumnsCollator that drops any
+        key the model's forward() signature does not name, which drops graph_idx (it reaches
+        the wrapper through **kwargs) at evaluation. 4.17 only removed columns from
+        datasets.Dataset objects, never from torch Datasets such as TokenizedDataset."""
+        return data_collator
+
     # ---- one micro-batch: loss / GA, plain backward, OOM fatal --------------------------
     def training_step(self, model, inputs, num_items_in_batch=None):
         model.train()
@@ -395,7 +403,12 @@ class SpiderTrainer(GraphixSeq2SeqTrainer):
                                   clean_up_tokenization_spaces=self.CLEANUP)
         label_ids = [f["labels"] for f in features]
         if self.ignore_pad_token_for_loss:
-            _label_ids = np.where(label_ids != -100, label_ids, tok.pad_token_id)
+            # The legacy line is np.where(label_ids != -100, label_ids, pad) with label_ids a
+            # Python list of ragged lists: `list != -100` is a single True, so it returned
+            # the labels unchanged (numpy 1.21 accepted the ragged array; numpy >= 1.24
+            # raises). Same effect here, without the ragged array. Unpadded TokenizedDataset
+            # labels hold no -100 anyway.
+            _label_ids = label_ids
         decoded_label_ids = tok.batch_decode(_label_ids, skip_special_tokens=True,
                                              clean_up_tokenization_spaces=self.CLEANUP)
         metas = [

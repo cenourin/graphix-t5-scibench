@@ -60,13 +60,28 @@ def parse_config(path):
         cfg["eval_strategy"] = cfg.pop("evaluation_strategy")
     parser = HfArgumentParser((PicardArguments, ModelArguments, DataArguments, DataTrainingArguments,
                                Seq2SeqTrainingArguments))
-    return parser.parse_dict(cfg)
+    # transformers 4.17's parse_json_file silently ignored keys no dataclass declares (the
+    # study configs carry one: "adam_eps", never read -- TrainingArguments' field is
+    # adam_epsilon, and Adafactor does not use it). 4.57 refuses them; keep the legacy
+    # behavior but say which keys are ignored.
+    from dataclasses import fields
+    known = {f.name for dc in parser.dataclass_types for f in fields(dc)}
+    ignored = sorted(k for k in cfg if k not in known)
+    if ignored:
+        logger.warning("Config keys ignored (no argument declares them, as in the legacy entrypoint): %s", ignored)
+    return parser.parse_dict(cfg, allow_extra_keys=True)
 
 
 def load_init_state_dict(model, path):
     if path.endswith(".safetensors"):
         from safetensors.torch import load_file
         state = load_file(path)
+        # safetensors files store a tied weight once (under shared.weight); the keys tied
+        # to it are restored from it, and only those, before the strict load.
+        shared = "pretrain_model.shared.weight"
+        for key in getattr(model, "_tied_weights_keys", []):
+            if key not in state and shared in state:
+                state[key] = state[shared]
     else:
         state = torch.load(path, map_location="cpu", weights_only=True)
     model.load_state_dict(state, strict=True)
