@@ -83,24 +83,15 @@ class RGAT_Layer(nn.Module):
                 out_x = self.propagate_attention(g)
             out_x = out_x.to(x.dtype)
         except dgl.DGLError as err:
-            # DGL's CPU SpMM backend (libxsmm kernel codegen) has been observed to fail
-            # for a rare graph shape even when both the graph and its features were moved
-            # to CUDA -- confirmed via a real ScienceBenchmark fine-tuning crash
-            # ("Failed to generate libxsmm kernel for the SpMM operation", CPU-backend
-            # stack frames throughout, for a graph.to(device) call that succeeded moments
-            # earlier). Rather than crashing the whole run over one pathological example's
-            # graph, skip the RGAT augmentation for just this layer/example (pass the
-            # node features through unchanged, same pattern used elsewhere this session:
-            # capture, skip only the affected example, log it, never fail silently or
-            # crash the whole computation).
-            print(
-                "RGAT_Layer.forward: DGLError on propagate_attention, skipping graph "
-                "augmentation for this example (n_nodes={}, n_edges={}): {}".format(
-                    graph.number_of_nodes(), graph.number_of_edges(), err
-                ),
-                flush=True,
-            )
-            return x, lgx
+            # This used to skip the RGAT for the example and carry on. On CPU, DGL 0.8.2's
+            # libxsmm SpMM fails for every graph, so a run that fell back to CPU trained with
+            # no RGAT at all while looking normal (incident of 2026-09-26, docs/incidentes.md).
+            # A result labeled RGAT must have run the RGAT: fail the run instead.
+            raise RuntimeError(
+                "RGAT_Layer.forward: DGL failed in propagate_attention (n_nodes={}, n_edges={}, "
+                "device={}); refusing to skip the RGAT silently".format(
+                    graph.number_of_nodes(), graph.number_of_edges(), x.device)
+            ) from err
 
         out_x = self.layernorm(x + self.affine_o(out_x.view(-1, self.num_heads * self.d_k)))
         out_x = self.ffn(out_x)

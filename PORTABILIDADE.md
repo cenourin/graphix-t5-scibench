@@ -157,7 +157,14 @@ O profiling é ativado por variável de ambiente e fica desligado nas runs norma
 - Adafactor;
 - schedule de learning rate.
 
-- **Onde rodam os testes:** na CPU, nos dois ambientes, para comparação determinística. Depois, na GPU: na 1070 aqui, com o mesmo build cu121, e na 4090 no pod.
+- **Onde rodam os testes** *(corrigido em 2026-09-29, depois do A3)*:
+  - **T3 a T10 não têm referência na CPU.** O DGL 0.8.2 do legado não roda o RGAT na CPU (16 de 16 grafos falham no SpMM via libxsmm).
+  - **O LEGACY_REFERENCE válido para o caminho RGAT é a GTX 1070**, com os dois ambientes na mesma GPU. Como a Pascal não tem TF32, o lado legado fica em fp32 estrito.
+  - **O T1 (tokenizador) e o T2 (grafos) não passam pelo RGAT** e continuam como estavam.
+  - **Na 4090 do pod** não há legado a comparar. Ali roda só o moderno, e ele é comparado com as saídas de referência gravadas na 1070.
+  - A premissa original ("testes primeiro na CPU, para comparação determinística") fica registrada aqui como superada.
+- **Pipeline:** `scripts/port_pipeline.sh` roda em ordem todos os testes já implementados, cada um no seu ambiente, para no primeiro que falhar e grava `data_all_in/data/port_tests/pipeline_summary.json` com o commit e as imagens. Cada passo novo acrescenta o seu teste ao pipeline, e só é dado como concluído quando o pipeline **inteiro** passa.
+- **Fallback para CPU no caminho RGAT agora é erro fatal** (`docs/incidentes.md`): o `run_seq2seq_train.py` recusa RGAT sem CUDA, e o `RGAT_Layer` legado não pula mais o RGAT em silêncio.
 - **Conjunto fixo:** 8 exemplos do Spider e 8 do ScienceBenchmark, incluindo grafos grandes do `oncomx`.
 - **Diferenças numéricas esperadas:**
   - a ordem das somas (atomics do DGL, kernels de redução) e as versões de cuBLAS e cuDNN dão erro relativo de ~1e-6 a 1e-5 por operação, acumulado em 12 camadas;

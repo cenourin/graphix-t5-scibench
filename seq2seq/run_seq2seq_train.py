@@ -311,6 +311,12 @@ def main() -> None:
         if os.environ.get("GRAPHIX_MODEL_VARIANT", "rgat") == "plain":
             from models.graphix.plain import Model
         else:
+            # The HF Trainer silently falls back to CPU when CUDA disappears, and on CPU
+            # DGL 0.8.2 cannot run the RGAT at all (incident of 2026-09-26,
+            # docs/incidentes.md). An RGAT run without CUDA is refused, not degraded.
+            if not torch.cuda.is_available() and os.environ.get("GRAPHIX_ALLOW_CPU_RGAT") != "1":
+                raise SystemExit("RGAT variant requires CUDA and none is available "
+                                 "(set GRAPHIX_ALLOW_CPU_RGAT=1 only for deliberate CPU tests)")
             from models.graphix.rgat import Model
         model = Model(tokenizer, model_cls_wrapper, model_args, config, graph_pedia_train, graph_pedia_eval)
         # model_name_or_path pointing at a checkpoint saved by this script does NOT load

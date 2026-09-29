@@ -88,7 +88,8 @@ def run(env, device):
         for i, ex in enumerate(fixture()):
             try:
                 result = run_one(i, ex, layer, rel_emb, inp, exports, device, F, fn, copy_e)
-            except dgl.DGLError as err:
+            except (dgl.DGLError, RuntimeError) as err:
+                # the legacy layer now raises RuntimeError from the DGLError (docs/incidentes.md)
                 if env == "legacy" and device == "cpu":
                     meta["unavailable"][str(i)] = str(err).splitlines()[0][:300]
                     print(env, device, i, ex["reason"], "UNAVAILABLE:", meta["unavailable"][str(i)], flush=True)
