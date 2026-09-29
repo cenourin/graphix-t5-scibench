@@ -182,7 +182,19 @@ O profiling é ativado por variável de ambiente e fica desligado nas runs norma
 | A0 | ✅ 2026-09-29 | **T2 passou em 100%**: 14 642 grafos (9611 do Spider, 4732 do train e 299 do dev do ScienceBenchmark), 125,2 milhões de arestas e 14 642 associações exemplo ↔ grafo. Export rodado a partir do commit `dbf5832`; uma segunda execução gerou artefatos idênticos byte a byte. Evidências em `data_all_in/data/graph_export/manifest.json` e `T2_report.json`. |
 | A1 | ✅ 2026-09-29 | Imagem `graphix-modern:a1` (commit `7c46c63`), publicada como `silveirabruno/graphix-modern:a1`, digest `sha256:7f9513344460f65cda11f29236ea724025ae0786c86bf441efc5d6c14d276a75` |
 | A2 | ✅ 2026-09-29 | **T1 passou**: `input_ids`, `labels` e `attention_mask` idênticos nos 14 642 exemplos. O tokenizador tem os mesmos 32 102 tokens, e os tokens extras `" <="`/`" <"` ficam em 32100/32101. Relatório em `data_all_in/data/port_tests/T1/T1_report.json` (`scripts/port_t1_tokenizer.py`). |
-| A3 a A7 | pendentes | |
+| A3 | ✅ 2026-09-29 | RGAT portado para `graphix_modern/rgat_tuning.py` com escopo mínimo (`copy_e`; `DGLError` não é mais capturado; sai o `empty_cache`+retry). **T3 na GPU passou**: saída da camada com max\|Δ\| entre 9,5e-7 e 2,3e-6 nos 16 exemplos do conjunto fixo (`tests/port/fixture.json`). Relatório estágio a estágio em `data_all_in/data/port_tests/T3/T3_report_cuda.json`. |
+| A4 a A7 | pendentes | |
+
+**Diagnóstico do T3, estágio a estágio (GPU):**
+- **Onde nasce a diferença:** `edge_feats`, `k` e `v` são idênticos bit a bit. A primeira diferença aparece em `q`, a única projeção com bias: ~2e-6 absoluto, relativo ≤ 1e-6. Vem do kernel `addmm` do cuBLAS no torch 1.9 × 2.4, não do DGL.
+- **Estágios que passam de 1e-5 em valor absoluto:** `score` (até ~69 em módulo), `wv` e `z`, que são somas com valores grandes. O erro relativo deles fica em 3 a 6e-7, o que equivale a poucos ULPs de float32 e é a diferença do `q` propagada. A normalização `o = wv/z` volta à escala 1.
+
+**Achado: o RGAT legado não roda na CPU.** O DGL 0.8.2 falha em **16 de 16** grafos na CPU ("Failed to generate libxsmm kernel for the SpMM operation"). Essa versão não tem o `dgl.use_libxsmm`, que permitiria desligar o libxsmm. Consequências:
+1. **O plano de testes muda.** O dispositivo de referência de todos os testes que passam pelo RGAT (T3 a T10) passa a ser a **GPU** (GTX 1070). Como a Pascal não tem TF32, o lado legado fica em fp32 estrito por construção.
+2. **Confirmação do incidente de 2026-09-26.** Qualquer run legado que caiu para a CPU treinou **sem RGAT**, porque o `except DGLError` do legado pulava a camada em silêncio. Isso confirma o diagnóstico do incidente de perda de GPU.
+3. **O moderno funciona na CPU.** O DGL 2.4 roda o RGAT na CPU (16 de 16, autoconsistente), então testes só do moderno podem usar a CPU.
+
+O comparador do T3 também passou a recusar comparação com zero exemplos: antes, uma comparação vazia contava como aprovação.
 
 ## 6. Alterações Graphix no T5 (o que o port preserva)
 
