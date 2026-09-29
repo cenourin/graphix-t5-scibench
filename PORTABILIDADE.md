@@ -1,0 +1,178 @@
+# Portabilidade para uma stack moderna (RTX 4090)
+
+Análise de 2026-09-28. **Decisão 51 revista:** o ambiente final é uma stack moderna, otimizada para a RTX 4090. A imagem legada passa a servir só como **LEGACY_REFERENCE**, para testes de equivalência.
+
+**Fora do escopo deste documento:** o protocolo experimental (`PROTOCOLO.md`) não é alterado aqui.
+
+Nada foi portado ainda. O documento propõe versões, lista as incompatibilidades e define o plano incremental.
+
+**Regra das fases:**
+- **Fase A, equivalência funcional:** fp32 estrito (`allow_tf32=False` para matmul e cuDNN), sem autocast e sem `torch.compile`.
+- **Fase B, otimização:** TF32, BF16, `torch.compile` e DataLoader. Só começa depois que a Fase A passar nos testes.
+
+## 1. Fontes consultadas
+
+| Fonte | O que confirma |
+|---|---|
+| `pytorch/pytorch` → `RELEASE.md`, "Release Compatibility Matrix" e "CUDA Support Matrix" (branch main, lida em 2026-09-28) | Python e CUDA suportados por cada versão do torch; arquiteturas de GPU por build |
+| `dmlc/dgl` → releases do GitHub (a última é a **v2.4.0**, de 2024-09-03) | "torch 2.4 & CUDA 12.4 are now supported"; "numpy 2.x is now supported" |
+| dgl.ai → "Get Started" (página oficial de instalação) | PyTorch **2.1.x a 2.4.x**; CUDA 11.8/12.1/12.4; Python 3.8 a 3.12; Linux Ubuntu ≥ 20.04 |
+| `data.dgl.ai/wheels` (índice de wheels) | há wheels `dgl-2.5.0` para torch 2.5/2.6, **sem release nem notas oficiais**, e por isso **não usadas** como base |
+| Commits do `dmlc/dgl` | o último é de 2025-07-31: o projeto está praticamente parado |
+| PyPI (metadados) e código de `transformers 4.57.6` e `datasets 2.21.0` | requisitos de Python e torch; APIs presentes, renomeadas ou removidas (§4) |
+
+Da matriz oficial do PyTorch, os pontos que decidem:
+- **Pascal (a GTX 1070 local) só aparece nos builds CUDA 12.6 do torch 2.7 em diante.** Até o torch 2.6, os builds CUDA 12.x ainda incluem sm_50/60.
+- **A Ada (8.9) não é listada explicitamente em nenhum build.** Ela roda os kernels sm_86 por compatibilidade binária dentro da família 8.x, o que vale para torch e DGL. Isso é confirmado no smoke do pod.
+- **Driver do pod:** reporta CUDA 13.2 e é retrocompatível com runtimes 12.x. A versão do driver não é a do runtime do container.
+
+## 2. LEGACY_REFERENCE
+
+A imagem `eyuansu62/graphix-text-to-sql:v2` (30,9 GB, Ubuntu 18.04):
+
+| Pacote | Versão |
+|---|---|
+| Python | 3.7.10 |
+| torch | 1.9.0, CUDA 11.1 (kernels sm_37…sm_86); TF32 **ligado** por padrão |
+| transformers | 4.17.0 |
+| tokenizers | 0.11.6 |
+| datasets | 1.18.4.dev0 |
+| DGL | 0.8.2 |
+| numpy | 1.21.4 |
+| scipy | 1.6.2 |
+| networkx | 2.6.3 |
+| sentencepiece | 0.1.96 |
+| stanza | 1.1.1 |
+
+O pré-processamento (Stanza, construção dos grafos) **continua no legado**. A stack moderna consome os artefatos já gerados (§5, passo A0).
+
+## 3. Matriz de versões modernas
+
+### 3.1 MODERN_A, a primeira versão moderna (Fase A)
+
+Mantém o DGL, dentro da faixa **oficialmente suportada** por ele.
+
+| Componente | Versão | Justificativa |
+|---|---|---|
+| Python | **3.11** | Suportado pelo torch 2.4 (3.8–3.12) e pelo DGL 2.4 (3.8–3.12). Mais maduro que o 3.12 para wheels científicos da época. |
+| torch | **2.4.1** | O mais novo que o DGL suporta oficialmente (2.1.x–2.4.x). É o último patch da série 2.4. Suporta Ada, BF16, TF32 e `torch.compile`. |
+| CUDA runtime | **12.1** (build `cu121`) | O CUDA **estável** do torch 2.4 (o 12.4 é "experimental" na matriz oficial). O DGL 2.4 publica `cu121`. **Inclui Pascal**, então o mesmo build roda na 1070 local e na 4090. |
+| DGL | **2.4.0 + cu121** | Última versão oficial. Suporta torch 2.4. |
+| transformers | **4.57.6** | Último patch da série 4; exige torch ≥ 2.2 e Python ≥ 3.9. A série 5.x ficou de fora: a 5.17 exige torch ≥ 2.5, e a série 5 removeu APIs de que o projeto ainda depende (§4). |
+| tokenizers | a que a transformers 4.57.6 fixar | O tokenizador é conferido token a token (teste T1). |
+| datasets | **2.21.0** | Última série 2.x. **Ainda tem `load_metric` e scripts de carregamento** (com `trust_remote_code`), dos quais o projeto depende. A 3.0 removeu `load_metric`, e a 4.0 removeu os scripts. |
+| numpy | **1.26.4** | O DGL 2.4 declara suporte a numpy 2, mas o numpy 2 não traz ganho aqui e aumentaria o número de variáveis no teste de equivalência. Pode subir depois da Fase A. |
+| sentencepiece, scipy, networkx | as que os pacotes acima exigirem | Não afetam o modelo, e o código só usa APIs estáveis delas. |
+
+### 3.2 MODERN_B, o alvo possível da Fase B
+
+É o MODERN_A com o RGAT reescrito em PyTorch puro, sem DGL em tempo de execução.
+
+| Componente | Versão | Justificativa |
+|---|---|---|
+| Python | 3.12 | Suportada pelo torch 2.8 (3.9–3.13) |
+| torch | **2.8.x**, build **cu126** | CUDA 12.6 é estável no 2.8, e é o **único build do 2.8 que ainda inclui Pascal**, então o mesmo build roda na 1070 e na 4090. Não uso o mais recente (2.14): o 2.8 tem mais de um ano de correções e é a versão do template do RunPod. |
+| DGL | **só no LEGACY_REFERENCE**, para exportar os grafos | Sem wheels oficiais depois do torch 2.4. |
+| transformers, datasets, numpy | como no MODERN_A | A única mudança é tirar o DGL. |
+
+**Quando passar do A para o B:** só se a Fase B mostrar que o DGL impede um ganho real, e a justificativa entra aqui. Os limites conhecidos do DGL são três:
+- os kernels SpMM do DGL **não aceitam 16 bits** (erro já reproduzido neste repositório), então o RGAT continua em fp32 dentro do BF16;
+- o `torch.compile` quebra o grafo em toda chamada ao DGL;
+- o `graph.to(device)` roda por camada e por exemplo.
+
+A troca exige demonstrar equivalência **contra o MODERN_A** (teste T3 com os mesmos pesos).
+
+## 4. Incompatibilidades de API do projeto
+
+Cada linha foi conferida no código da versão-alvo, não inferida.
+
+| # | Onde no projeto | API legada | Situação na versão-alvo | Ação no port |
+|---|---|---|---|---|
+| 1 | `models/modeling_t5.py` (fork do T5 4.17, Graphix) | T5 com cache em tupla, `past_key_value`, `checkpoint()` direto, `parallelize()` | O T5 da transformers 4.57.6 usa `Cache`/`EncoderDecoderCache`, `cache_position`, `past_key_values` (o nome antigo está obsoleto, com remoção prevista para a 4.58) e `_gradient_checkpointing_func` | **Reaplicar as alterações Graphix (§6) sobre o `modeling_t5.py` da 4.57.6**, num arquivo vendorizado novo. Os remendos de precisão (§6.2) ficam de fora, e `parallelize` é removido. |
+| 2 | `models/graphix/rgat_tuning.py` | `fn.copy_edge` | **Removida** no DGL 2.x (virou `fn.copy_e`) | trocar |
+| 3 | `rgat_tuning.py`, `modeling_t5.py` | `number_of_nodes()` / `number_of_edges()` | obsoletos (`num_nodes()` / `num_edges()`) | trocar |
+| 4 | `graph_pedia_*.bin` (dados) | pickle/shelve de `DGLGraph` do DGL 0.8.2 + Python 3.7 | desserialização no DGL 2.4 **sem garantia** | **exportação única** no legado para um formato neutro (§5, A0) |
+| 5 | `rgat_tuning.py` | `except DGLError` → pula o RGAT daquele exemplo | continua possível | no port **vira erro**, porque a equivalência não pode mascarar falha. `empty_cache` + retry é removido (contorno de 8 GB). |
+| 6 | `utils/picard_model_wrapper.py` | `transformers.generation_utils` e `transformers.generation_logits_process` | **Módulos removidos** (hoje em `transformers.generation`) | o PICARD não é usado. O import passa a acontecer só com `use_picard=True`. |
+| 7 | Vários (`file_utils.copy_func`, docstrings) | `transformers.file_utils` | existe como compatibilidade na 4.57, e some na série 5 | migrar para `transformers.utils` |
+| 8 | `models/modeling_auto.py` | internos de `auto_factory` (`_get_model_class`, `CONFIG_MAPPING_NAMES`, `model_type_to_module_name`, `replace_list_option_in_docstrings`) | API interna; mudou entre versões | usar a classe Graphix-T5 diretamente, sem a fábrica automática |
+| 9 | `dynamic_module_utils.get_class_from_dynamic_module` | assinatura antiga | assinatura mudou | não é usado no caminho de treino; remover o import |
+| 10 | Configs e scripts (`study_t5base_*.json`, `run_optuna_search.py`, `run_t5base_study.py`) | `evaluation_strategy` | **Renomeado** para `eval_strategy`; o nome antigo não é mais aceito | renomear as chaves (novos configs; os configs legados ficam como estão) |
+| 11 | `utils/trainer.py`, `run_seq2seq_train.py` | `Trainer(tokenizer=...)` | obsoleto (`processing_class`), removido na 5.0 | trocar |
+| 12 | `utils/trainer.py` (`evaluate`/`predict`/`prediction_step` sobrescritos) | contrato interno do `Seq2SeqTrainer` 4.17 (`evaluation_loop`, `_memory_tracker`, `gen_kwargs`) | `evaluation_loop` com a mesma assinatura. `prediction_step` e o tratamento de `gen_kwargs` mudaram. | reescrever as sobrescritas contra a 4.57.6. Teste T8 (geração). |
+| 13 | `utils/dataset_loader.py`, `metrics/*` | `datasets.load_metric`, `datasets.Metric`, scripts de dataset | existem na 2.21 (obsoletos); scripts exigem `trust_remote_code=True` | Fase A: `datasets==2.21.0` + `trust_remote_code=True`. Depois: carregadores diretos e chamada direta das métricas (sai o `datasets`). |
+| 14 | `run_seq2seq_train.py` (tokens extras `" <="`, `" <"`) | `AddedToken` do tokenizers 0.11 | os padrões de `AddedToken` (lstrip/rstrip/normalized) mudaram entre versões | teste T1: `input_ids` idênticos. Se divergirem, fixar os parâmetros do `AddedToken` explicitamente. |
+| 15 | `modeling_t5.py` (gradient checkpointing) | `torch.utils.checkpoint.checkpoint` sem `use_reentrant` | o torch 2.4 avisa, e o padrão vai mudar | fixar `use_reentrant=True` (comportamento legado) na Fase A |
+| 16 | `run_seq2seq_train.py` (`GRAPHIX_INIT_STATE_DICT`), retomada do HF | `torch.load` | no torch 2.4 o `weights_only` padrão é False; no 2.6+ é True | passar `weights_only=True` explícito (os `state_dict` são só tensores) |
+| 17 | Treino (`adafactor: true`) | `TrainingArguments.adafactor` → `Adafactor(scale_parameter=False, relative_step=False)` | ainda existe na 4.57.6 | conferir que os kwargs do otimizador são os mesmos (teste T9) |
+| 18 | `run_seq2seq_train.py` | `graph_pedia` via `pickle` + `shelve` (`dbm.dumb`) | o formato `dbm.dumb` é legível no 3.11, mas o conteúdo é `DGLGraph` (ver #4) | carregar do formato neutro |
+| 19 | `modeling_t5.py` (remendos fp16/bf16) | upcasts manuais para contornar a Pascal | desnecessários na Ada e com autocast | **removidos** do port (§6.2), com registro |
+
+## 5. Plano incremental
+
+Cada passo termina num teste verde, e nenhum passo da Fase B começa com a Fase A pendente.
+
+**Fase A: equivalência funcional**, sempre em `modern_fp32_reference` (fp32, TF32 off, sem autocast, sem compile).
+
+| Passo | O que é feito | Teste que fecha o passo |
+|---|---|---|
+| A0 | **No legado:** exportar cada entrada do `graph_pedia` para um formato neutro (`src`/`dst` em ordem de ID, `num_nodes`, relações e demais campos) + manifesto sha256 | T2: reconstruir cada grafo no legado a partir do export e comparar com o `DGLGraph` original, com arestas e ordem idênticas |
+| A1 | Ambiente MODERN_A reproduzível (imagem ou venv com versões fixas) | imports; `torch.cuda` na 1070; versões registradas |
+| A2 | Tokenizador | **T1**: `input_ids` idênticos em todos os exemplos de train, val e dev dos dois benchmarks |
+| A3 | Port do RGAT para o DGL 2.4 (#2, #3, #5) | **T3**: com os mesmos pesos e entrada, a saída do `RGAT_Layer` legado × moderno tem max \|Δ\| ≤ 1e-5 |
+| A4 | Port do T5 Graphix sobre o T5 4.57.6 (#1, #15, #19) | **T4**: um checkpoint legado carrega com `strict=True`, mesma lista de parâmetros e shapes. **T5**: logits max \|Δ\| relativo ≤ 1e-4 e loss \|Δ\| ≤ 1e-5, com dropout off |
+| A5 | Gradientes | **T6**: cosseno ≥ 0,9999 por tensor e o mesmo conjunto de parâmetros com gradiente não nulo, incluindo `relation_emb` e as 12 camadas RGAT |
+| A6 | Infra de treino e avaliação (#6–#14, #16–#18) | **T7**: checkpoint salvo e recarregado sem perdas. **T8**: geração greedy com SQL idêntico. **T9**: mesmo otimizador e hiperparâmetros efetivos |
+| A7 | Treino curto de 50 passos, mesma seed e mesma ordem de dados, legado × moderno | **T10**: curvas de loss com divergência ≤ ~1e-3 nos primeiros passos. Qualquer divergência maior precisa ser explicada antes de seguir |
+
+- **Onde rodam os testes:** na CPU, nos dois ambientes, para comparação determinística. Depois, na GPU: na 1070 aqui, com o mesmo build cu121, e na 4090 no pod.
+- **Conjunto fixo:** 8 exemplos do Spider e 8 do ScienceBenchmark, incluindo grafos grandes do `oncomx`.
+- **Diferenças numéricas esperadas:**
+  - a ordem das somas (atomics do DGL, kernels de redução) e as versões de cuBLAS e cuDNN dão erro relativo de ~1e-6 a 1e-5 por operação, acumulado em 12 camadas;
+  - divergência na geração só é aceitável se vier de um empate de logits, e cada caso é investigado.
+
+**Fase B: otimização para a Ada.** Cada passo é medido contra o `modern_fp32_reference`.
+
+| Passo | O que é feito |
+|---|---|
+| B1 | `--precision tf32` (`allow_tf32=True` para matmul e cuDNN), registrado nos metadados |
+| B2 | `--precision bf16`: `torch.autocast(bfloat16)` com pesos e estado do Adafactor em fp32. Mede VRAM, throughput e estabilidade da loss. Com DGL, o RGAT fica em fp32. |
+| B3 | *(condicional)* MODERN_B: RGAT em PyTorch puro, validado contra o MODERN_A com os testes T3 a T6 |
+| B4 | `--compile` opcional, com os graph breaks documentados |
+| B5 | DataLoader: levar a montagem do grafo do `forward` para o collate; depois `num_workers`, `pin_memory`, `persistent_workers`, `prefetch_factor` e `non_blocking` |
+| B6 | Instrumentação por run (GPU, capability, driver, versões, precisão, TF32, compile, batch, acumulação, tokens/s, passos/s, s/época, pico de VRAM) e benchmark na 4090: A fp32, B fp32+TF32, C bf16, D bf16+compile, no mesmo conjunto |
+| B7 | Recomendação da configuração para a 4090. **A mudança no protocolo vem só depois disso, como proposta separada.** |
+
+## 6. Alterações Graphix no T5 (o que o port preserva)
+
+O `seq2seq/models/modeling_t5.py` é o `modeling_t5.py` da transformers 4.17 (1845 linhas) com 199 linhas alteradas.
+
+### 6.1 Algoritmo, que é portado exatamente
+
+| Classe | Função | Alteração | Motivo | Equivalente moderno | Dificuldade |
+|---|---|---|---|---|---|
+| `T5LayerRGAT` (nova) | `__init__` | `RGAT_Layer(d_model, d_model, heads=1, feat_drop=0.2)`, `T5LayerNorm`, 2 dropouts e um `filter = Linear(d_ff, d_model)` **nunca usado** | camada de grafo | copiar. O `filter` morto fica, para os checkpoints baterem. | baixa |
+| `T5LayerRGAT` | `forward` | `x + dropout(dropout_gnn(elu(graph_caption(layer_norm(x)))))` | injeção do grafo | copiar | baixa |
+| `T5LayerRGAT` | `graph_caption(_one)` | por exemplo: primeiros `num_nodes` estados; `relation_emb(rel_ids)`; RGAT; **escrita in-place** no tensor normalizado | nós = subwords da pergunta e do esquema | copiar e validar os gradientes (T6) | média |
+| `T5Block` | `__init__` | encoder: `self.rgat_layer = T5LayerRGAT(config)` | uma camada RGAT por bloco do encoder | acrescentar | baixa |
+| `T5Block` | `forward` | kwargs `graph_batch` e `relation_emb`. No encoder, o RGAT roda depois do FF e antes do clamp de fp16. | a ordem define o modelo | acrescentar ao forward com cache moderno | média |
+| `T5Stack` | `__init__` | `relation_emb = nn.Embedding(25, d_model)`, no encoder **e no decoder** (o do decoder não é usado) | 25 relações de `GRAPHIX_RELATIONS` | acrescentar os dois | baixa |
+| `T5Stack` | `forward` | repassa `graph_batch` e `relation_emb` aos blocos, inclusive no gradient checkpointing | sem isso, o RGAT some com checkpointing | via `_gradient_checkpointing_func` | média |
+| `T5ForConditionalGeneration` | `forward` | aceita `graph_batch` e o repassa ao encoder | ponto de entrada | acrescentar | baixa |
+| `graphix/rgat.py` → `Model` | `graph_factory`, `graph_postprocess`, `generate` | monta o `graph_batch` pelo `graph_idx`; relação → ID; passa o grafo ao `generate` | pareamento exemplo-grafo | sem mudança de lógica. O `generate` moderno filtra os kwargs do encoder pela assinatura, então o `graph_batch` precisa estar nela. | média |
+
+### 6.2 Remendos de precisão, que não são algoritmo e não são portados
+
+Foram adicionados por sessões anteriores para avaliar o Graphix-3B em 16 bits numa GPU Pascal. **Em fp32 não fazem nada**, então não afetam a equivalência da Fase A.
+
+| Local | O que faz | Por que sai |
+|---|---|---|
+| `T5DenseReluDense.forward`, `T5DenseGatedGeluDense.forward` | FFN em fp32 quando a entrada é 16 bits | no BF16 a faixa de expoente é a do fp32, sem o estouro do fp16 |
+| `T5Attention.forward` | QKᵀ e AV em fp32 quando a entrada é 16 bits | o cuBLAS da Pascal não tem GEMM batched em bf16; na Ada não há essa limitação |
+| `T5ForConditionalGeneration.forward` | `lm_head` em fp32 quando a entrada é 16 bits | com autocast, a cross-entropy já roda em fp32. Volta como opção documentada se a Fase B mostrar instabilidade. |
+
+## 7. O que depende de você
+
+1. **Aprovar a matriz MODERN_A** para a Fase A: Python 3.11, torch 2.4.1+cu121, DGL 2.4.0+cu121, transformers 4.57.6, datasets 2.21.0, numpy 1.26.4.
+2. **Onde fica o ambiente moderno.** Recomendo uma **imagem Docker própria**, `FROM` uma imagem oficial `pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime` com as versões fixadas. No RunPod, a mesma imagem vira o pod, e aqui ela roda com `docker run`. Um venv no template do RunPod dependeria do Python do template. A imagem precisa ser publicada numa conta sua do Docker Hub.
+3. **Começar pelo A0** (exportação dos grafos no legado), que não muda nada no código de treino.
