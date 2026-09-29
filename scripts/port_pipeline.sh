@@ -8,16 +8,17 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 LEGACY=eyuansu62/graphix-text-to-sql:v2
-MODERN=silveirabruno/graphix-modern@sha256:7f9513344460f65cda11f29236ea724025ae0786c86bf441efc5d6c14d276a75
+MODERN=silveirabruno/graphix-modern@sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037
 OUT=data_all_in/data/port_tests
 mkdir -p "$OUT"
 FORCE_T2=0; [ "${1:-}" = "--force-t2" ] && FORCE_T2=1
 
 COMMIT="$(git rev-parse HEAD)$(git diff --quiet HEAD -- seq2seq graphix_modern scripts tests configs || echo +uncommitted)"
-U=(--user "$(id -u):$(id -g)" -e HOME=/tmp -e DGLBACKEND=pytorch -e GRAPHIX_CODE_COMMIT="$COMMIT")
+U=(--user "$(id -u):$(id -g)" -e HOME=/tmp -e DGLBACKEND=pytorch -e GRAPHIX_CODE_COMMIT="$COMMIT"
+   -e HF_HOME=/tmp/hf -e HF_MODULES_CACHE=/tmp/hf/modules -e HF_DATASETS_CACHE=/tmp/hf/datasets)
 M=(-v "$PWD/seq2seq:/app/seq2seq:ro" -v "$PWD/graphix_modern:/app/graphix_modern:ro"
    -v "$PWD/scripts:/app/scripts:ro" -v "$PWD/tests:/app/tests:ro" -v "$PWD/configs:/app/configs:ro"
-   -v "$PWD/data_all_in:/app/data_all_in" -w /app)
+   -v "$PWD/third_party:/app/third_party:ro" -v "$PWD/data_all_in:/app/data_all_in" -w /app)
 # legacy|modern [docker options] -- command...
 in_image() {
   local image=$1; shift; local opts=()
@@ -33,7 +34,7 @@ import json, sys, time
 commit, status, results = sys.argv[1], sys.argv[2], sys.argv[3:]
 summary = {"time_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "commit": commit,
            "legacy_image": "eyuansu62/graphix-text-to-sql:v2",
-           "modern_image": "silveirabruno/graphix-modern@sha256:7f9513344460f65cda11f29236ea724025ae0786c86bf441efc5d6c14d276a75",
+           "modern_image": "silveirabruno/graphix-modern@sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037",
            "status": status, "steps": [dict(zip(("test", "result"), r.split("=", 1))) for r in results]}
 json.dump(summary, open("data_all_in/data/port_tests/pipeline_summary.json", "w"), indent=1)
 print(json.dumps(summary, indent=1))
@@ -99,7 +100,39 @@ t6() {
   modern --gpus all -- python scripts/port_t6_gradients.py run modern >/dev/null 2>&1 &&
   modern -- python scripts/port_t6_gradients.py compare
 }
+# --- A6.2a TD: data stage (filters, dev examples, alignment, schemas); run sequentially ---
+td() {
+  for b in spider sciencebenchmark; do
+    legacy -- python scripts/port_td_data.py dump legacy $b >/dev/null 2>&1 &&
+    modern -- python scripts/port_td_data.py dump modern $b >/dev/null 2>&1 || return 1
+  done
+  modern -- python scripts/port_td_data.py compare
+}
+# --- A6.2b TW: model wrappers (graph_batch, loss), GPU ---------------------------------
+tw() {
+  legacy --gpus all -- python scripts/port_tw_wrapper.py run legacy >/dev/null 2>&1 &&
+  modern --gpus all -- python scripts/port_tw_wrapper.py run modern >/dev/null 2>&1 &&
+  modern -- python scripts/port_tw_wrapper.py compare
+}
+# --- A6.2c TRACE: training-loop semantics vs the legacy trace (N=10, GA=4, 3 epochs) ---
+trace() {
+  legacy -- python scripts/port_trace_epochs.py legacy stock >/dev/null 2>&1 &&
+  modern -- python scripts/port_trace_epochs.py modern ported >/dev/null 2>&1 &&
+  python3 - <<'PY'
+import json, sys
+D = "data_all_in/data/port_tests/TRACE/"
+a, b = json.load(open(D + "legacy_stock.json")), json.load(open(D + "modern_ported.json"))
+keys = ["max_steps", "global_step", "optimizer_steps", "scheduler_steps", "scheduler_num_training_steps",
+        "order", "processed_after_last_update", "updates"]
+bad = [k for k in keys if a[k] != b[k]]
+print("TRACE", "PASSED" if not bad else "FAILED: %s" % bad)
+sys.exit(1 if bad else 0)
+PY
+}
 step T5 t5
 step T6 t6
+step TD td
+step TW tw
+step TRACE trace
 # (T7..T10 are appended here as the port advances)
 finish passed
