@@ -1,0 +1,24 @@
+# MODERN_A top-level requirements (PORTABILIDADE.md §3.1). Resolved into
+# requirements-a1.lock by docker/modern/lock.sh; the image installs only the lock.
+#
+# Base image (pinned by digest in the Dockerfile) already provides:
+#   Python 3.11.9, torch 2.4.0 (CUDA 12.1, cuDNN 9.1.0), numpy 1.26.4.
+# torch is 2.4.0, not 2.4.1: the dgl 2.4.0+cu121 wheel declares Requires-Dist torch<=2.4.0.
+
+# core
+dgl==2.4.0+cu121
+transformers==4.57.6
+datasets==2.21.0
+numpy==1.26.4
+
+# tokenizer: the T5 fast tokenizer is converted from spiece.model when tokenizer.json is absent
+sentencepiece==0.2.0
+protobuf==5.28.2
+
+# Transitive dependencies that the resolver would otherwise take at their newest release
+# (pandas 3.x, pyarrow 25.x, scipy 1.17.x, protobuf 7.x), all far newer than datasets
+# 2.21.0 (2024-08) and dgl 2.4.0 (2024-09). Pinned to releases of the same period.
+pandas==2.2.3
+pyarrow==17.0.0
+scipy==1.14.1
+fsspec==2024.6.1

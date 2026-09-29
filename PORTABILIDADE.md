@@ -55,7 +55,7 @@ Mantém o DGL, dentro da faixa **oficialmente suportada** por ele.
 | Componente | Versão | Justificativa |
 |---|---|---|
 | Python | **3.11** | Suportado pelo torch 2.4 (3.8–3.12) e pelo DGL 2.4 (3.8–3.12). Mais maduro que o 3.12 para wheels científicos da época. |
-| torch | **2.4.1** | O mais novo que o DGL suporta oficialmente (2.1.x–2.4.x). É o último patch da série 2.4. Suporta Ada, BF16, TF32 e `torch.compile`. |
+| torch | **2.4.0** | O DGL suporta oficialmente a série 2.4, mas o wheel `dgl-2.4.0+cu121` declara **`Requires-Dist: torch<=2.4.0`** (metadado conferido em 2026-09-29). Por isso foi usado o 2.4.0, e não o 2.4.1 aprovado inicialmente: com o 2.4.1, a instalação do DGL rebaixava o torch por conta própria. Suporta Ada, BF16, TF32 e `torch.compile`. |
 | CUDA runtime | **12.1** (build `cu121`) | O CUDA **estável** do torch 2.4 (o 12.4 é "experimental" na matriz oficial). O DGL 2.4 publica `cu121`. **Inclui Pascal**, então o mesmo build roda na 1070 local e na 4090. |
 | DGL | **2.4.0 + cu121** | Última versão oficial. Suporta torch 2.4. |
 | transformers | **4.57.6** | Último patch da série 4; exige torch ≥ 2.2 e Python ≥ 3.9. A série 5.x ficou de fora: a 5.17 exige torch ≥ 2.5, e a série 5 removeu APIs de que o projeto ainda depende (§4). |
@@ -63,6 +63,13 @@ Mantém o DGL, dentro da faixa **oficialmente suportada** por ele.
 | datasets | **2.21.0** | Última série 2.x. **Ainda tem `load_metric` e scripts de carregamento** (com `trust_remote_code`), dos quais o projeto depende. A 3.0 removeu `load_metric`, e a 4.0 removeu os scripts. |
 | numpy | **1.26.4** | O DGL 2.4 declara suporte a numpy 2, mas o numpy 2 não traz ganho aqui e aumentaria o número de variáveis no teste de equivalência. Pode subir depois da Fase A. |
 | sentencepiece, scipy, networkx | as que os pacotes acima exigirem | Não afetam o modelo, e o código só usa APIs estáveis delas. |
+
+**Implementação (A1, 2026-09-29): imagem `graphix-modern:a1`**
+- `docker/modern/Dockerfile`: base `pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime` fixada pelo digest `sha256:68c022c2…`, com Python 3.11.9, torch 2.4.0, CUDA 12.1, cuDNN 9.1.0, numpy 1.26.4 e Ubuntu 22.04.
+- `docker/modern/requirements-a1.in` → `requirements-a1.lock`: tudo o que é acrescentado à base, instalado com `--no-deps`.
+- **Dependências indiretas fixadas na mesma época** do datasets 2.21 e do DGL 2.4: pandas 2.2.3, pyarrow 17.0.0, scipy 1.14.1, fsspec 2024.6.1 e protobuf 5.28.2. Sem isso, o pip escolheria pandas 3, pyarrow 25, scipy 1.17 e protobuf 7.
+- **Resultado:** tokenizers 0.22.2 (exigido pela transformers 4.57.6) e sentencepiece 0.2.0. O `pip check` passou limpo.
+- **Verificado na GTX 1070:** CUDA disponível, arquiteturas sm_50…sm_90 e troca de mensagens do DGL na GPU.
 
 ### 3.2 MODERN_B, o alvo possível da Fase B
 
