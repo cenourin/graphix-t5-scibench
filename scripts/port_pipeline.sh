@@ -93,6 +93,13 @@ step T1 t1
 step T3 t3
 step A4_build a4_build
 step T4 t4
+# --- T6: gradients (R1 spider no-ckpt, R2 spider ckpt, R3 scibench ckpt), GPU reference -
+t6() {
+  legacy --gpus all -- python scripts/port_t6_gradients.py run legacy >/dev/null 2>&1 &&
+  modern --gpus all -- python scripts/port_t6_gradients.py run modern >/dev/null 2>&1 &&
+  modern -- python scripts/port_t6_gradients.py compare
+}
 step T5 t5
-# (T6..T10 are appended here as the port advances)
+step T6 t6
+# (T7..T10 are appended here as the port advances)
 finish passed
