@@ -67,8 +67,32 @@ t3() {
   modern -- python scripts/port_t3_rgat.py compare cuda
 }
 
+# --- A4 build check: the ported modeling_t5.py is exactly what the builder generates ---
+a4_build() {
+  { [ -f data_all_in/t5-base-st/manifest.json ] || modern -- python scripts/port_convert_t5_safetensors.py; } &&
+  cp graphix_modern/modeling_t5.py /tmp/modeling_t5.committed.py &&
+  docker run --rm "${U[@]}" -v "$PWD:/app" -w /app "$MODERN" python scripts/port_build_modeling_t5.py >/dev/null 2>&1 &&
+  cmp -s graphix_modern/modeling_t5.py /tmp/modeling_t5.committed.py
+}
+# --- T4: structure and legacy checkpoint loading (strict) ------------------------------
+t4() {
+  legacy -- python scripts/port_t4_structure.py dump legacy >/dev/null 2>&1 &&
+  modern -- python scripts/port_t4_structure.py dump modern >/dev/null 2>&1 &&
+  modern -- python scripts/port_t4_structure.py compare
+}
+# --- T5: training forward (use_cache=False), same weights/inputs, GPU reference -------
+t5() {
+  { [ -f "$OUT/T5/inputs.npz" ] || legacy -- python scripts/port_t5_forward.py inputs; } &&
+  legacy --gpus all -- python scripts/port_t5_forward.py run legacy >/dev/null 2>&1 &&
+  modern --gpus all -- python scripts/port_t5_forward.py run modern >/dev/null 2>&1 &&
+  modern -- python scripts/port_t5_forward.py compare
+}
+
 step T2 t2
 step T1 t1
 step T3 t3
-# (T4..T10 are appended here as the port advances)
+step A4_build a4_build
+step T4 t4
+step T5 t5
+# (T6..T10 are appended here as the port advances)
 finish passed
