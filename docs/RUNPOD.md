@@ -1,5 +1,8 @@
 # Rodar o estudo t5-base num pod do RunPod
 
+> **Superseded for the modern stack (2026-09-30).** This page describes the legacy image (`eyuansu62/graphix-text-to-sql:v2`). On the MODERN_A image (`silveirabruno/graphix-modern@sha256:371f61af…`), follow `docs/RUNPOD_PHASE_B.md` and **do not run `scripts/run_t5base_study_pod.sh`**: it drives the legacy entrypoint `seq2seq/run_seq2seq_train.py`, which was never validated on the modern stack (a missing `tenacity` import is the symptom). The study orchestrator has not been ported to `graphix_modern/train.py` yet.
+
+
 Alvo: **1× RTX 4090 24 GB**, RAM de 31 a 46 GB, *network volume* de 100 GB em `/workspace` e disco raiz efêmero.
 
 **Regra do protocolo:** as 4 células rodam num só lugar (`PROTOCOLO.md` §2.2). Se o estudo for para o pod, isso entra em "Desvios" **antes** do lançamento: hardware GTX 1070 → RTX 4090, TF32 desligado. Nenhuma célula fica pela metade em cada máquina.
