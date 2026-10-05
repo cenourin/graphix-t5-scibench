@@ -300,3 +300,38 @@ A cadeia de evidência da equivalência funcional:
 
 **Próximo passo: a Fase B na RTX 4090.** A sequência é: smoke, depois 50 passos, depois um probe de 200 a 300 passos, medir o custo real e desligar. Só então vêm os modos de precisão, o benchmark e o desvio de protocolo explícito antes de qualquer run do estudo. O `PROTOCOLO.md` continua sem alteração.
 
+
+## Fase B: baseline FP32 na RTX 4090 (2026-10-05) e decisão de precisão
+
+**Sessão.** `phase_b_s2`, commit `cc5f69b`, imagem a5 por digest, RTX 4090 (capability 8.9, driver 570.195.03). Todas as 14 etapas passaram (rc=0) em 20 min:
+- preflight;
+- smoke: treino, checkpoint, resume exato dos passos 4–6 e avaliação com geração;
+- steps50;
+- probe das 4 células com 250 passos;
+- profiling e geração das células RGAT;
+- relatório.
+
+Relatório completo em `docs/port/phase_b/4090/4090_baseline_fp32.{md,json}`. A primeira tentativa, `phase_b_s1`, foi interrompida e descartada (`docs/incidentes.md`).
+
+**FP32 estrito confirmado em execução.** O erro relativo da matmul fp32 contra float64 foi de 8,1e-7, enquanto o TF32 ficaria na casa de 1e-3. O guarda de `forward` não disparou em nenhum run.
+
+**Equivalência.** No steps50 (T10 repetido), a ordem dos 406 itens e a LR por passo ficaram idênticas às da 1070. A loss ficou dentro do envelope same-stack do T10: mediana mean_rel 1,96e-2, max_rel 9,28e-2, RMSE 2,20e-2. Isso é reportado, não é gate.
+
+| Célula | s/exemplo 4090 | s/exemplo 1070 | Ganho | Uso da GPU (treino) | Custo estimado da célula |
+|---|---|---|---|---|---|
+| spider_rgat | 0,0559 | 0,2645 | 4,73× | 64% | 1,2–3,9 h |
+| spider_plain | 0,0328 | 0,1582 | 4,82× | 69% | 0,7–2,3 h |
+| sciencebenchmark_rgat | 0,1251 | 0,7828 | 6,26× | 90% | 1,6–5,1 h |
+| sciencebenchmark_plain | 0,0624 | 0,3557 | 5,70× | 80% | 0,9–2,6 h |
+
+**Estudo completo (4 células):** 4,5–14,0 GPU-horas, ou US$ 3,33–10,35 a US$ 0,74/h. O limite superior supõe 6 trials de 3 épocas sem pruning e treino final de 15 épocas.
+
+**Profiling.** O backward domina: 44% do passo no Spider e 66% no ScienceBenchmark, que usa gradient checkpointing. A entrada de dados e as cópias do grafo somam ~1%.
+
+**Decisão (2026-10-05): o estudo roda em FP32 estrito.** Sem TF32, sem BF16, sem `torch.compile` e sem trocar os kernels do RGAT. Os passos B1–B5 e o benchmark comparativo do B6 (B, C, D) não serão executados.
+
+- **Motivo:** o estudo inteiro custa no máximo cerca de US$ 10 em FP32. Qualquer ganho de velocidade economizaria poucos dólares. Em troca, exigiria um desvio de protocolo e uma nova validação numérica, e afastaria o estudo da configuração validada na Fase A.
+- **Protocolo:** o `PROTOCOLO.md` já especifica fp32 (§2.1), então **não há desvio de protocolo de precisão**.
+- **Configuração de alocador:** a única configuração além da Fase A é `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, que não muda nenhuma conta (veja o achado do T10 acima). Ela vale em todos os runs.
+
+**Próximo passo:** portar o orquestrador do estudo (Optuna, trials, treino final e avaliação no dev) para `graphix_modern/train.py`. O orquestrador atual, `seq2seq/run_t5base_study.py`, chama o entrypoint legado e não pode ser usado na imagem moderna.

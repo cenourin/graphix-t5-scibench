@@ -121,6 +121,12 @@ On the 4090, the first session also builds the HF datasets cache once:
 - CPU-bound, so the 4090 does not speed it up;
 - the cache stays in `/workspace/cache` for later sessions.
 
+## 5a. Result (2026-10-05)
+
+Session `phase_b_s2` passed every stage in 20 min; its report is in `docs/port/phase_b/4090/`. The study keeps strict FP32 (decision recorded in `PORTABILIDADE.md`). The first attempt, `phase_b_s1`, was interrupted and discarded (`docs/incidentes.md`).
+
+A second full session needs a new name, given on the command line (`SESSION=phase_b_s3 EXPECT_COMMIT=... bash scripts/runpod_phase_b_probe.sh 2>&1 | tee /workspace/outputs/phase_b_s3_console.log`). Always keep the `tee`, and keep the web terminal open until `STOP THE POD NOW`.
+
 ## 6. After the session
 
 1. Stop the pod as soon as `STOP THE POD NOW` appears (stop, don't delete; never delete the volume).

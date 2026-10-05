@@ -1,0 +1,114 @@
+{
+ "python": {
+  "ok": true,
+  "value": "3.11.9"
+ },
+ "torch": {
+  "ok": true,
+  "value": "2.4.0"
+ },
+ "torch_cuda_runtime": {
+  "ok": true,
+  "value": "12.1"
+ },
+ "numpy": {
+  "ok": true,
+  "value": "1.26.4"
+ },
+ "transformers": {
+  "ok": true,
+  "value": "4.57.6"
+ },
+ "datasets": {
+  "ok": true,
+  "value": "2.21.0"
+ },
+ "dgl": {
+  "ok": true,
+  "value": "2.4.0+cu121"
+ },
+ "env_fingerprint": {
+  "ok": true,
+  "value": {
+   "got": "d6d923a223971ddb93299963c68d31671260cce4e5906d7ce971ff0658d8b26d",
+   "expected": "d6d923a223971ddb93299963c68d31671260cce4e5906d7ce971ff0658d8b26d",
+   "image": "silveirabruno/graphix-modern@sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037"
+  }
+ },
+ "image_declared": "sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037",
+ "image_expected": "silveirabruno/graphix-modern@sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037",
+ "cgroup_cpus": null,
+ "os_cpu_count": 32,
+ "cuda_available": {
+  "ok": true,
+  "value": true
+ },
+ "gpu_model": {
+  "ok": true,
+  "value": "NVIDIA GeForce RTX 4090"
+ },
+ "gpu_count": {
+  "ok": true,
+  "value": 1
+ },
+ "compute_capability": {
+  "ok": true,
+  "value": "8.9"
+ },
+ "torch_has_kernels_for_gpu": {
+  "ok": true,
+  "value": [
+   "sm_50",
+   "sm_60",
+   "sm_61",
+   "sm_70",
+   "sm_75",
+   "sm_80",
+   "sm_86",
+   "sm_90"
+  ]
+ },
+ "vram_gb": {
+  "ok": true,
+  "value": 23.53
+ },
+ "driver": {
+  "ok": true,
+  "value": "570.195.03"
+ },
+ "cudnn": 90100,
+ "env_GRAPHIX_ALLOW_TF32_off": {
+  "ok": true,
+  "value": null
+ },
+ "env_NVIDIA_TF32_OVERRIDE_not_forcing": {
+  "ok": true,
+  "value": null
+ },
+ "env_TORCH_ALLOW_TF32_CUBLAS_OVERRIDE_unset": {
+  "ok": true,
+  "value": null
+ },
+ "env_no_compile_switches": {
+  "ok": true,
+  "value": {}
+ },
+ "float32_matmul_precision_highest": {
+  "ok": true,
+  "value": "highest"
+ },
+ "autocast_off": {
+  "ok": true,
+  "value": false
+ },
+ "empirical_fp32_matmul_not_tf32": {
+  "ok": true,
+  "value": 8.103687136086285e-07
+ },
+ "dgl_cuda_message_passing": {
+  "ok": true,
+  "value": "cuda:0"
+ },
+ "failures": [],
+ "passed": true
+}

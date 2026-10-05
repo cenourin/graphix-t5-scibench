@@ -1,0 +1,28 @@
+{"stage": "preflight", "event": "start", "time": "2026-10-05T23:08:48Z", "epoch_s": 1791241728.428257691}
+{"stage": "preflight", "event": "end", "time": "2026-10-05T23:09:07Z", "epoch_s": 1791241747.699155562, "rc": 0}
+{"stage": "smoke_train", "event": "start", "time": "2026-10-05T23:09:07Z", "epoch_s": 1791241747.743189619}
+{"stage": "smoke_train", "event": "end", "time": "2026-10-05T23:09:24Z", "epoch_s": 1791241764.774158029, "rc": 0}
+{"stage": "smoke_resume", "event": "start", "time": "2026-10-05T23:09:24Z", "epoch_s": 1791241764.826498278}
+{"stage": "smoke_resume", "event": "end", "time": "2026-10-05T23:09:42Z", "epoch_s": 1791241782.783960979, "rc": 0}
+{"stage": "smoke_eval", "event": "start", "time": "2026-10-05T23:09:42Z", "epoch_s": 1791241782.821018444}
+{"stage": "smoke_eval", "event": "end", "time": "2026-10-05T23:09:56Z", "epoch_s": 1791241796.944791277, "rc": 0}
+{"stage": "steps50", "event": "start", "time": "2026-10-05T23:09:56Z", "epoch_s": 1791241796.976417981}
+{"stage": "steps50", "event": "end", "time": "2026-10-05T23:10:43Z", "epoch_s": 1791241843.523099713, "rc": 0}
+{"stage": "probe_spider_rgat", "event": "start", "time": "2026-10-05T23:10:43Z", "epoch_s": 1791241843.548953900}
+{"stage": "probe_spider_rgat", "event": "end", "time": "2026-10-05T23:13:06Z", "epoch_s": 1791241986.279011071, "rc": 0}
+{"stage": "profile_spider_rgat", "event": "start", "time": "2026-10-05T23:13:06Z", "epoch_s": 1791241986.336200207}
+{"stage": "profile_spider_rgat", "event": "end", "time": "2026-10-05T23:13:45Z", "epoch_s": 1791242025.891037462, "rc": 0}
+{"stage": "devgen_spider", "event": "start", "time": "2026-10-05T23:13:45Z", "epoch_s": 1791242025.929308778}
+{"stage": "devgen_spider", "event": "end", "time": "2026-10-05T23:14:08Z", "epoch_s": 1791242048.160488892, "rc": 0}
+{"stage": "probe_spider_plain", "event": "start", "time": "2026-10-05T23:14:08Z", "epoch_s": 1791242048.187089857}
+{"stage": "probe_spider_plain", "event": "end", "time": "2026-10-05T23:15:30Z", "epoch_s": 1791242130.322598423, "rc": 0}
+{"stage": "probe_sciencebenchmark_rgat", "event": "start", "time": "2026-10-05T23:15:30Z", "epoch_s": 1791242130.349646655}
+{"stage": "probe_sciencebenchmark_rgat", "event": "end", "time": "2026-10-05T23:24:29Z", "epoch_s": 1791242669.230245304, "rc": 0}
+{"stage": "profile_sciencebenchmark_rgat", "event": "start", "time": "2026-10-05T23:24:29Z", "epoch_s": 1791242669.255919524}
+{"stage": "profile_sciencebenchmark_rgat", "event": "end", "time": "2026-10-05T23:25:37Z", "epoch_s": 1791242737.298474379, "rc": 0}
+{"stage": "devgen_sciencebenchmark", "event": "start", "time": "2026-10-05T23:25:37Z", "epoch_s": 1791242737.340830763}
+{"stage": "devgen_sciencebenchmark", "event": "end", "time": "2026-10-05T23:26:42Z", "epoch_s": 1791242802.294519689, "rc": 0}
+{"stage": "probe_sciencebenchmark_plain", "event": "start", "time": "2026-10-05T23:26:42Z", "epoch_s": 1791242802.339017552}
+{"stage": "probe_sciencebenchmark_plain", "event": "end", "time": "2026-10-05T23:29:16Z", "epoch_s": 1791242956.055652147, "rc": 0}
+{"stage": "report", "event": "start", "time": "2026-10-05T23:29:16Z", "epoch_s": 1791242956.081670571}
+{"stage": "report", "event": "end", "time": "2026-10-05T23:29:16Z", "epoch_s": 1791242956.418426234, "rc": 0}
