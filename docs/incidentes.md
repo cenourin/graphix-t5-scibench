@@ -55,9 +55,9 @@ Foi só `--smoke`: nunca `--probe` e nunca o estudo. Os dois trials falharam na 
 
 **Prevenção.** `docs/RUNPOD_PHASE_B.md` e `docs/RUNPOD.md` avisam para não rodar o launcher legado na imagem moderna. A sessão da Fase B usa só `scripts/runpod_phase_b_probe.sh`.
 
-## 2026-09-30: sessão `phase_b_s1` interrompida (incompleta, descartada)
+## 2026-09-30: sessão `phase_b_s1` interrompida manualmente (incompleta, descartada)
 
-**O que aconteceu.** A primeira sessão da Fase B na 4090 (`SESSION=phase_b_s1`, commit `cc5f69b`) passou no preflight, nas três etapas de smoke e no steps50. O processo do `probe_spider_rgat` também terminou: os resultados foram gravados às 11:39:15 UTC. Logo depois, o launcher parou sem gravar o evento de fim da etapa, sem mensagem de erro e sem chegar às etapas seguintes. O monitor de CPU parou no mesmo segundo. Isso é compatível com o pod ter sido parado, ou com o terminal web ter sido fechado e encerrado o processo; não há erro nos logs.
+**O que aconteceu.** A primeira sessão da Fase B na 4090 (`SESSION=phase_b_s1`, commit `cc5f69b`) passou no preflight, nas três etapas de smoke e no steps50. O processo do `probe_spider_rgat` também terminou: os resultados foram gravados às 11:39:15 UTC. Logo depois, o launcher parou sem gravar o evento de fim da etapa, sem mensagem de erro e sem chegar às etapas seguintes. O monitor de CPU parou no mesmo segundo. A causa foi uma **interrupção manual** da sessão, informada pelo usuário; não há erro nos logs.
 
 **Validade.** A sessão está incompleta e **nenhum número dela é usado**. A baseline da 4090 é a sessão `phase_b_s2` (2026-10-05), que rodou do início ao fim com o mesmo commit e a mesma imagem (`docs/port/phase_b/4090/`). Em s1, a inicialização do steps50 e do probe levou 321 s e 348 s, contra 10–16 s em s2, e o smoke_train levou 389 s no total, contra 17 s. Isso é compatível com a primeira montagem do cache de datasets do Spider no volume; em s2 o cache já existia.
 
