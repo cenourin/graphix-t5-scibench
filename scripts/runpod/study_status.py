@@ -60,14 +60,20 @@ def main(root):
         name = "%s_t5base_%s" % (bench, arm)
         recs = jl(root / "trials" / name / "trials.jsonl")
         n = {k: sum(1 for r in recs if r["outcome"].startswith(k)) for k in ("complete", "pruned", "fail")}
+        # a trial killed while running has no trial_end; the next start marks it FAIL
+        stale = {e["trial"] for e in ev if e.get("study") == name and e["event"] == "stale_trial_failed"}
+        n["fail"] += len(stale)
         best = min((r["best_eval_loss"] for r in recs if r["outcome"] == "complete"), default=None)
-        running = [e for e in ev if e.get("study") == name and e["event"] == "trial_start"]
-        ended = [e for e in ev if e.get("study") == name and e["event"] == "trial_end"]
+        started = {e["trial"] for e in ev if e.get("study") == name and e["event"] == "trial_start"}
+        ended = {e["trial"] for e in ev if e.get("study") == name and e["event"] == "trial_end"}
+        open_trials = sorted(started - ended - stale)
         trials = "%d/%d/%d" % (n["complete"], n["pruned"], n["fail"])
         if best is not None:
             trials += " best %.4f" % best
-        if len(running) > len(ended):
-            trials += " (trial %d running)" % running[-1]["trial"]
+        if open_trials and alive:
+            trials += " (trial %d running)" % open_trials[-1]
+        elif open_trials:
+            trials += " (trial %d interrupted)" % open_trials[-1]
         fd = root / "final" / ("study-t5base-%s-%s" % (bench, arm))
         if (fd / "FINAL_DONE").exists():
             post = json.load(open(fd / "FINAL_DONE"))
