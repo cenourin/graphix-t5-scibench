@@ -79,6 +79,13 @@ EOF
   setsid nohup bash "$0" _run $([ $SMOKE = 1 ] && echo --smoke || true) "$@" </dev/null >>"$LD/orchestrator.log" 2>&1 &
   for _ in $(seq 1 30); do alive && break; sleep 0.5; done
   alive || die "the runner did not start; see $LD/orchestrator.log"
+  # the orchestrator must be writing to this root (its pipeline_start event), or nothing is
+  # what it seems: stop it and fail
+  for _ in $(seq 1 120); do grep -qs '"event": "pipeline_start"' "$ROOT/events.jsonl" && break; sleep 1; done
+  if ! grep -qs '"event": "pipeline_start"' "$ROOT/events.jsonl"; then
+    kill -TERM -- "-$(cat "$LD/pid")" 2>/dev/null || true
+    die "the orchestrator did not start writing to $ROOT within 120 s; runner stopped (see $LD/orchestrator.log)"
+  fi
   echo
   echo "STUDY STARTED in the background (pid $(cat "$LD/pid"), root $ROOT)."
   echo "It keeps running if you close this terminal. Follow it with:"
@@ -89,7 +96,7 @@ EOF
 _run)  # the detached runner (setsid: own session and process group)
   echo $$ > "$LD/pid"
   state running
-  echo "=== $(now) runner $$ started: study.py --root $WS/study $*"
+  echo "=== $(now) runner $$ started: study.py --root $WS/study$([ $SMOKE = 1 ] && echo ' --smoke' || true) $*"
   nvidia-smi --query-gpu=timestamp,utilization.gpu,memory.used,memory.total,power.draw,temperature.gpu \
     --format=csv,nounits -l 10 >> "$LD/gpu.csv" 2>/dev/null &
   mon1=$!
@@ -98,7 +105,8 @@ _run)  # the detached runner (setsid: own session and process group)
   stopped=0
   trap 'stopped=1' TERM INT
   set +e
-  python graphix_modern/study.py --root "$WS/study" "$@" &
+  # --smoke was consumed by this script's own argument parsing: pass it on explicitly
+  python graphix_modern/study.py --root "$WS/study" $([ $SMOKE = 1 ] && echo --smoke || true) "$@" &
   child=$!
   wait $child; rc=$?
   if [ $stopped = 1 ]; then kill -TERM $child 2>/dev/null; wait $child 2>/dev/null; fi

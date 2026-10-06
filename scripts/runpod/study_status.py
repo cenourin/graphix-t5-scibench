@@ -55,7 +55,7 @@ def main(root):
         e = ev[-1]
         print("last event : %s %s (%s)" % (e["time"], e["event"], ago(e["time"])))
     print()
-    print("%-26s %-24s %-14s %s" % ("cell", "trials (C/P/F of 6)", "final", "dev"))
+    print("%-26s %-24s %-14s %s" % ("cell", "trials (C/P/F)", "final", "dev"))
     for bench, arm in CELLS:
         name = "%s_t5base_%s" % (bench, arm)
         recs = jl(root / "trials" / name / "trials.jsonl")
