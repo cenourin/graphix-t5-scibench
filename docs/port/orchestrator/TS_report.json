@@ -1,0 +1,316 @@
+{
+ "test": "TS orchestrator smoke",
+ "passed": true,
+ "failures": [],
+ "checks": [
+  {
+   "ok": true,
+   "check": "killed mid-save: checkpoint directory without trainer_state.json [(4, False)]"
+  },
+  {
+   "ok": true,
+   "check": "incomplete checkpoint moved aside, not deleted (['/workspace/port_tests_TS/study_smoke/final/study-t5base-spider-rgat/incomplete-checkpoint-4-20261006T004406'])"
+  },
+  {
+   "ok": true,
+   "check": "spider/rgat completes after three kills (rc=0)"
+  },
+  {
+   "ok": true,
+   "check": "trial 0, killed while running, marked FAIL at restart"
+  },
+  {
+   "ok": true,
+   "check": "last final start resumed from checkpoint-4 ({'time': '2026-10-06 00:45:32', 'event': 'final_start', 'cell': 'study-t5base-spider-rgat', 'best_trial': 1, 'val_loss': 3.167168140411377, 'params': {'learning_rate': 0.00011009618149591347, 'warmup_ratio': 0.0025926231827891333, 'gradient_accumulation_steps': 8, 'weight_decay': 0.01}, 'resume': True, 'resume_from_step': 4})"
+  },
+  {
+   "ok": true,
+   "check": "the resumed process ran only steps 5..8 ([5, 6, 7, 8])"
+  },
+  {
+   "ok": true,
+   "check": "spider/plain completes (rc=0) with MKL_THREADING_LAYER=INTEL inherited"
+  },
+  {
+   "ok": true,
+   "check": "the orchestrator removed the inherited MKL_THREADING_LAYER"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark/rgat completes (rc=0)"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark/plain completes (rc=0)"
+  },
+  {
+   "ok": true,
+   "check": "re-run skips every stage (['pipeline_start', 'pipeline_end'])"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: 2 finished trials, none running (['FAIL', 'COMPLETE'])"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat trial 0: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat trial 0: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat trial 1: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat trial 1: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat trial 1: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat trial 1: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: trials.jsonl written"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: FINAL_DONE"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: final model == best checkpoint (bitwise)"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: final config = base + best trial 1 params"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: dev eval_results.json"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: dev eval of 20 examples with exact match and execution"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: dev predictions written"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_rgat: dev eval loaded the final weights"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: 2 finished trials, none running (['COMPLETE', 'COMPLETE'])"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 0: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 0: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 0: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 0: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 1: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 1: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 1: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain trial 1: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: trials.jsonl written"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: FINAL_DONE"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: final model == best checkpoint (bitwise)"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: final config = base + best trial 0 params"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: dev eval_results.json"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: dev eval of 20 examples with exact match and execution"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: dev predictions written"
+  },
+  {
+   "ok": true,
+   "check": "spider_t5base_plain: dev eval loaded the final weights"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: 2 finished trials, none running (['COMPLETE', 'COMPLETE'])"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 0: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 0: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 0: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 0: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 1: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 1: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 1: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat trial 1: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: trials.jsonl written"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: FINAL_DONE"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: final model == best checkpoint (bitwise)"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: final config = base + best trial 0 params"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: dev eval_results.json"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: dev eval of 20 examples with exact match and execution"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: dev predictions written"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_rgat: dev eval loaded the final weights"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: 2 finished trials, none running (['COMPLETE', 'COMPLETE'])"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 0: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 0: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 0: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 0: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 1: config = base + params in the \u00a74 space, schedule of the final run"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 1: weights removed after the trial"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 1: strict fp32 recorded"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain trial 1: stops after the 1 search epoch"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: trials.jsonl written"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: FINAL_DONE"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: final model == best checkpoint (bitwise)"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: final config = base + best trial 0 params"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: dev eval_results.json"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: dev eval of 20 examples with exact match and execution"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: dev predictions written"
+  },
+  {
+   "ok": true,
+   "check": "sciencebenchmark_t5base_plain: dev eval loaded the final weights"
+  }
+ ],
+ "minutes": 47.7
+}

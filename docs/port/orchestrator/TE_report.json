@@ -1,0 +1,253 @@
+{
+ "test": "TE epoch-level control",
+ "passed": true,
+ "failures": [],
+ "minutes": 34.1,
+ "cases": {
+  "C1_best_earlystop": {
+   "checks": [
+    {
+     "ok": true,
+     "check": "run exits 0"
+    },
+    {
+     "ok": true,
+     "check": "evaluated at the end of epochs 1-4 (steps [3, 6, 9, 12])"
+    },
+    {
+     "ok": true,
+     "check": "early stopping after epoch 4: global_step 12 == 12"
+    },
+    {
+     "ok": true,
+     "check": "best_metric == 1.0 (epoch 2)"
+    },
+    {
+     "ok": true,
+     "check": "best_model_checkpoint is checkpoint-6 (/workspace/checkpoints/port_tests/TE/C1_best_earlystop/run/checkpoint-6)"
+    },
+    {
+     "ok": true,
+     "check": "rotation keeps best + last: [6, 12]"
+    },
+    {
+     "ok": true,
+     "check": "final model == best checkpoint weights (0 of 451 tensors differ)"
+    },
+    {
+     "ok": true,
+     "check": "final model != last checkpoint weights (best was really loaded; 438 of 451 tensors differ)"
+    },
+    {
+     "ok": true,
+     "check": "post-training real eval loss 2.869627 == epoch-2 real loss 2.869627 (rel 0.0e+00)"
+    }
+   ],
+   "eval_steps": [
+    3,
+    6,
+    9,
+    12
+   ],
+   "global_step": 12,
+   "checkpoints": [
+    6,
+    12
+   ],
+   "real_losses": [
+    3.2018256187438965,
+    2.8696272373199463,
+    2.711087465286255,
+    2.5698697566986084
+   ],
+   "final_real_eval_loss": 2.8696272373199463
+  },
+  "C2_trial_stop_after": {
+   "checks": [
+    {
+     "ok": true,
+     "check": "run exits 0"
+    },
+    {
+     "ok": true,
+     "check": "stopped after epoch 2 of 15: global_step 6"
+    },
+    {
+     "ok": true,
+     "check": "schedule length is the full run's: max_steps 45 == 45"
+    },
+    {
+     "ok": true,
+     "check": "LR per step = linear warmup/decay over 45 steps (max rel err 0.0e+00)"
+    },
+    {
+     "ok": true,
+     "check": "not pruned (values below the median)"
+    },
+    {
+     "ok": true,
+     "check": "reported one value per epoch to the study: {0: 1.0, 1: 0.9}"
+    }
+   ],
+   "global_step": 6,
+   "lr": {
+    "1": 5.9999999999999995e-05,
+    "2": 0.00011999999999999999,
+    "3": 0.00017999999999999998,
+    "4": 0.00023999999999999998,
+    "5": 0.0003,
+    "6": 0.00029249999999999995
+   },
+   "intermediate": {
+    "0": 1.0,
+    "1": 0.9
+   }
+  },
+  "C3_trial_pruned": {
+   "checks": [
+    {
+     "ok": true,
+     "check": "run exits 0 (pruning stops training cleanly)"
+    },
+    {
+     "ok": true,
+     "check": "pruned marker written"
+    },
+    {
+     "ok": true,
+     "check": "pruned at the first report (epoch 1)"
+    },
+    {
+     "ok": true,
+     "check": "training stopped after epoch 1: global_step 3"
+    },
+    {
+     "ok": true,
+     "check": "trial state in the study is PRUNED"
+    },
+    {
+     "ok": true,
+     "check": "one value reported before pruning: {0: 9.0}"
+    }
+   ],
+   "global_step": 3,
+   "state": "PRUNED"
+  },
+  "C4_resume": {
+   "checks": [
+    {
+     "ok": true,
+     "check": "first part exits 0 (interrupted after step 6)"
+    },
+    {
+     "ok": true,
+     "check": "checkpoint-6 written"
+    },
+    {
+     "ok": true,
+     "check": "resumed part exits 0"
+    },
+    {
+     "ok": true,
+     "check": "the resumed process ran only steps 7..12 ([7]..[12])"
+    },
+    {
+     "ok": true,
+     "check": "eval history spans the interruption: [3, 6, 9, 12]"
+    },
+    {
+     "ok": true,
+     "check": "best = checkpoint-6, written before the interruption (/workspace/checkpoints/port_tests/TE/C4_resume/run/checkpoint-6)"
+    },
+    {
+     "ok": true,
+     "check": "final model == best checkpoint weights (0 of 451 tensors differ)"
+    },
+    {
+     "ok": true,
+     "check": "post-training real eval loss == epoch-2 real loss (rel 0.0e+00)"
+    }
+   ],
+   "steps_after_resume": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "eval_steps": [
+    3,
+    6,
+    9,
+    12
+   ],
+   "best": "/workspace/checkpoints/port_tests/TE/C4_resume/run/checkpoint-6"
+  },
+  "C5_full_15_epochs": {
+   "checks": [
+    {
+     "ok": true,
+     "check": "run exits 0"
+    },
+    {
+     "ok": true,
+     "check": "ended exactly at epoch 15: global_step 45 == max_steps 45"
+    },
+    {
+     "ok": true,
+     "check": "state.epoch == 15.0"
+    },
+    {
+     "ok": true,
+     "check": "one evaluation per epoch, 15 in all"
+    },
+    {
+     "ok": true,
+     "check": "LR schedule exact (max rel err 0.0e+00), LR at the last step 0"
+    },
+    {
+     "ok": true,
+     "check": "best = last checkpoint"
+    },
+    {
+     "ok": true,
+     "check": "checkpoints kept: [42, 45]"
+    },
+    {
+     "ok": true,
+     "check": "save_total_limit 2 respected over 15 saves"
+    },
+    {
+     "ok": true,
+     "check": "final model == best checkpoint weights (0 of 451 tensors differ)"
+    }
+   ],
+   "global_step": 45,
+   "eval_steps": [
+    3,
+    6,
+    9,
+    12,
+    15,
+    18,
+    21,
+    24,
+    27,
+    30,
+    33,
+    36,
+    39,
+    42,
+    45
+   ],
+   "checkpoints": [
+    42,
+    45
+   ]
+  }
+ },
+ "n_train": 24,
+ "ga": 8,
+ "n_val": 8
+}

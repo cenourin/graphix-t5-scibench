@@ -1,0 +1,9 @@
+# files as tested (TE 2026-10-05, TS run 3 2026-10-06), a5 image, GTX 1070, base commit 240f866 + this commit's changes
+35d65061e5a446032259a0ff035b14af6f08ca32fca61402f2ad1745a4277711  graphix_modern/study.py
+804ad7636aad3708f32c851c221c33680b52992a785e8451d07587eea31f0c64  graphix_modern/train.py
+2d59fff139f1ad69f1f7bf2a6f07f85f5a38a204ca8718f89e644a2053bad9f4  graphix_modern/trainer.py
+c5d57ab7ee88af518d6a5f9e5dfaf4ac7a61f703953ad1521fe22895f96e0c7a  scripts/port_entry_harness.py
+6fcbed751ff448037119649ea6d5f7c5ecce93561be11dff81ef08ae0190b81e  scripts/port_te_epoch_control.py
+0eabc9faf4183ed03768a3fcdc6a28025ce0825720caf58d9f66d116c1c35d26  scripts/port_ts_study_smoke.py
+9b032e6d0f3a14621e522b66f08094eb73202fdf0712471f9c30463863434ee8  scripts/runpod/entry.py
+6149f54bedf644ff74f3a32d5e4d68c387789431c845d9d1b1817f9208c969f6  seq2seq/utils/optuna_callback.py

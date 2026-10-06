@@ -12,6 +12,9 @@ after these test-only patches, each enabled by an environment variable:
                           (TokenizedDataset.__getitem__ while the model is training).
   HARNESS_STOP_AT_STEP=n  (modern only) stops training after optimizer step n and saves a
                           checkpoint there, to simulate an interruption for the resume test.
+  HARNESS_FAKE_EVAL_LOSS=a,b,c  (modern only) eval_loss of epoch 1, 2, 3... replaced by these
+                          values (the real one kept as eval_real_loss), for the epoch-control
+                          test TE (scripts/port_te_epoch_control.py).
 Nothing else is changed; per-step loss/LR come from trainer_state.json (logging_steps=1).
 """
 import json
@@ -70,6 +73,26 @@ if stop_at and env == "modern":
         _orig(self, *a, **k)
         self.add_callback(_StopAt())
     T.LegacyLoopTrainer.__init__ = _tinit
+
+fake_eval = os.environ.get("HARNESS_FAKE_EVAL_LOSS")
+if fake_eval and env == "modern":
+    # eval_loss of the evaluation at the end of epoch e (1-based) -> the e-th value, so the
+    # epoch-control decisions (best model, early stopping, pruning) are deterministic in
+    # tests; the real loss is kept as eval_real_loss. Evaluations after training (the
+    # entrypoint's do_eval) get the value of the epoch the trainer state ended in.
+    from graphix_modern import trainer as T
+    _fake = [float(x) for x in fake_eval.split(",")]
+    _orig_loop = T.LegacyLoopTrainer.evaluation_loop
+
+    def _loop(self, *a, **k):
+        out = _orig_loop(self, *a, **k)
+        key = k.get("metric_key_prefix", "eval") + "_loss"
+        e = int(round(self.state.epoch or 0))
+        if key in out.metrics and 1 <= e <= len(_fake):
+            out.metrics[key.replace("_loss", "_real_loss")] = out.metrics[key]
+            out.metrics[key] = _fake[e - 1]
+        return out
+    T.LegacyLoopTrainer.evaluation_loop = _loop
 
 sys.argv = ["entry", config]
 if env == "legacy":

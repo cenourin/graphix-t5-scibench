@@ -335,3 +335,44 @@ Relatório completo em `docs/port/phase_b/4090/4090_baseline_fp32.{md,json}`. A 
 - **Configuração de alocador:** a única configuração além da Fase A é `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, que não muda nenhuma conta (veja o achado do T10 acima). Ela vale em todos os runs.
 
 **Próximo passo:** portar o orquestrador do estudo (Optuna, trials, treino final e avaliação no dev) para `graphix_modern/train.py`. O orquestrador atual, `seq2seq/run_t5base_study.py`, chama o entrypoint legado e não pode ser usado na imagem moderna.
+
+## Orquestrador do estudo na stack moderna (2026-10-06)
+
+`graphix_modern/study.py` porta `seq2seq/run_t5base_study.py` e `seq2seq/run_optuna_search.py` para `graphix_modern/train.py`.
+
+**O que fica igual ao legado.** Espaço de busca, sampler TPE (seed 1 + número de trials já no estudo), MedianPruner (n_startup_trials=2, poda a partir da época 1), regras de desfecho dos trials, configs de trial e de treino final, e as variáveis de ambiente.
+
+**O que muda é só interface:**
+- Todo run passa por `scripts/runpod/entry.py`: o guarda de FP32 estrito falha o run em caso de autocast, TF32, precisão de matmul diferente de "highest" ou parâmetros fora de fp32/CUDA. Configs com fp16/bf16/tf32/compile são recusados.
+- Os pesos vêm do t5-base em safetensors e são salvos como `model.safetensors`.
+- As saídas ficam numa raiz só (`$WS/study`).
+- Pós-condições são checadas: o modelo final tem que ser bit a bit o melhor checkpoint (`FINAL_DONE`).
+- O `PROTOCOLO.md` não muda.
+
+**Gate TE (`scripts/port_te_epoch_control.py`), passou em 2026-10-05 com 38/38 checks, em 34 min, na imagem a5 com a GTX 1070.** Ele cobre o controle por época, que roda no código da transformers 4.57 em volta do laço 4.17 portado e não tinha sido testado na Fase A. Os valores de `eval_loss` que cada decisão vê são fixados por época (`HARNESS_FAKE_EVAL_LOSS`), e a loss real fica registrada à parte. O treino não foi alterado.
+- **Avaliação e checkpoint por época:** a cada fim de época, com rotação em `save_total_limit` 2 que preserva o melhor.
+- **Melhor checkpoint e `load_best_model_at_end`:** o modelo final é idêntico bit a bit ao melhor checkpoint (0 de 451 tensores diferentes) e difere do último. A loss real depois do treino é igual à da época do melhor.
+- **Early stopping:** parou na época esperada.
+- **Pruning do Optuna:** um trial é podado na primeira avaliação e fica `PRUNED` no estudo; outro não é podado e reporta um valor por época.
+- **Stop-after-epochs:** o trial para depois de 2 de 15 épocas, com o agendamento de LR do run completo (erro relativo 0), ou seja, um prefixo exato do treino final.
+- **Resume:** retoma do checkpoint, roda só os passos restantes e escolhe o melhor checkpoint atravessando a interrupção.
+- **Treino completo de 15 épocas:** termina exatamente em `max_steps`, com 15 avaliações e LR 0 no último passo.
+
+**Teste TS (`scripts/port_ts_study_smoke.py`), passou em 2026-10-06 com 77/77 checks, em 48 min.** É o smoke completo das 4 células com interrupções reais (SIGKILL no grupo de processos):
+- kill durante um trial, que fica FAIL no reinício, como no legado;
+- kill **durante a gravação** de um checkpoint do treino final;
+- kill depois de um checkpoint completo, seguido de resume real, que roda só os passos 5 a 8;
+- um terceiro início que não faz nada (idempotência).
+
+Também são conferidos: as configs contra o §4, a remoção dos pesos dos trials, o modelo final contra o melhor checkpoint, a avaliação no dev (EM e EX) com os pesos finais e o FP32 estrito registrado em todos os runs. Relatórios e hashes dos arquivos testados estão em `docs/port/orchestrator/`.
+
+**Dois defeitos reais encontrados pelo TS e corrigidos no orquestrador, com a causa raiz identificada (o treino não mudou):**
+1. **`MKL_THREADING_LAYER` herdado.** Ao ser importado pela primeira vez via numpy, o mkl-service chama o `setenv()` de C: `INTEL` se a libgomp ainda não foi carregada, `GNU` caso contrário. O `os.environ` do Python não vê essa mudança, mas um filho iniciado sem `env=` herda a variável.
+   - O processo que lançou o orquestrador importou numpy (via optuna) antes do torch. O orquestrador herdou `INTEL` e o repassou aos runs.
+   - Cada run importa o torch (que carrega a libgomp) antes do numpy e abortava com "MKL_THREADING_LAYER=INTEL is incompatible with libgomp.so.1".
+   - Todos os runs validados começaram com a variável ausente, e o mkl escolheu `GNU`. Agora todo filho recebe um ambiente explícito sem a variável (`child_env()`), e o TS cobre um lançamento com `INTEL` herdado.
+2. **Resume a partir de checkpoint incompleto.** Um processo morto durante a gravação deixa o diretório `checkpoint-N` sem o `trainer_state.json`, que a 4.57 grava por último. O `get_last_checkpoint` escolhia esse diretório, e o reinício falhava com "Can't find a valid checkpoint". O legado tinha a mesma fragilidade. Agora checkpoints incompletos são movidos de lado (nunca apagados) antes do resume.
+
+**Semântica herdada do legado e mantida:**
+- Um trial interrompido por queda conta no orçamento de 6 trials e é reportado como FAIL.
+- O contador do early stopping recomeça do zero num resume do treino final. Na 4.17 o callback também não guardava estado; o melhor checkpoint e a melhor métrica são preservados.
