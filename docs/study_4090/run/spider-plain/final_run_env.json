@@ -1,0 +1,28 @@
+{
+ "gpu": "NVIDIA GeForce RTX 4090",
+ "capability": [
+  8,
+  9
+ ],
+ "torch": "2.4.0",
+ "cuda": "12.1",
+ "cudnn": 90100,
+ "matmul_allow_tf32": false,
+ "cudnn_allow_tf32": false,
+ "float32_matmul_precision": "highest",
+ "commit": "01e006ef17e2605d6e342a8704ad0ee9efd99fe1",
+ "image_digest": "sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037",
+ "vars": {
+  "GRAPHIX_IMAGE_DIGEST": "sha256:371f61af7521069e62bb8973c2c42584377659440b5902d025876fb94d859037",
+  "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+  "GRAPHIX_TRAIN_DATASET_PATH": "data_all_in/data/splits/spider_train.json",
+  "GRAPHIX_TRAIN_GRAPH_PEDIA_PATH": "data_all_in/data/output/graph_pedia_total.bin",
+  "GRAPHIX_EVAL_DATASET_PATH": "data_all_in/data/splits/spider_val.json",
+  "GRAPHIX_EVAL_GRAPH_PEDIA_PATH": "data_all_in/data/output/graph_pedia_total.bin",
+  "GRAPHIX_MAX_GRAPH_NODES": "512",
+  "GRAPHIX_MODEL_VARIANT": "plain",
+  "GRAPHIX_EARLY_STOPPING_PATIENCE": "3",
+  "GRAPHIX_LOSS_ONLY_EVAL": "1"
+ },
+ "config": "/workspace/study/final/study-t5base-spider-plain/final_config.json"
+}

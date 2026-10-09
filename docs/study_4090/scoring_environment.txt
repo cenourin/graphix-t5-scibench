@@ -1,0 +1,23 @@
+date_utc: 2026-10-07T13:34:08Z
+repo_commit: 01e006ef17e2605d6e342a8704ad0ee9efd99fe1
+scorer_image: eyuansu62/graphix-text-to-sql@sha256:1fb86bb618456dbc0dba73d13fd7af7219eda4bad22ad9d3a476254dd66d6614
+study_copy_manifest_sha256: 624e7677bcc36dfa6daa137d7579cc4fb9d20b49c7d152e040e8b80927c6816f
+python: 3.7.10
+sqlite: 3.33.0
+file hashes:
+  6c10907db8e6076b4bc1e20281e2ef675f2ae0788941ee3bdd693d2f8212cdd9  scripts/score_predictions.py
+  29152f007477f63756c0845eb516091b28cab6f2ad4ce020b352fd03581db726  scripts/analyze_study.py
+  08efff84f5ddcca4d32dacfcd3959622374fa1386e62ae9c82d53271ffcf9c1d  seq2seq/metrics/spider/spider_exact_match.py
+  8e4e878c25db2bddf7b698e05c62158ad45a7daa4d35deda28dd0c4e33cb08e9  seq2seq/metrics/spider/spider.py
+  33575670355781a4a2d10c44370877168a469e1386d5ca25203e2e72da1acfc2  seq2seq/metrics/spider/spider_test_suite.py
+  223ed0961d750f379694b9d05331310c1c93be0602c11fd081a62a2cdac42bfb  third_party/spider/evaluation.py
+  2ef748af026ae42552361094db08145fd02eb0d7489aae6dc9a124c8662aabcb  third_party/spider/process_sql.py
+  b8c2a6e1c02312f454582435bf4a84764cb1125bf30508787dc90403b71636bb  third_party/test_suite/evaluation.py
+  ab33ee23b22f859cf6c83e09240ef5b494667f675b888539a51ad967824cd31d  third_party/test_suite/exec_eval.py
+  0e364a7465d3603934a4a23ba01543824317febed100c1aaf221e1b8156d26a5  third_party/test_suite/parse.py
+  54fe3816de82cf240fa06b62529925a80ef596b18d7aae8f9dff33e0d5ee9e83  third_party/test_suite/process_sql.py
+predictions:
+  0036bce0992dcfd43e851c1fb819b21099b772262f16afd7de0dbbb2deee9d33  train_db_id/study_4090_2026-10-06/final/study-t5base-spider-rgat/dev_eval/run/predictions_eval_None.json
+  2819c9a78bfae92f35c53bf4ed56ab6dcbb32a5afea399b374ada9f177ac71c6  train_db_id/study_4090_2026-10-06/final/study-t5base-spider-plain/dev_eval/run/predictions_eval_None.json
+  80fad4f6660e841a94a2fef9bbb522fd07cd0f81ebca5741b51c7d02ecac3970  train_db_id/study_4090_2026-10-06/final/study-t5base-sciencebenchmark-rgat/dev_eval/run/predictions_eval_None.json
+  09ba5f619264bcb9d8e1c1a009a5944c0230f5bd045a690810999c41603046f8  train_db_id/study_4090_2026-10-06/final/study-t5base-sciencebenchmark-plain/dev_eval/run/predictions_eval_None.json

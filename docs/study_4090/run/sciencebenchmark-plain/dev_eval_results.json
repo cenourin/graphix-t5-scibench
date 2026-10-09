@@ -1,0 +1,15 @@
+{
+    "eval_exact_match": 0.1482758620689655,
+    "eval_exact_match_scored_examples": 290,
+    "eval_exec": 0.17064846416382254,
+    "eval_exec_scored_examples": 289,
+    "eval_exec_skipped_hang_risk_count": 0,
+    "eval_gpu": "NVIDIA GeForce RTX 4090",
+    "eval_loss": 0.7167895436286926,
+    "eval_model_preparation_time": 0.0022,
+    "eval_peak_vram_gb": 1.02,
+    "eval_peak_vram_reserved_gb": 1.07,
+    "eval_runtime": 725.7606,
+    "eval_samples": 299,
+    "eval_samples_per_second": 0.404
+}
